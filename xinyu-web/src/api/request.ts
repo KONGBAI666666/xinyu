@@ -46,8 +46,8 @@ instance.interceptors.response.use(
   },
 )
 
-/** token 失效兜底: 清凭证并带回跳参数去登录页 */
-function handleUnauthorized(): void {
+/** token 失效兜底: 清凭证并带回跳参数去登录页（SSE 通道收到 40100 时同样复用） */
+export function handleUnauthorized(): void {
   tokenStorage.remove()
   userStorage.remove()
   if (window.location.pathname !== '/login') {

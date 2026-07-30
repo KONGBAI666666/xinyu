@@ -1,21 +1,27 @@
 <script setup lang="ts">
 /**
  * 输入框: Enter 发送 / Shift+Enter 换行 / 空内容禁止
- * 只负责收集输入并 emit, 发送编排在 ChatView
+ * 生成中: 输入框禁用, 发送按钮变「停止」（契约二 2.3 单会话串行）
+ * 只负责收集输入并 emit, 发送/停止编排在 ChatView
  */
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
   /** 未选中会话时禁用 */
   disabled: boolean
+  /** 生成中: 锁定输入, 按钮切「停止」 */
+  streaming: boolean
 }>()
 
 const emit = defineEmits<{
   send: [content: string]
+  stop: []
 }>()
 
 const draft = ref('')
-const canSend = computed(() => !props.disabled && draft.value.trim().length > 0)
+const canSend = computed(
+  () => !props.disabled && !props.streaming && draft.value.trim().length > 0,
+)
 
 function handleSend(): void {
   if (!canSend.value) return
@@ -40,11 +46,32 @@ function handleKeydown(event: KeyboardEvent): void {
         class="field flex-1 resize-none text-sm"
         rows="2"
         maxlength="2000"
-        :disabled="disabled"
-        :placeholder="disabled ? '先选择或创建一个会话' : '说点什么吧…（Enter 发送，Shift+Enter 换行）'"
+        :disabled="disabled || streaming"
+        :placeholder="
+          disabled
+            ? '先选择或创建一个会话'
+            : streaming
+              ? '屿屿正在回复…'
+              : '说点什么吧…（Enter 发送，Shift+Enter 换行）'
+        "
         @keydown="handleKeydown"
       ></textarea>
-      <button type="button" class="send-btn shrink-0 text-sm" :disabled="!canSend" @click="handleSend">
+      <!-- 生成中切「停止」: 单会话串行由前端保证 -->
+      <button
+        v-if="streaming"
+        type="button"
+        class="stop-btn shrink-0 text-sm"
+        @click="$emit('stop')"
+      >
+        停止
+      </button>
+      <button
+        v-else
+        type="button"
+        class="send-btn shrink-0 text-sm"
+        :disabled="!canSend"
+        @click="handleSend"
+      >
         发送
       </button>
     </div>
@@ -92,5 +119,19 @@ function handleKeydown(event: KeyboardEvent): void {
 .send-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.stop-btn {
+  padding: 10px 20px;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-base);
+}
+
+.stop-btn:hover {
+  background: var(--bg-hover);
 }
 </style>

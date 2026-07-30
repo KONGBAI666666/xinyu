@@ -68,3 +68,29 @@ export interface MessageVO {
   completionTokens: number | null
   createdAt: string
 }
+
+// ---------- SSE 事件载荷（契约二 2.2, 与后端 Sse*VO 逐字段一致） ----------
+
+/** event:meta — 双消息 ID 回执 */
+export interface SseMetaEvent {
+  userMessageId: string
+  assistantMessageId: string
+}
+
+/** event:delta — 增量文本 */
+export interface SseDeltaEvent {
+  content: string
+}
+
+/** event:done — 终态回执 */
+export interface SseDoneEvent {
+  messageId: string
+  completionTokens: number
+  status: MessageStatus
+}
+
+/** event:error — LLM 异常（51001~51004） */
+export interface SseErrorEvent {
+  code: number
+  message: string
+}

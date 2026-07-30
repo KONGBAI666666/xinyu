@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * 消息区域: 历史消息 + 「等待AI回复」占位, 新消息自动滚到底部
+ * 消息区域: 历史消息 + 流式气泡, 新消息/流式追加时自动滚到底部
  */
 import { nextTick, ref, watch } from 'vue'
 import { useMessageStore } from '@/stores/message'
@@ -14,9 +14,12 @@ defineProps<{
   hasActive: boolean
 }>()
 
-// 消息变化（加载历史/发送）后滚到底部
+// 消息数变化（加载/发送）或流式文本增长时滚到底部
 watch(
-  () => [messageStore.items.length, messageStore.awaitingReply],
+  () => {
+    const last = messageStore.items[messageStore.items.length - 1]
+    return [messageStore.items.length, last?.content.length ?? 0]
+  },
   async () => {
     await nextTick()
     scrollRef.value?.scrollTo({ top: scrollRef.value.scrollHeight })
@@ -33,8 +36,6 @@ watch(
     <template v-else>
       <div class="mx-auto flex max-w-3xl flex-col gap-3">
         <MessageBubble v-for="item in messageStore.items" :key="item.id" :message="item" />
-        <!-- M1-4.3 发送后占位; M1-4.4 替换为 SSE 流式气泡 -->
-        <p v-if="messageStore.awaitingReply" class="waiting text-xs">等待AI回复...</p>
       </div>
     </template>
   </div>
@@ -43,10 +44,6 @@ watch(
 <style scoped>
 .hint {
   margin-top: 48px;
-  color: var(--text-muted);
-}
-
-.waiting {
   color: var(--text-muted);
 }
 </style>
