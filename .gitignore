@@ -1,0 +1,22 @@
+# ---------- 通用 ----------
+.DS_Store
+Thumbs.db
+*.log
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.iml
+
+# ---------- 后端 xinyu-server ----------
+xinyu-server/target/
+xinyu-server/.mvn/wrapper/maven-wrapper.jar
+
+# 含数据库密码 / 大模型 API Key 的本地配置，绝不提交
+xinyu-server/src/main/resources/application-dev.yml
+
+# ---------- 前端 xinyu-web ----------
+xinyu-web/node_modules/
+xinyu-web/dist/
+xinyu-web/.env.local
+xinyu-web/.env.*.local

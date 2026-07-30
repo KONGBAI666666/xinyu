@@ -1,0 +1,35 @@
+# ============================================================
+# 心屿 XinYu · 公共配置 (所有环境共享, 不含任何敏感信息)
+# 环境差异配置见 application-dev.yml (本地, 不入库) / application-prod.yml (部署阶段创建)
+# ============================================================
+
+spring:
+  application:
+    name: xinyu-server
+  profiles:
+    active: dev
+  jackson:
+    # 统一时间格式与时区, 避免前后端时间对不上
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+server:
+  port: 8080
+
+mybatis-plus:
+  configuration:
+    # 数据库下划线字段 <-> Java驼峰属性自动映射
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      # 主键统一使用雪花ID (对应设计文档 2.1 全局约定)
+      id-type: assign_id
+      # 逻辑删除统一字段
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+logging:
+  level:
+    com.xinyu: debug

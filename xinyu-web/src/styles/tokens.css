@@ -1,0 +1,42 @@
+/* ============================================================
+   心屿 XinYu · Design Tokens
+   全项目唯一取色来源 —— 业务代码禁止出现裸色值 (设计文档 4.1)
+   主题切换机制: html.dark / html.light 切换整套变量
+   M1 仅深色主题; 浅色主题在 M5 补充变量值
+   ============================================================ */
+
+:root,
+html.dark {
+  /* ---------- 背景 ---------- */
+  --bg-base: #0c1020;                       /* 深海夜蓝, 页面基底 */
+  --bg-elevated: rgba(255, 255, 255, 0.06); /* 毛玻璃浮层 */
+  --bg-hover: rgba(255, 255, 255, 0.1);     /* 悬停态 */
+
+  /* ---------- 品牌 ---------- */
+  --brand-from: #8b7cf6;                    /* 暮紫 */
+  --brand-to: #5eead4;                      /* 屿青 */
+  --brand-gradient: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+  --accent-warm: #ffb86b;                   /* 暖橘: 收藏/情感元素专用 */
+
+  /* ---------- 文字三级灰阶 ---------- */
+  --text-primary: #eaecf5;
+  --text-secondary: #9aa1b5;
+  --text-muted: #5c6379;
+
+  /* ---------- 功能色 ---------- */
+  --color-danger: #f87171;
+  --color-success: #4ade80;
+
+  /* ---------- 圆角 ---------- */
+  --radius-card: 16px;
+  --radius-bubble: 18px;
+  --radius-bubble-tail: 4px;                /* 气泡发送方向角 */
+  --radius-btn: 12px;
+
+  /* ---------- 动效 ---------- */
+  --duration-base: 180ms;
+  --ease-base: ease-out;
+
+  /* ---------- 毛玻璃 ---------- */
+  --blur-glass: 20px;
+}

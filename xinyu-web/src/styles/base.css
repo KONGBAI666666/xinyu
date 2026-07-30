@@ -1,0 +1,44 @@
+/* ============================================================
+   心屿 XinYu · 全局基础样式
+   ============================================================ */
+
+@import 'tailwindcss';
+@import './tokens.css';
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'PingFang SC',
+    'Microsoft YaHei',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 统计数字等宽, 避免滚动跳动 (设计文档 4.1) */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 沉浸式细滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
