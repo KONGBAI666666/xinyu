@@ -16,6 +16,9 @@
 --   mysql> SOURCE e:/虚拟C盘/AI聊天项目/scripts/seed-dev.sql;
 -- ============================================================
 
+-- 统一连接排序规则, 避免 MySQL 8 默认 utf8mb4_0900_ai_ci 与表列 unicode_ci 比较报 1267
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- ⚠ 改成你注册的管理员用户名
 SET @admin_username = 'CHANGE_ME';
 
