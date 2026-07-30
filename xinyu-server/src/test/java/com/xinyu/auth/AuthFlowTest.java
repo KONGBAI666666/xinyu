@@ -97,7 +97,7 @@ class AuthFlowTest {
 
     @Test
     @Order(2)
-    @DisplayName("重复注册: 40100 用户名已存在")
+    @DisplayName("重复注册: 42200 用户名已存在")
     void duplicateRegister() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ class AuthFlowTest {
                                 {"username":"%s","password":"other123"}
                                 """.formatted(USERNAME)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(40100))
+                .andExpect(jsonPath("$.code").value(42200))
                 .andExpect(jsonPath("$.message").value("用户名已存在"));
     }
 

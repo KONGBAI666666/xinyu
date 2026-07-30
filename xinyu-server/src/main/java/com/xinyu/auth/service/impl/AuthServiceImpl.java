@@ -37,7 +37,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginVO register(RegisterDTO dto) {
         if (userService.getByUsername(dto.getUsername()) != null) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "用户名已存在");
+            // 格式合法但业务规则不允许, 属于校验类错误(42200), 非认证失败
+            throw new BizException(ResultCode.PARAM_ERROR, "用户名已存在");
         }
 
         User user = new User();
