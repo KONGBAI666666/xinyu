@@ -269,6 +269,40 @@ class ChatFlowTest {
                 .andExpect(jsonPath("$.code").value(42200));
     }
 
+    @Test
+    @Order(9)
+    @DisplayName("会话列表: 仅返回本人会话, 按最新消息时间倒序")
+    void listConversations() throws Exception {
+        // 再建一个会话: 其 greeting 时间比首个会话的最后一条消息更晚, 应排在列表首位;
+        // last_message_at 是 DATETIME(秒级), 先等 1.1s 避免与前用例同秒导致排序断言不稳定
+        Thread.sleep(1100);
+        MvcResult created = mockMvc.perform(post("/api/conversations")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"characterId\":\"" + characterId + "\",\"title\":\"第二个会话\"}"))
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        String secondId = objectMapper
+                .readTree(created.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .path("data").path("id").asText();
+
+        mockMvc.perform(get("/api/conversations")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].id").value(secondId))
+                .andExpect(jsonPath("$.data[0].title").value("第二个会话"))
+                .andExpect(jsonPath("$.data[1].id").value(String.valueOf(conversationId)));
+
+        // 用户隔离: 他人拿到空列表而非别人的会话
+        mockMvc.perform(get("/api/conversations")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
     /**
      * 轮询等待 SSE 流结束标记（done/error）出现, MockHttpServletResponse
      * 的缓冲区随 emitter.send 增长, 无需真实网络

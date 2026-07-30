@@ -7,6 +7,7 @@ import com.xinyu.conversation.service.ConversationService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 会话服务实现
@@ -33,5 +34,14 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
                 .set(Conversation::getLastMessageAt, messageAt)
                 .set(Conversation::getLastMessagePreview, truncated)
                 .update();
+    }
+
+    @Override
+    public List<Conversation> listByUser(Long userId) {
+        // 命中 idx_user_last(user_id, last_message_at); 刚创建时 lastMessageAt 已写 greeting 时间, 不为 NULL
+        return lambdaQuery()
+                .eq(Conversation::getUserId, userId)
+                .orderByDesc(Conversation::getLastMessageAt)
+                .list();
     }
 }

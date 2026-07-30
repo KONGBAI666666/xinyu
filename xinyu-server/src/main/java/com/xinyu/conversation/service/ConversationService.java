@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.xinyu.conversation.entity.Conversation;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 会话服务: conversation 模块对外唯一入口
@@ -24,4 +25,11 @@ public interface ConversationService extends IService<Conversation> {
      * 刷新会话冗余字段: 最新消息时间 + 摘要（会话列表排序/副标题用）
      */
     void refreshLastMessage(Long conversationId, String preview, LocalDateTime messageAt);
+
+    /**
+     * 查询用户的全部会话, 按最新消息时间倒序（会话列表页）
+     *
+     * <p>M1 阶段单用户会话量小, 不分页; 会话数大后再演进为分页。
+     */
+    List<Conversation> listByUser(Long userId);
 }

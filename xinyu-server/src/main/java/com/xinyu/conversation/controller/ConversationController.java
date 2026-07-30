@@ -1,0 +1,36 @@
+package com.xinyu.conversation.controller;
+
+import com.xinyu.common.result.Result;
+import com.xinyu.common.security.UserContext;
+import com.xinyu.conversation.service.ConversationService;
+import com.xinyu.conversation.vo.ConversationVO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+/**
+ * 会话管理接口（需登录; M1-4 范围: 仅会话列表）
+ *
+ * <p>与 ChatController 共用 /api/conversations 前缀但按职责分开:
+ * 本类负责会话本身的管理（列表, 后续重命名/删除）,
+ * ChatController 负责聊天链路（创建会话+开场白 / 消息历史 / SSE）。
+ */
+@RestController
+@RequestMapping("/api/conversations")
+@RequiredArgsConstructor
+public class ConversationController {
+
+    private final ConversationService conversationService;
+
+    /** 会话列表: 仅当前用户的会话, 按最新消息时间倒序 */
+    @GetMapping
+    public Result<List<ConversationVO>> list() {
+        List<ConversationVO> list = conversationService.listByUser(UserContext.getUserId()).stream()
+                .map(ConversationVO::from)
+                .toList();
+        return Result.success(list);
+    }
+}
