@@ -34,3 +34,9 @@ mybatis-plus:
 logging:
   level:
     com.xinyu: debug
+
+# 项目自定义配置 (非敏感部分; secret/api-key 在 application-dev.yml)
+xinyu:
+  jwt:
+    # access_token 有效期: 2小时 (对应 API 设计 3.1)
+    expire-ms: 7200000

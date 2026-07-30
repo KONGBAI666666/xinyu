@@ -16,3 +16,6 @@ spring:
 xinyu:
   llm:
     api-key: 填入你的DashScope API Key
+  jwt:
+    # HS256 要求密钥至少 256 bit (32 个 ASCII 字符), 请换成自己的随机字符串
+    secret: CHANGE_ME_TO_RANDOM_STRING_AT_LEAST_32_CHARS
