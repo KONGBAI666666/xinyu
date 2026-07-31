@@ -1,0 +1,82 @@
+# ============================================================
+# 心屿 XinYu · Docker Compose 一键部署 (M1-7)
+#
+# 启动: docker compose up -d      访问: http://localhost
+# 敏感配置在同目录 .env (不入库), 模板见 .env.example
+#
+# 拓扑: 浏览器 -> nginx(80) -> 静态资源 / -> backend(9000) -> mysql(3306)
+# backend/mysql 只在 compose 内网暴露, 唯一对外入口是 nginx —— 贴近生产形态
+# ============================================================
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: xinyu-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      # 首启自动建库, 随后执行 initdb.d 的建表+种子脚本
+      MYSQL_DATABASE: xinyu
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      # 数据落盘: 容器重建聊天记录不丢
+      - xinyu-mysql-data:/var/lib/mysql
+      # 首启初始化 (仅数据卷为空时执行一次)
+      - ./deploy/mysql/init:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build: ./xinyu-server
+    container_name: xinyu-server
+    environment:
+      # prod profile: 启用 QwenLlmClient (真实千问); 配置全走环境变量, 镜像内无敏感文件
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/xinyu?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      # relaxed binding: XINYU_JWT_SECRET -> xinyu.jwt.secret
+      XINYU_JWT_SECRET: ${XINYU_JWT_SECRET}
+      # 缺省从宿主机环境变量透传 (也可写入 .env)
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    expose:
+      - "9000"
+    healthcheck:
+      # 无 actuator 依赖, 用 TCP 探活 (busybox nc)
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9000"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  nginx:
+    build: ./xinyu-web
+    container_name: xinyu-nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  xinyu-mysql-data:
