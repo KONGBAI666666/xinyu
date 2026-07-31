@@ -1,0 +1,147 @@
+/* ============================================================
+   心屿 XinYu · Markdown 消息排版 (M1-6)
+   作用于 MessageBubble 的 .md-body (v-html 内容无 scoped 属性, 需全局样式)
+   取色全部来自 tokens.css; 代码高亮色由 highlight.js github-dark 主题提供
+   ============================================================ */
+
+/* ---------- 块间距: Tailwind preflight 清零了默认 margin, 统一补回 ---------- */
+.md-body > * + * {
+  margin-top: 0.6em;
+}
+
+/* ---------- 标题 ---------- */
+.md-body h1,
+.md-body h2,
+.md-body h3,
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.md-body h1 {
+  font-size: 1.25em;
+}
+
+.md-body h2 {
+  font-size: 1.15em;
+}
+
+.md-body h3 {
+  font-size: 1.05em;
+}
+
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  font-size: 1em;
+}
+
+/* ---------- 列表 ---------- */
+.md-body ul,
+.md-body ol {
+  padding-left: 1.4em;
+}
+
+.md-body ul {
+  list-style: disc;
+}
+
+.md-body ol {
+  list-style: decimal;
+}
+
+.md-body li + li {
+  margin-top: 0.25em;
+}
+
+/* ---------- 行内代码 ---------- */
+.md-body :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  background: var(--bg-hover);
+  color: var(--brand-to);
+  font-size: 0.9em;
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+}
+
+/* ---------- 代码块 (结构由 utils/markdown.ts 的 renderer 生成) ---------- */
+.md-code-block {
+  position: relative;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.md-code-block .md-code-lang {
+  display: block;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--bg-hover);
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: lowercase;
+  user-select: none;
+}
+
+.md-code-block pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+
+.md-code-block code.hljs {
+  padding: 0;
+  background: transparent;
+  font-size: 0.9em;
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  line-height: 1.55;
+}
+
+/* ---------- 引用 ---------- */
+.md-body blockquote {
+  padding-left: 0.8em;
+  border-left: 3px solid var(--brand-from);
+  color: var(--text-secondary);
+}
+
+/* ---------- 表格 ---------- */
+.md-body table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.95em;
+}
+
+.md-body th,
+.md-body td {
+  padding: 6px 10px;
+  border: 1px solid var(--bg-hover);
+  text-align: left;
+}
+
+.md-body th {
+  background: var(--bg-hover);
+  font-weight: 600;
+}
+
+/* ---------- 链接 ---------- */
+.md-body a {
+  color: var(--brand-to);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md-body a:hover {
+  opacity: 0.85;
+}
+
+/* ---------- 分隔线 ---------- */
+.md-body hr {
+  border: none;
+  border-top: 1px solid var(--bg-hover);
+}
+
+/* ---------- 加粗/斜体沿用浏览器默认, 仅确保颜色继承 ---------- */
+.md-body strong {
+  font-weight: 600;
+}

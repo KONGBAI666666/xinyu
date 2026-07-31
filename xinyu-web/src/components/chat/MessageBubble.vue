@@ -4,10 +4,11 @@
  * ASSISTANT 按 MessageStatus 四态展示（契约三 3.2）:
  *   GENERATING 无文本=呼吸点 / 有文本=打字机+光标
  *   FAILED=错误文案  STOPPED=灰字标注
- * 纯文本展示; Markdown/代码高亮统一 M2
+ * M1-6: ASSISTANT 经 markdown 安全渲染管线(marked+DOMPurify+hljs); USER 保持纯文本
  */
 import { computed } from 'vue'
 import type { MessageVO } from '@/types/api'
+import { renderMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   message: MessageVO
@@ -15,6 +16,11 @@ const props = defineProps<{
 
 const isUser = computed(() => props.message.messageType === 'USER')
 const generating = computed(() => props.message.status === 'GENERATING')
+
+/** ASSISTANT 消息的安全 HTML（已消毒, 流式期间随 content 增长重算） */
+const renderedContent = computed(() =>
+  isUser.value ? '' : renderMarkdown(props.message.content),
+)
 </script>
 
 <template>
@@ -25,9 +31,9 @@ const generating = computed(() => props.message.status === 'GENERATING')
         <i></i><i></i><i></i>
       </span>
       <template v-else>
-        <span>{{ message.content }}</span>
-        <!-- 打字机光标: 流式追加期间闪烁 -->
-        <span v-if="generating" class="cursor"></span>
+        <!-- USER 纯文本插值; ASSISTANT 经消毒后的 HTML, 流式光标由 .generating 伪元素追加 -->
+        <span v-if="isUser" class="user-text">{{ message.content }}</span>
+        <div v-else class="md-body" :class="{ generating }" v-html="renderedContent"></div>
       </template>
 
       <p v-if="message.status === 'FAILED'" class="status-note failed">
@@ -43,9 +49,13 @@ const generating = computed(() => props.message.status === 'GENERATING')
   max-width: 72%;
   padding: 10px 14px;
   line-height: 1.6;
-  white-space: pre-wrap;
   word-break: break-word;
   border-radius: var(--radius-bubble);
+}
+
+/* 用户消息保留手动换行（markdown 侧由块级标签自行排版） */
+.user-text {
+  white-space: pre-wrap;
 }
 
 .bubble-user {
@@ -93,13 +103,24 @@ const generating = computed(() => props.message.status === 'GENERATING')
   }
 }
 
-/* 打字机光标 */
-.cursor {
+/* 打字机光标: 挂在 markdown 最后一个块级元素末尾（v-html 内无法插真实节点） */
+.md-body.generating > :deep(*:last-child)::after {
+  content: '';
   display: inline-block;
   width: 2px;
   height: 1em;
   margin-left: 2px;
   vertical-align: text-bottom;
+  background: var(--brand-from);
+  animation: blink 0.8s step-end infinite;
+}
+
+/* 刚进入流式且首个块未生成时兼容（无子元素） */
+.md-body.generating:empty::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
   background: var(--brand-from);
   animation: blink 0.8s step-end infinite;
 }
