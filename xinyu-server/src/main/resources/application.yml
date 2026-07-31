@@ -35,8 +35,17 @@ logging:
   level:
     com.xinyu: debug
 
-# 项目自定义配置 (非敏感部分; secret/api-key 在 application-dev.yml)
+# 项目自定义配置 (非敏感部分; secret 在 application-dev/prod.yml, api-key 走环境变量)
 xinyu:
   jwt:
     # access_token 有效期: 2小时 (对应 API 设计 3.1)
     expire-ms: 7200000
+  llm:
+    # OpenAI 兼容模式: 换 DeepSeek/OpenAI 只改 base-url + model, 代码零改动
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    model: qwen-plus
+    # Key 只从环境变量注入, 绝不写进任何配置文件; dev(Mock) 用不到, 缺省空串
+    api-key: ${DASHSCOPE_API_KEY:}
+    connect-timeout-ms: 10000
+    # 建连到响应头到达的超时; 流式 body 总时长由 SSE 180s 兜底
+    read-timeout-ms: 120000

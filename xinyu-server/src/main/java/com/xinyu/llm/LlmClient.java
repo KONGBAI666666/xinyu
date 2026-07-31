@@ -13,6 +13,11 @@ import java.util.List;
 public interface LlmClient {
 
     /**
+     * 实际使用的模型标识（写入 message.model_code 溯源）
+     */
+    String modelCode();
+
+    /**
      * 流式对话（同步阻塞式: 方法返回即本次生成结束, 由调用方决定执行线程）
      *
      * <p>回调约定: 正常结束回调 onComplete, 失败回调 onError, 二者互斥且只回调一次;

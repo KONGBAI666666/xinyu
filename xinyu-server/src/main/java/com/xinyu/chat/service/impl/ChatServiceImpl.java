@@ -16,6 +16,7 @@ import com.xinyu.conversation.entity.Conversation;
 import com.xinyu.conversation.service.ConversationService;
 import com.xinyu.conversation.vo.ConversationVO;
 import com.xinyu.llm.LlmClient;
+import com.xinyu.llm.LlmException;
 import com.xinyu.llm.LlmStreamCallback;
 import com.xinyu.llm.dto.LlmMessage;
 import com.xinyu.message.entity.Message;
@@ -159,7 +160,7 @@ public class ChatServiceImpl implements ChatService {
         assistantMsg.setMessageType(MessageRole.ASSISTANT);
         assistantMsg.setContent("");
         assistantMsg.setStatus(MessageStatus.GENERATING);
-        assistantMsg.setModelCode("mock");
+        assistantMsg.setModelCode(llmClient.modelCode());
         messageService.save(assistantMsg);
 
         // 3. 上下文在请求线程组装（含刚落库的 USER 消息）, 异步线程不依赖 ThreadLocal
@@ -218,9 +219,10 @@ public class ChatServiceImpl implements ChatService {
                             .set(Message::getContent, generated.toString())
                             .set(Message::getStatus, MessageStatus.FAILED)
                             .update();
-                    sendEvent(emitter, "error",
-                            new SseErrorVO(ResultCode.LLM_CONNECT_ERROR.getCode(),
-                                    ResultCode.LLM_CONNECT_ERROR.getMessage()));
+                    // LlmException 携带精确错误码(51002超时/51003超长/51004拦截), 其余按 51001 兜底
+                    ResultCode code = cause instanceof LlmException le
+                            ? le.getResultCode() : ResultCode.LLM_CONNECT_ERROR;
+                    sendEvent(emitter, "error", new SseErrorVO(code.getCode(), code.getMessage()));
                     emitter.complete();
                 }
             });

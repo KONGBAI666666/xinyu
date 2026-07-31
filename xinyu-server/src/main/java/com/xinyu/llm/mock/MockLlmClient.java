@@ -4,6 +4,7 @@ import com.xinyu.llm.LlmClient;
 import com.xinyu.llm.LlmStreamCallback;
 import com.xinyu.llm.dto.LlmMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,10 +16,14 @@ import java.util.List;
  * 不是 AI 能力本身; 先用 Mock 打通全链路, 真实模型接入时
  * 替换实现类即可（LlmClient 接口不变）。
  *
+ * <p>M1-5 起仅 dev 环境注册: 测试永远稳定且零成本;
+ * prod 环境由 {@link com.xinyu.llm.qwen.QwenLlmClient} 接真实模型。
+ *
  * <p>触发失败: 最后一条 user 消息含 {@link #FAIL_TRIGGER} 时回调 onError,
  * 用于验收"LLM 异常 → event:error → 消息置 FAILED"链路。
  */
 @Slf4j
+@Profile("dev")
 @Component
 public class MockLlmClient implements LlmClient {
 
@@ -32,6 +37,11 @@ public class MockLlmClient implements LlmClient {
     };
 
     private static final long SEGMENT_INTERVAL_MS = 100;
+
+    @Override
+    public String modelCode() {
+        return "mock";
+    }
 
     @Override
     public void streamChat(List<LlmMessage> messages, LlmStreamCallback callback) {
