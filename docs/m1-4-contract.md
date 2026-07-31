@@ -12,7 +12,7 @@
 
 | 项 | 约定 |
 |---|---|
-| Base URL | 开发环境前端 `/api/**` 由 Vite 代理到 `http://localhost:8086`（已配置） |
+| Base URL | 开发环境前端 `/api/**` 由 Vite 代理到 `http://localhost:9000`（已配置） |
 | 响应包装 | 所有 JSON 接口统一 `{ code, message, data }`；HTTP 状态码恒为 200，业务状态看 `code`（SSE 接口除外） |
 | 成功 | `code === 0` |
 | 认证 | `Authorization: Bearer <token>`；token 有效期 2h，无 RefreshToken，过期即重新登录 |

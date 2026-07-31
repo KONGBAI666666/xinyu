@@ -14,8 +14,8 @@ spring:
     time-zone: GMT+8
 
 server:
-  # 8080 被本机其他项目占用, 固定使用 8086
-  port: 8086
+  # 8080 被本机其他项目占用, 固定使用 9000
+  port: 9000
 
 mybatis-plus:
   configuration:
