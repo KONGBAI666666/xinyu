@@ -20,7 +20,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private static final String[] AUTH_WHITELIST = {
             "/api/auth/register",
             "/api/auth/login",
-            "/api/health"
+            "/api/health",
+            // M2.3 角色广场: 游客可逛 PUBLISHED 角色列表与详情; 收藏/开聊由前端引导登录
+            "/api/characters/square",
+            "/api/characters/*/detail"
     };
 
     private final AuthInterceptor authInterceptor;

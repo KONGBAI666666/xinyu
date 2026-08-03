@@ -3,6 +3,9 @@
 Thumbs.db
 *.log
 
+# 私人备战资料 (面试题库/简历描述等), 绝不公开
+docs-private/
+
 # ---------- Docker 部署 ----------
 # 含数据库密码/JWT密钥的部署环境变量, 模板见 .env.example
 .env

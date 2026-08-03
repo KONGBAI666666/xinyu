@@ -24,18 +24,20 @@
 DROP TABLE IF EXISTS `ai_model`;
 CREATE TABLE `ai_model` (
   `id` bigint NOT NULL,
-  `provider` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'QWEN/OPENAI/DEEPSEEK...',
-  `model_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模型标识, 如qwen-plus',
-  `display_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '展示名',
+  `user_id` bigint NOT NULL COMMENT '归属用户(个人模型库)',
+  `provider` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'QWEN/OPENAI/DEEPSEEK/MOONSHOT/GLM/OLLAMA...',
+  `model_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模型标识, 如qwen-plus / gpt-4o / deepseek-chat',
+  `display_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '展示名, 用户自定义',
   `base_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'OpenAI兼容接口地址',
-  `is_default` tinyint NOT NULL DEFAULT '0' COMMENT '系统默认模型',
+  `api_key_encrypted` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'AES加密后的API Key',
+  `is_default` tinyint NOT NULL DEFAULT '0' COMMENT '用户默认模型(每用户至多1个)',
   `enabled` tinyint NOT NULL DEFAULT '1',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted` tinyint NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_model_code` (`model_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='模型配置表';
+  KEY `idx_user` (`user_id`,`is_default`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='模型配置表(用户级)';
 
 DROP TABLE IF EXISTS `character`;
 CREATE TABLE `character` (
@@ -88,6 +90,7 @@ CREATE TABLE `conversation` (
   `id` bigint NOT NULL,
   `user_id` bigint NOT NULL COMMENT '归属用户',
   `character_id` bigint NOT NULL COMMENT '绑定角色',
+  `model_id` bigint DEFAULT NULL COMMENT '会话级模型覆盖, NULL=用用户默认模型',
   `title` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '默认取首条用户消息前20字, 可重命名',
   `last_message_at` datetime DEFAULT NULL COMMENT '冗余: 最新消息时间(列表排序)',
   `last_message_preview` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '冗余: 最新消息摘要(列表副标题)',
@@ -188,9 +191,6 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- ---------- 种子数据 ----------
-
--- 系统默认模型 (与 application.yml xinyu.llm 保持一致)
-INSERT INTO `ai_model` VALUES (1,'QWEN','qwen-plus','通义千问Plus','https://dashscope.aliyuncs.com/compatible-mode/v1',1,1,'2026-07-30 11:39:18','2026-07-30 11:39:18',0);
 
 -- 官方角色: 屿屿 (creator_id 为原始创建者快照, 无外键约束, OFFICIAL 角色不依赖该用户存在)
 INSERT INTO `character` VALUES (1001,'屿屿',NULL,'心屿的官方伙伴，一座温暖的小岛，随时欢迎你靠岸。','你是屿屿，心屿平台的官方 AI 伙伴。人设：一座会说话的温暖小岛，性格温柔、耐心、包容，像一个值得信赖的老朋友。\n说话风格：自然口语化，简洁不啰嗦；多倾听、多共情，先接住对方的情绪再给建议；不说教、不评判。\n边界：你不是医生或心理咨询师，涉及严重心理危机时温和建议对方寻求专业帮助；不编造事实，不知道就坦诚说不知道。\n始终使用中文回复。','你好呀，我是屿屿🏝️ 欢迎来到心屿。今天过得怎么样？不管是想聊聊天，还是有心事想说说，我都在这儿。',0.80,1024,NULL,2082849265143468033,'OFFICIAL','PUBLISHED',0,0,'2026-07-30 23:26:44','2026-07-30 23:26:44',0);

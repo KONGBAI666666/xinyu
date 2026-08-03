@@ -25,4 +25,23 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    /**
+     * 记忆提取专用线程池
+     *
+     * <p>与 chatExecutor 隔离: 提取是低优先级后台任务, 不能挤占 SSE 推送线程;
+     * 单线程 + 大队列即可（提取耗时但无并发要求）; 拒绝策略用 discard 静默丢弃,
+     * 队列满时放弃本次提取, 下一轮对话仍会再触发, 不影响主链路。
+     */
+    @Bean("memoryExecutor")
+    public ThreadPoolTaskExecutor memoryExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(2);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("memory-extract-");
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy());
+        executor.initialize();
+        return executor;
+    }
 }

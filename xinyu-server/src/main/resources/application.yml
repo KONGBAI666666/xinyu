@@ -49,3 +49,6 @@ xinyu:
     connect-timeout-ms: 10000
     # 建连到响应头到达的超时; 流式 body 总时长由 SSE 180s 兜底
     read-timeout-ms: 120000
+    # 计费单价（元 / 1K tokens）, 取通义千问 qwen-plus 公开价; 切换模型同步调整
+    input-price-per-1k: 0.0008
+    output-price-per-1k: 0.002

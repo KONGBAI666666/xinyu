@@ -68,3 +68,7 @@ export function post<T>(url: string, data?: unknown, config?: AxiosRequestConfig
 export function put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
   return instance.put(url, data, config) as Promise<T>
 }
+
+export function del<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  return instance.delete(url, config) as Promise<T>
+}

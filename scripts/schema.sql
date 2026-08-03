@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `conversation` (
   `id`                   BIGINT       NOT NULL,
   `user_id`              BIGINT       NOT NULL COMMENT '归属用户',
   `character_id`         BIGINT       NOT NULL COMMENT '绑定角色',
+  `model_id`             BIGINT       DEFAULT NULL COMMENT '会话级模型覆盖, NULL=用用户默认模型',
   `title`                VARCHAR(50)  NOT NULL COMMENT '默认取首条用户消息前20字, 可重命名',
   `last_message_at`      DATETIME     DEFAULT NULL COMMENT '冗余: 最新消息时间(列表排序)',
   `last_message_preview` VARCHAR(100) DEFAULT NULL COMMENT '冗余: 最新消息摘要(列表副标题)',
@@ -164,22 +165,24 @@ CREATE TABLE IF NOT EXISTS `memory` (
 ) ENGINE=InnoDB COMMENT='长期记忆表';
 
 -- ------------------------------------------------------------
--- 9. 模型配置表 (多模型预留; API Key不入库, 存配置文件)
+-- 9. 模型配置表 (用户级, 每个用户管理自己的模型库; API Key AES加密入库)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `ai_model` (
-  `id`           BIGINT       NOT NULL,
-  `provider`     VARCHAR(20)  NOT NULL COMMENT 'QWEN/OPENAI/DEEPSEEK...',
-  `model_code`   VARCHAR(50)  NOT NULL COMMENT '模型标识, 如qwen-plus',
-  `display_name` VARCHAR(50)  NOT NULL COMMENT '展示名',
-  `base_url`     VARCHAR(255) NOT NULL COMMENT 'OpenAI兼容接口地址',
-  `is_default`   TINYINT      NOT NULL DEFAULT 0 COMMENT '系统默认模型',
-  `enabled`      TINYINT      NOT NULL DEFAULT 1,
-  `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `deleted`      TINYINT      NOT NULL DEFAULT 0,
+  `id`                  BIGINT       NOT NULL,
+  `user_id`             BIGINT       NOT NULL COMMENT '归属用户(个人模型库)',
+  `provider`            VARCHAR(20)  NOT NULL COMMENT 'QWEN/OPENAI/DEEPSEEK/MOONSHOT/GLM/OLLAMA...',
+  `model_code`          VARCHAR(50)  NOT NULL COMMENT '模型标识, 如qwen-plus / gpt-4o / deepseek-chat',
+  `display_name`        VARCHAR(50)  NOT NULL COMMENT '展示名, 用户自定义',
+  `base_url`            VARCHAR(255) NOT NULL COMMENT 'OpenAI兼容接口地址',
+  `api_key_encrypted`   VARCHAR(500) DEFAULT NULL COMMENT 'AES加密后的API Key',
+  `is_default`          TINYINT      NOT NULL DEFAULT 0 COMMENT '用户默认模型(每用户至多1个)',
+  `enabled`             TINYINT      NOT NULL DEFAULT 1,
+  `created_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted`             TINYINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_model_code` (`model_code`)
-) ENGINE=InnoDB COMMENT='模型配置表';
+  KEY `idx_user` (`user_id`, `is_default`)
+) ENGINE=InnoDB COMMENT='模型配置表(用户级)';
 
 -- ------------------------------------------------------------
 -- 10. 文件表 (预留, M1不开发接口)
@@ -201,11 +204,6 @@ CREATE TABLE IF NOT EXISTS `file` (
 -- ============================================================
 -- 初始数据
 -- ============================================================
-
--- 默认模型: 通义千问 (OpenAI兼容模式)
-INSERT INTO `ai_model` (`id`, `provider`, `model_code`, `display_name`, `base_url`, `is_default`, `enabled`)
-SELECT 1, 'QWEN', 'qwen-plus', '通义千问Plus', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 1, 1
-WHERE NOT EXISTS (SELECT 1 FROM `ai_model` WHERE `model_code` = 'qwen-plus');
 
 -- 说明:
 -- 1) 管理员账号在 M1-2 认证模块完成后, 通过注册+手工升权或数据脚本创建(密码需BCrypt, 不在此明文预置)
