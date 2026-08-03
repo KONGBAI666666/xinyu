@@ -157,7 +157,7 @@ class ChatFlowTest {
                         .content("{\"characterId\":\"1\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(40400))
-                .andExpect(jsonPath("$.message").value("角色不存在"));
+                .andExpect(jsonPath("$.message").value("角色不存在或不可用"));
     }
 
     @Test

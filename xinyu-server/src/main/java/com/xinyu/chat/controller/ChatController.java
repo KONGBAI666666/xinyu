@@ -9,9 +9,11 @@ import com.xinyu.conversation.vo.ConversationVO;
 import com.xinyu.message.vo.MessageVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,4 +55,13 @@ public class ChatController {
     public SseEmitter chat(@PathVariable Long id, @Valid @RequestBody ChatRequestDTO dto) {
         return chatService.chat(UserContext.getUserId(), id, dto);
     }
+
+    /** 切换会话使用的模型（modelId=null 表示回到用户默认模型） */
+    @PutMapping("/{id}/model")
+    public Result<Void> switchModel(@PathVariable Long id,
+                                    @RequestParam(required = false) Long modelId) {
+        chatService.switchModel(UserContext.getUserId(), id, modelId);
+        return Result.success(null);
+    }
 }
+

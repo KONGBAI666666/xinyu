@@ -38,4 +38,11 @@ public interface ChatService {
      * 前端 AbortController 断连时服务端将消息置 STOPPED 并保留已生成文本。
      */
     SseEmitter chat(Long userId, Long conversationId, ChatRequestDTO dto);
+
+    /**
+     * 切换会话使用的模型
+     *
+     * @param modelId 模型 ID, null 表示清除会话级覆盖回到用户默认模型
+     */
+    void switchModel(Long userId, Long conversationId, Long modelId);
 }

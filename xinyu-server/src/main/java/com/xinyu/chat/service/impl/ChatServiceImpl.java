@@ -16,9 +16,14 @@ import com.xinyu.conversation.entity.Conversation;
 import com.xinyu.conversation.service.ConversationService;
 import com.xinyu.conversation.vo.ConversationVO;
 import com.xinyu.llm.LlmClient;
+import com.xinyu.llm.LlmClientFactory;
 import com.xinyu.llm.LlmException;
 import com.xinyu.llm.LlmStreamCallback;
+import com.xinyu.llm.LlmUsage;
 import com.xinyu.llm.dto.LlmMessage;
+import com.xinyu.llm.mock.MockLlmClient;
+import com.xinyu.memory.service.MemoryExtractor;
+import com.xinyu.memory.service.MemoryInjector;
 import com.xinyu.message.entity.Message;
 import com.xinyu.message.enums.MessageRole;
 import com.xinyu.message.enums.MessageStatus;
@@ -71,9 +76,19 @@ public class ChatServiceImpl implements ChatService {
 
     private final CharacterService characterService;
 
-    private final LlmClient llmClient;
+    private final LlmClientFactory llmClientFactory;
+
+    /** dev 环境无用户模型时兜底（@Profile("dev") 保证仅 dev 注册） */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private MockLlmClient mockLlmClient;
 
     private final ContextAssembler contextAssembler;
+
+    /** 记忆注入器: 组装上下文时拼记忆块到 system prompt */
+    private final MemoryInjector memoryInjector;
+
+    /** 记忆提取器: ASSISTANT 完成后异步提取记忆 */
+    private final MemoryExtractor memoryExtractor;
 
     @Qualifier("chatExecutor")
     private final Executor chatExecutor;
@@ -81,9 +96,10 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ConversationVO createConversation(Long userId, ConversationCreateDTO dto) {
-        AiCharacter character = characterService.getById(dto.getCharacterId());
+        // 可聊性校验: 官方 PUBLISHED 任何人可聊; 用户自建任意状态创建者可聊; 其余拒绝
+        AiCharacter character = characterService.getChattable(dto.getCharacterId(), userId);
         if (character == null) {
-            throw new BizException(ResultCode.NOT_FOUND, "角色不存在");
+            throw new BizException(ResultCode.NOT_FOUND, "角色不存在或不可用");
         }
 
         Conversation conversation = new Conversation();
@@ -125,6 +141,9 @@ public class ChatServiceImpl implements ChatService {
             throw new BizException(ResultCode.NOT_FOUND, "角色不存在");
         }
 
+        // 解析本次使用的 LLM client（会话级覆盖 > 用户默认 > dev Mock 兜底）
+        LlmClient llmClient = resolveClient(conversation, userId);
+
         // 1. USER 消息落库（幂等: uk(user_id, client_message_id)）
         int seq = messageService.nextSequenceNo(conversationId);
         Message userMsg = new Message();
@@ -163,23 +182,55 @@ public class ChatServiceImpl implements ChatService {
         assistantMsg.setModelCode(llmClient.modelCode());
         messageService.save(assistantMsg);
 
-        // 3. 上下文在请求线程组装（含刚落库的 USER 消息）, 异步线程不依赖 ThreadLocal
-        List<LlmMessage> context = contextAssembler.assemble(character,
+        // 3. 上下文在请求线程组装（含刚落库的 USER 消息 + 记忆注入）, 异步线程不依赖 ThreadLocal
+        String memoryBlock = memoryInjector.inject(userId, conversation.getCharacterId());
+        List<LlmMessage> context = contextAssembler.assemble(character, memoryBlock,
                 messageService.listRecent(conversationId, ContextAssembler.MAX_CONTEXT_MESSAGES));
 
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
         // 超时兜底: 仍在 GENERATING 则按 STOPPED 收尾（条件更新, 不覆盖终态）
         emitter.onTimeout(() -> markStopped(assistantMsg.getId(), conversationId, null));
 
-        chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userMsg, assistantMsg, context));
+        chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userId,
+                conversation.getCharacterId(), userMsg, assistantMsg, context, llmClient));
         return emitter;
     }
 
     /**
-     * 异步流式推送并持久化（SSE 生命周期全在此方法内闭环）
+     * 解析本次对话使用的 LLM client
+     *
+     * <p>优先级:
+     * <ol>
+     *   <li>会话级模型 conversation.model_id（不为 null）</li>
+     *   <li>用户默认模型 ai_model.is_default=1</li>
+     *   <li>dev 环境: MockLlmClient 兜底; 否则抛异常提示先配置模型</li>
+     * </ol>
      */
-    private void streamAndPersist(SseEmitter emitter, Long conversationId,
-                                  Message userMsg, Message assistantMsg, List<LlmMessage> context) {
+    private LlmClient resolveClient(Conversation conversation, Long userId) {
+        if (conversation.getModelId() != null) {
+            return llmClientFactory.get(conversation.getModelId(), userId);
+        }
+        LlmClient defaultClient = llmClientFactory.getDefaultClient(userId);
+        if (defaultClient != null) {
+            return defaultClient;
+        }
+        // 无任何模型配置: dev 走 Mock, 否则提示用户配置
+        if (mockLlmClient != null) {
+            return mockLlmClient;
+        }
+        throw new BizException(ResultCode.PARAM_ERROR,
+                "尚未配置 AI 模型, 请先在「模型管理」添加一个模型");
+    }
+
+    /**
+     * 异步流式推送并持久化（SSE 生命周期全在此方法内闭环）
+     *
+     * <p>记忆提取钩子: ASSISTANT 落 COMPLETED 后, 异步触发 {@link MemoryExtractor} 提取长期记忆,
+     * 投递到 memoryExecutor, 不阻塞 SSE 线程, 失败静默不影响主链路。
+     */
+    private void streamAndPersist(SseEmitter emitter, Long conversationId, Long userId, Long characterId,
+                                  Message userMsg, Message assistantMsg, List<LlmMessage> context,
+                                  LlmClient llmClient) {
         StringBuilder generated = new StringBuilder();
         try {
             sendEvent(emitter, "meta",
@@ -193,7 +244,7 @@ public class ChatServiceImpl implements ChatService {
                 }
 
                 @Override
-                public void onComplete(int completionTokens) {
+                public void onComplete(LlmUsage usage) {
                     // 先落库再推 done: 即使 done 推送失败, 消息也已是 COMPLETED 终态
                     String content = generated.toString();
                     messageService.lambdaUpdate()
@@ -201,13 +252,17 @@ public class ChatServiceImpl implements ChatService {
                             .eq(Message::getStatus, MessageStatus.GENERATING)
                             .set(Message::getContent, content)
                             .set(Message::getStatus, MessageStatus.COMPLETED)
-                            .set(Message::getCompletionTokens, completionTokens)
+                            .set(Message::getPromptTokens, usage.promptTokens())
+                            .set(Message::getCompletionTokens, usage.completionTokens())
                             .update();
                     conversationService.refreshLastMessage(conversationId, content, LocalDateTime.now());
                     sendEvent(emitter, "done",
-                            new SseDoneVO(String.valueOf(assistantMsg.getId()), completionTokens,
+                            new SseDoneVO(String.valueOf(assistantMsg.getId()),
+                                    usage.promptTokens(), usage.completionTokens(),
                                     MessageStatus.COMPLETED.name()));
                     emitter.complete();
+                    // 异步触发记忆提取（投递到 memoryExecutor, 不阻塞 SSE 线程, 失败静默）
+                    memoryExtractor.extractAsync(userId, characterId, conversationId, context, llmClient);
                 }
 
                 @Override
@@ -272,5 +327,18 @@ public class ChatServiceImpl implements ChatService {
             throw new BizException(ResultCode.NOT_FOUND, "会话不存在");
         }
         return conversation;
+    }
+
+    @Override
+    public void switchModel(Long userId, Long conversationId, Long modelId) {
+        requireOwned(conversationId, userId);
+        // modelId 非空时校验模型存在且属于该用户
+        if (modelId != null) {
+            llmClientFactory.get(modelId, userId);
+        }
+        Conversation update = new Conversation();
+        update.setId(conversationId);
+        update.setModelId(modelId);
+        conversationService.updateById(update);
     }
 }

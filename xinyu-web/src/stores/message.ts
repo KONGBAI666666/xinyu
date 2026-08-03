@@ -46,7 +46,9 @@ export const useMessageStore = defineStore('message', () => {
       messageType: 'USER',
       content,
       status: 'COMPLETED',
+      promptTokens: null,
       completionTokens: null,
+      modelCode: null,
       createdAt: new Date().toISOString().slice(0, 19),
     })
     streaming.value = true
@@ -65,7 +67,9 @@ export const useMessageStore = defineStore('message', () => {
       messageType: 'ASSISTANT',
       content: '',
       status: 'GENERATING',
+      promptTokens: null,
       completionTokens: null,
+      modelCode: null,
       createdAt: new Date().toISOString().slice(0, 19),
     })
   }
@@ -83,6 +87,7 @@ export const useMessageStore = defineStore('message', () => {
     const generating = findGenerating()
     if (generating) {
       generating.status = done.status
+      generating.promptTokens = done.promptTokens
       generating.completionTokens = done.completionTokens
     }
     streaming.value = false
