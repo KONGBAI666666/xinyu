@@ -2,7 +2,7 @@
 
 > 每个人心里，都有一座岛。
 
-心屿是一款基于 **Spring Boot 3 + Vue 3 + 大语言模型** 的原创 AI 角色聊天平台，支持 **多模型热切换、长期记忆、角色 UGC 广场、SSE 流式回复**，并通过 **Docker Compose 一键部署**（Nginx + Spring Boot + MySQL 三容器编排）。
+心屿是一款基于 **Spring Boot 3 + Vue 3 + Qwen + Qdrant** 的 AI 对话平台，支持 **SSE 流式聊天、RAG 知识库增强生成、多模型热切换、长期记忆、角色 UGC 广场**，并通过 **Docker Compose 一键部署**（Nginx + Spring Boot + MySQL + Qdrant 四容器编排）。
 
 ```bash
 docker compose up -d --build   # 一条命令启动整套系统 → http://localhost
@@ -34,6 +34,13 @@ docker compose up -d --build   # 一条命令启动整套系统 → http://local
 - **角色详情页**：模糊头像背景 + 开场白预览 + 悬浮操作栏
 - **记忆按 用户 × 角色 隔离**：不同角色不串味
 
+### RAG 知识库增强生成（M3）
+- **文档上传与向量化**：支持 PDF / Markdown / TXT 三种格式，服务端解析后按 1000 字/块（50 字重叠避免切断语义）切片，调用 **通义千问 text-embedding-v2**（1536 维）批量向量化，存入 **Qdrant** 向量数据库
+- **会话绑定知识库**：创建会话时可选绑定一个知识库（普通聊天 / 考研助手 / Java 学习助手 ...），不同会话独立挂载
+- **Top-K 检索注入**：用户提问时，按问题 embedding 在 Qdrant 中做 Cosine 相似度检索，取 Top-3 且分数 ≥ 0.5 的片段拼接到 system prompt，让模型基于你的资料作答
+- **失败降级**：Qdrant 不可用或检索异常时静默降级为普通聊天，不阻断主链路
+- **可视化知识库管理**：知识库卡片列表 / 创建抽屉 / 详情抽屉（文档列表 + 上传进度 + 状态机 PROCESSING / READY / ERROR + 失败原因展示），文档与向量支持级联删除
+
 ### 用户系统
 - 注册 / 登录 / JWT 鉴权 / 接口权限校验 / 数据按用户隔离
 - 用量统计：调用次数 + Token 消耗 + 估算成本，实时面板
@@ -54,11 +61,13 @@ docker compose up -d --build   # 一条命令启动整套系统 → http://local
 flowchart TB
     Browser["浏览器<br/>Vue 3 + Pinia + Tailwind CSS"]
     Nginx["Nginx<br/>静态资源托管 + /api 反向代理<br/>(SSE: proxy_buffering off)"]
-    Server["Spring Boot 3 (Java 21)<br/>JWT 鉴权 · ChatService 编排<br/>ContextAssembler 上下文 + 记忆注入"]
+    Server["Spring Boot 3 (Java 21)<br/>JWT 鉴权 · ChatService 编排<br/>ContextAssembler 上下文 + 记忆 + RAG 注入"]
     Factory["LlmClientFactory<br/>工厂模式 + 客户端缓存"]
     LLM["OpenAiCompatibleClient<br/>(OpenAI 协议)"]
     Extractor["MemoryExtractor<br/>异步记忆提取<br/>(独立线程池)"]
-    MySQL[("MySQL 8<br/>用户 / 角色 / 会话 / 消息<br/>模型 / 记忆 / 收藏")]
+    RagPipe["RAG 管道<br/>DocumentParser → ChunkSplitter<br/>→ EmbeddingClient → QdrantService<br/>RagRetriever + RagInjector"]
+    Qdrant[("Qdrant<br/>向量库 (Cosine, 1536维)<br/>payload: kb_id/doc_id/text")]
+    MySQL[("MySQL 8<br/>用户 / 角色 / 会话 / 消息<br/>模型 / 记忆 / 收藏 / 知识库")]
 
     Browser -- "HTTP / SSE" --> Nginx
     Nginx -- "/api → backend:9000" --> Server
@@ -67,9 +76,13 @@ flowchart TB
     Server -- "onComplete 异步" --> Extractor
     Extractor --> LLM
     Extractor --> MySQL
+    Server -- "上传 / 检索" --> RagPipe
+    RagPipe --> Qdrant
+    RagPipe -- "Embedding 调用" --> LLM
+    RagPipe -- "元数据" --> MySQL
 ```
 
-**部署形态**：`docker compose up -d` 拉起三个容器 —— `xinyu-nginx`（对外唯一入口 80）→ `xinyu-server`（内部 9000，不暴露宿主机）→ `xinyu-mysql`（内部 3306，数据持久化于 named volume，首启自动执行建表+种子脚本）。
+**部署形态**：`docker compose up -d` 拉起四个容器 —— `xinyu-nginx`（对外唯一入口 80）→ `xinyu-server`（内部 9000）→ `xinyu-mysql`（内部 3306）+ `xinyu-qdrant`（内部 6334 gRPC / 6333 REST），数据全部持久化于 named volume，MySQL 首启自动执行建表+种子脚本。
 
 ## 🔄 SSE 流式对话链路
 
@@ -106,14 +119,40 @@ stateDiagram-v2
 
 占位先行 + 状态流转的设计保证了**任何异常路径（模型超时、用户断网、主动停止）都不会产生脏数据**，刷新页面后历史消息始终一致。
 
+## 📚 RAG 知识库链路
+
+```mermaid
+flowchart LR
+    subgraph Upload["文档入库 (同步)"]
+        U1["上传文件<br/>PDF/MD/TXT"] --> U2["DocumentParser<br/>文本抽取"]
+        U2 --> U3["ChunkSplitter<br/>1000字/块 + 50字重叠"]
+        U3 --> U4["EmbeddingClient<br/>千问 text-embedding-v2"]
+        U4 --> U5["QdrantService<br/>批量 upsert"]
+        U5 --> Q[("Qdrant")]
+    end
+
+    subgraph Chat["检索增强 (聊天时)"]
+        C1["用户提问"] --> C2["EmbeddingClient<br/>问题向量化"]
+        C2 --> C3["RagRetriever<br/>Cosine Top-K=3"]
+        C3 --> Q
+        Q --> C4["RagInjector<br/>拼接知识片段"]
+        C4 --> C5["ContextAssembler<br/>system+记忆+RAG+历史"]
+        C5 --> C6["Qwen SSE 流式回复"]
+    end
+```
+
+**入库**：上传 → 解析（PDFBox / Markdown / TXT）→ 段落感知分块 → 批量 Embedding → Qdrant upsert（payload 含 `kb_id` / `doc_id` / `chunk_index` / `text`，便于按文档级联删除）。
+
+**检索**：用户提问 → 问题向量化 → Qdrant filtered 搜索（按 `kb_id` 过滤 + Cosine 排序）→ 分数 ≥ 0.5 的 Top-3 片段 → 拼接到 system prompt。**RagRetriever 失败时静默降级**，聊天链路不受影响。
+
 ## 🧰 技术栈
 
 | 层 | 技术 |
 |---|---|
 | 前端 | Vue 3.5 · TypeScript · Vite · Pinia · Vue Router · Axios · Tailwind CSS 4 · marked + highlight.js + DOMPurify |
-| 后端 | Java 21 · Spring Boot 3.5 · MyBatis-Plus · JWT (jjwt) · SSE (SseEmitter) |
-| 数据 | MySQL 8 |
-| 模型 | 通义千问 qwen-plus（OpenAI 兼容协议），接口抽象支持多供应商扩展 |
+| 后端 | Java 21 · Spring Boot 3.5 · MyBatis-Plus · JWT (jjwt) · SSE (SseEmitter) · Apache PDFBox |
+| 数据 | MySQL 8（业务元数据） · Qdrant 1.12（向量检索, gRPC 协议） |
+| 模型 | 通义千问 qwen-plus（对话, OpenAI 兼容协议）+ text-embedding-v2（1536 维向量化） |
 | 部署 | Docker Compose · Nginx · 多阶段镜像构建（Maven / Node 构建层 + 轻量运行层） |
 
 ## 🚀 快速开始
@@ -160,13 +199,14 @@ xinyu/
 │       ├── llm/          LlmClient 抽象 + LlmClientFactory 工厂 + OpenAi 兼容客户端
 │       ├── memory/       长期记忆（提取 / 注入 / CRUD）
 │       ├── character/    角色 UGC（CRUD + 状态机 + 广场 + 收藏）
+│       ├── rag/          RAG 知识库（DocumentParser / ChunkSplitter / EmbeddingClient / QdrantService / RagRetriever / RagInjector）
 │       ├── conversation/ 会话管理
 │       ├── message/      消息持久化 + 状态机
 │       ├── stats/        用量统计
 │       └── common/       安全（AES / JWT / 鉴权过滤器）+ 异常 + 配置
 ├── nginx/nginx.conf      反向代理配置（SSE 关闭缓冲 / SPA fallback / 静态资源缓存）
 ├── deploy/mysql/init/    容器 MySQL 自动初始化脚本（建表 + 种子数据）
-├── docker-compose.yml    三容器编排（nginx / backend / mysql）
+├── docker-compose.yml    四容器编排（nginx / backend / mysql / qdrant）
 ├── .env.example          环境变量模板
 └── docs/                 设计文档 + 截图
 ```
@@ -187,6 +227,10 @@ xinyu/
 | GET / POST / PUT / DELETE | `/api/characters` | 角色 CRUD |
 | GET | `/api/characters/square` | 角色广场（游客可访问） |
 | POST / DELETE | `/api/characters/{id}/favorite` | 收藏 / 取消收藏 |
+| GET / POST / DELETE | `/api/knowledge-bases` | 知识库 CRUD（M3 RAG） |
+| GET | `/api/knowledge-bases/{id}` | 知识库详情（含文档列表） |
+| POST | `/api/knowledge-bases/{id}/documents` | 上传文档（multipart, 同步解析+向量化） |
+| DELETE | `/api/knowledge-bases/{id}/documents/{docId}` | 删除文档（元数据 + Qdrant 向量级联） |
 | GET | `/api/stats/usage` | 用量统计 |
 
 除 `/api/auth/**`、`/api/characters/square`、`/api/characters/*/detail` 外所有接口需携带 `Authorization: Bearer <token>`。
@@ -196,10 +240,11 @@ xinyu/
 1. **多模型热切换架构** —— `LlmClientFactory` 工厂模式按模型配置动态创建 `OpenAiCompatibleClient`，支持 5+ 供应商（Qwen/DeepSeek/GLM/Moonshot/Ollama）；API Key 采用 **AES-GCM 加密存储**（自带认证防篡改）；会话级模型覆盖优先级 = 会话 > 用户默认，聊天顶栏一键切换无需重新部署。
 2. **长期记忆系统** —— 每轮对话后异步提取结构化记忆（JSON 输出 + 容错解析，兼容 markdown 代码块包裹），按 importance Top-K 注入 system prompt；独立线程池 `memoryExecutor` 与 SSE 线程池隔离，DiscardPolicy 队列满静默丢弃；同 (用户, 角色, memory_key) 去重避免堆积。
 3. **角色 UGC 全闭环** —— CRUD + 状态机（DRAFT/PUBLISHED/OFFLINE）+ 广场搜索（推荐/热门/最新三排序）+ 收藏（幂等 upsert/delete + 冗余计数 GREATEST 下限保护）；游客可逛操作引导登录，记忆按 用户×角色 隔离不串味。
-4. **SSE 全链路打通** —— 后端 `SseEmitter` 异步输出、Nginx `proxy_buffering off` 防缓冲截流、前端 `fetch-event-source` 增量消费 + `AbortController` 停止生成，三层协同。
-5. **消息状态机容错** —— ASSISTANT 消息先落 `GENERATING` 占位再生成，异常/停止路径均有终态，杜绝半途中断产生的脏数据。
-6. **AI 输出安全** —— 模型输出视为不可信输入：marked 渲染 → DOMPurify 白名单过滤 → v-html 展示，恶意 `<script>`/`onerror` payload 均被净化。
-7. **镜像安全与效率** —— 多阶段构建减小体积；`.dockerignore` 排除含密钥的本地配置文件，敏感信息全部经环境变量注入（`.env` 不入库）；MySQL/后端容器不暴露宿主机端口，Nginx 为唯一入口。
+4. **RAG 检索增强生成** —— 完整的 RAG 管道：文档上传 → PDFBox/Markdown/TXT 解析 → 段落感知分块（1000字/块 + 50字重叠）→ 千问 text-embedding-v2 向量化 → Qdrant 存储（payload 带 `kb_id`/`doc_id` 便于级联删除）；聊天时按问题 embedding 做 Cosine Top-3 检索 + 分数阈值过滤 + system prompt 注入；会话级知识库绑定，会话创建时下拉选择；**RagRetriever 失败静默降级**，主链路不受影响。
+5. **SSE 全链路打通** —— 后端 `SseEmitter` 异步输出、Nginx `proxy_buffering off` 防缓冲截流、前端 `fetch-event-source` 增量消费 + `AbortController` 停止生成，三层协同。
+6. **消息状态机容错** —— ASSISTANT 消息先落 `GENERATING` 占位再生成，异常/停止路径均有终态，杜绝半途中断产生的脏数据。
+7. **AI 输出安全** —— 模型输出视为不可信输入：marked 渲染 → DOMPurify 白名单过滤 → v-html 展示，恶意 `<script>`/`onerror` payload 均被净化。
+8. **镜像安全与效率** —— 多阶段构建减小体积；`.dockerignore` 排除含密钥的本地配置文件，敏感信息全部经环境变量注入（`.env` 不入库）；MySQL/后端/Qdrant 容器均不暴露宿主机端口，Nginx 为唯一入口。
 
 ## 📄 更多文档
 
