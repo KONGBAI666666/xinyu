@@ -9,8 +9,20 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/',
     // 用 tokenStorage 而非 store 判断: redirect 回调不依赖 pinia 初始化时序
-    // M2 有角色广场后, 游客落地页改为 /square
-    redirect: () => (tokenStorage.get() ? '/chat' : '/login'),
+    // M2.3: 游客落地页改为 /square, 已登录进 /chat
+    redirect: () => (tokenStorage.get() ? '/chat' : '/square'),
+  },
+  {
+    path: '/square',
+    name: 'square',
+    // 游客可逛广场, 不设 requiresAuth
+    component: () => import('@/views/SquareView.vue'),
+  },
+  {
+    path: '/square/:id',
+    name: 'character-detail',
+    // 游客可看角色详情, 不设 requiresAuth
+    component: () => import('@/views/CharacterDetailView.vue'),
   },
   {
     path: '/login',
@@ -21,7 +33,24 @@ export const routes: RouteRecordRaw[] = [
     path: '/chat',
     name: 'chat',
     meta: { requiresAuth: true },
-    // M1-4.2 为验证守卫的占位实现, M1-4.3 替换为三栏聊天界面
     component: () => import('@/views/ChatView.vue'),
+  },
+  {
+    path: '/settings/models',
+    name: 'models',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/ModelsView.vue'),
+  },
+  {
+    path: '/settings/memories',
+    name: 'memories',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/MemoriesView.vue'),
+  },
+  {
+    path: '/settings/characters',
+    name: 'characters',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/CharactersView.vue'),
   },
 ]
