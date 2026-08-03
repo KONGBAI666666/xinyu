@@ -21,6 +21,10 @@ public class ConversationVO {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long characterId;
 
+    /** 会话级模型覆盖, NULL=用用户默认模型 */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long modelId;
+
     private String title;
 
     /** 冗余: 最新消息时间（列表排序） */
@@ -35,6 +39,7 @@ public class ConversationVO {
         ConversationVO vo = new ConversationVO();
         vo.setId(conversation.getId());
         vo.setCharacterId(conversation.getCharacterId());
+        vo.setModelId(conversation.getModelId());
         vo.setTitle(conversation.getTitle());
         vo.setLastMessageAt(conversation.getLastMessageAt());
         vo.setLastMessagePreview(conversation.getLastMessagePreview());

@@ -2,6 +2,7 @@ package com.xinyu.llm.mock;
 
 import com.xinyu.llm.LlmClient;
 import com.xinyu.llm.LlmStreamCallback;
+import com.xinyu.llm.LlmUsage;
 import com.xinyu.llm.dto.LlmMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -70,7 +71,10 @@ public class MockLlmClient implements LlmClient {
             callback.onDelta(segment);
             totalChars += segment.length();
         }
-        // Mock 阶段以字符数粗估 token 数
-        callback.onComplete(totalChars);
+        // Mock 阶段: prompt 按上下文总字符数粗估(中文 1 字 ≈ 1 token), completion 按输出字符数
+        int promptTokens = messages.stream()
+                .mapToInt(m -> m.content() == null ? 0 : m.content().length())
+                .sum();
+        callback.onComplete(new LlmUsage(promptTokens, totalChars));
     }
 }

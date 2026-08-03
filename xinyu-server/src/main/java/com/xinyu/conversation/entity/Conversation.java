@@ -29,6 +29,9 @@ public class Conversation {
     /** 绑定角色 */
     private Long characterId;
 
+    /** 会话级模型覆盖, NULL=用用户默认模型 */
+    private Long modelId;
+
     /** 标题: 创建时默认角色名, 首条用户消息后取其前20字, 可重命名 */
     private String title;
 

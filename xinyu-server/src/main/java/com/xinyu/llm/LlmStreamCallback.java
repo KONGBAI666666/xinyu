@@ -13,9 +13,10 @@ public interface LlmStreamCallback {
     /**
      * 生成正常结束
      *
-     * @param completionTokens 输出 token 数（Mock 阶段以字符数粗估）
+     * @param usage 本次调用用量（promptTokens + completionTokens）;
+     *              供应商未返回时由实现估算或返回 0
      */
-    void onComplete(int completionTokens);
+    void onComplete(LlmUsage usage);
 
     /**
      * 生成失败（连接/超时/内容拦截等）

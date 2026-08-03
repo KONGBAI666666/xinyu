@@ -27,4 +27,42 @@ public interface LlmClient {
      * @param callback 流式回调
      */
     void streamChat(List<LlmMessage> messages, LlmStreamCallback callback);
+
+    /**
+     * 同步对话（非流式）: 一次性返回完整回复, 用于记忆提取等内部场景
+     *
+     * <p>默认实现基于 {@link #streamChat} 收集全部 delta, 子类可覆盖为原生非流式调用以提升效率。
+     * 失败时抛 {@link LlmException}（或其运行时异常）, 调用方自行 try-catch。
+     *
+     * @param messages 完整上下文
+     * @return 完整回复 + 用量
+     */
+    default LlmResponse chat(List<LlmMessage> messages) {
+        StringBuilder buffer = new StringBuilder();
+        LlmUsage[] usageHolder = new LlmUsage[1];
+        Throwable[] errorHolder = new Throwable[1];
+        streamChat(messages, new LlmStreamCallback() {
+            @Override
+            public void onDelta(String delta) {
+                buffer.append(delta);
+            }
+
+            @Override
+            public void onComplete(LlmUsage usage) {
+                usageHolder[0] = usage;
+            }
+
+            @Override
+            public void onError(Throwable cause) {
+                errorHolder[0] = cause;
+            }
+        });
+        if (errorHolder[0] != null) {
+            Throwable cause = errorHolder[0];
+            throw cause instanceof RuntimeException re ? re
+                    : new LlmException(com.xinyu.common.result.ResultCode.LLM_CONNECT_ERROR, cause);
+        }
+        LlmUsage usage = usageHolder[0] != null ? usageHolder[0] : LlmUsage.empty();
+        return new LlmResponse(buffer.toString(), usage);
+    }
 }
