@@ -42,6 +42,8 @@ export interface ConversationVO {
   characterId: string
   /** 会话级模型覆盖, null=用用户默认模型 */
   modelId: string | null
+  /** 会话绑定的知识库ID (M3 RAG), null=普通聊天 */
+  kbId: string | null
   title: string
   lastMessageAt: string | null
   lastMessagePreview: string | null
@@ -50,6 +52,8 @@ export interface ConversationVO {
 
 export interface CreateConversationDTO {
   characterId: string
+  /** 绑定知识库ID (M3 RAG), 可空=普通聊天 */
+  kbId?: string | null
   /** 缺省 = 角色名 */
   title?: string
 }
@@ -225,5 +229,42 @@ export interface CharacterSaveDTO {
   maxTokens: number
   /** 创建可不传(默认 DRAFT); 编辑可传 DRAFT/PUBLISHED/OFFLINE */
   status?: CharacterStatus
+}
+
+// ==================== M3 RAG 知识库 ====================
+
+export interface KnowledgeBaseVO {
+  id: string
+  userId: string
+  name: string
+  description: string | null
+  docCount: number
+  chunkCount: number
+  status: string
+  createdAt: string
+  updatedAt: string
+  /** 详情接口才填充, 列表为 null */
+  documents?: KnowledgeDocumentVO[]
+}
+
+export interface KnowledgeBaseCreateDTO {
+  name: string
+  description?: string
+}
+
+export interface KnowledgeDocumentVO {
+  id: string
+  kbId: string
+  userId: string
+  fileName: string
+  /** PDF / MARKDOWN / TXT */
+  fileType: string
+  fileSize: number
+  chunkCount: number
+  /** PROCESSING / READY / ERROR */
+  status: string
+  errorMsg: string | null
+  createdAt: string
+  updatedAt: string
 }
 

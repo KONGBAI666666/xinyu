@@ -27,8 +27,8 @@ export const useConversationStore = defineStore('conversation', () => {
   }
 
   /** 创建会话（后端同时落库 greeting）, unshift 进列表并设为当前 */
-  async function create(characterId: string, title?: string): Promise<ConversationVO> {
-    const conversation = await conversationApi.createConversation({ characterId, title })
+  async function create(characterId: string, title?: string, kbId?: string | null): Promise<ConversationVO> {
+    const conversation = await conversationApi.createConversation({ characterId, title, kbId: kbId ?? null })
     list.value.unshift(conversation)
     activeId.value = conversation.id
     return conversation

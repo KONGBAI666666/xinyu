@@ -61,11 +61,11 @@ watch(
   },
 )
 
-async function createConversation(characterId: string): Promise<void> {
+async function createConversation(characterId: string, kbId: string | null = null): Promise<void> {
   if (creating.value) return
   creating.value = true
   try {
-    await conversationStore.create(characterId)
+    await conversationStore.create(characterId, undefined, kbId)
   } catch (e) {
     showError(e)
   } finally {
@@ -75,10 +75,11 @@ async function createConversation(characterId: string): Promise<void> {
 
 /**
  * 处理列表选择: 普通会话 id 直接切换; 'new:<characterId>' 前缀触发创建
+ * 第二个参数 kbId 仅在新建会话时携带 (M3 RAG: 会话绑定知识库)
  */
-function handleSelect(id: string): void {
+function handleSelect(id: string, kbId?: string | null): void {
   if (id.startsWith('new:')) {
-    createConversation(id.slice(4))
+    createConversation(id.slice(4), kbId ?? null)
     return
   }
   conversationStore.setActive(id)

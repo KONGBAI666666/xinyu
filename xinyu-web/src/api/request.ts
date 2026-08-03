@@ -15,7 +15,7 @@ import type { ApiResult } from '@/types/api'
  * 避免 request → router → guards → store → request 的循环依赖,
  * 且全页刷新可顺带清空内存中的过期状态
  */
-const instance = axios.create({
+export const instance = axios.create({
   baseURL: '/api',
   timeout: 15_000,
 })

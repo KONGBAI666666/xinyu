@@ -1,12 +1,16 @@
 <script setup lang="ts">
 /**
- * 左侧会话列表栏: 品牌区 + 「+ 新聊天」(角色选择) + 会话列表 + 角色管理入口
+ * 左侧会话列表栏: 品牌区 + 「+ 新聊天」(角色选择 + 知识库绑定) + 会话列表 + 角色管理入口
  * 数据来自 conversation store; 创建/切换的后续编排（加载消息）由 ChatView 负责
+ *
+ * M3 RAG: 「+ 新聊天」浮层顶部新增知识库下拉, 选角色时把 kbId 一并传给 ChatView
  */
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConversationStore } from '@/stores/conversation'
 import { useCharactersStore } from '@/stores/character'
+import { knowledgeApi } from '@/api/modules/knowledge'
+import type { KnowledgeBaseVO } from '@/types/api'
 import ConversationItem from './ConversationItem.vue'
 
 const router = useRouter()
@@ -18,24 +22,65 @@ defineProps<{
   creating: boolean
 }>()
 
-defineEmits<{
-  select: [id: string]
+const emit = defineEmits<{
+  /** 普通切换: [id]; 新建: ['new:<characterId>', kbId?] */
+  select: [id: string, kbId?: string | null]
 }>()
 
 /** 角色选择浮层 */
 const pickerOpen = ref(false)
 
+/** 知识库列表 (仅 READY 可绑定) + 当前选择 */
+const kbList = ref<KnowledgeBaseVO[]>([])
+const selectedKbId = ref<string | null>(null)
+const kbDropdownOpen = ref(false)
+
+function selectedKbName(): string {
+  if (!selectedKbId.value) return '不绑定'
+  return kbList.value.find((kb) => kb.id === selectedKbId.value)?.name ?? '不绑定'
+}
+
 onMounted(() => {
   // 预加载角色列表用于「+ 新聊天」选择
   charactersStore.load().catch(() => {})
+  // 预加载知识库列表 (仅 READY 状态可绑定到会话)
+  knowledgeApi
+    .list()
+    .then((list) => {
+      kbList.value = list.filter((kb) => kb.status === 'READY')
+    })
+    .catch(() => {})
 })
 
 function togglePicker(): void {
   pickerOpen.value = !pickerOpen.value
+  if (!pickerOpen.value) {
+    // 关闭浮层时重置知识库选择
+    selectedKbId.value = null
+    kbDropdownOpen.value = false
+  }
 }
 
 function closePicker(): void {
   pickerOpen.value = false
+  selectedKbId.value = null
+  kbDropdownOpen.value = false
+}
+
+function toggleKbDropdown(e: Event): void {
+  e.stopPropagation()
+  kbDropdownOpen.value = !kbDropdownOpen.value
+}
+
+function selectKb(kbId: string | null): void {
+  selectedKbId.value = kbId
+  kbDropdownOpen.value = false
+}
+
+function pickCharacter(characterId: string): void {
+  const kbId = selectedKbId.value
+  closePicker()
+  emit('select', `new:${characterId}`, kbId)
 }
 
 defineExpose({ closePicker })
@@ -62,12 +107,62 @@ defineExpose({ closePicker })
       <Transition name="picker">
         <div v-if="pickerOpen" class="picker" @click.stop>
           <p class="picker-title">选择角色开聊</p>
+
+          <!-- 知识库选择 (RAG 增强, 仅当存在知识库时展示) -->
+          <div v-if="kbList.length > 0" class="kb-section">
+            <button type="button" class="kb-btn" @click="toggleKbDropdown">
+              <svg class="kb-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 3.5C2 2.7 2.7 2 3.5 2H6V12H3.5C2.7 12 2 11.3 2 10.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M8 2H10.5C11.3 2 12 2.7 12 3.5V10.5C12 11.3 11.3 12 10.5 12H8V2Z" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              <span class="kb-label">知识库</span>
+              <span class="kb-value" :class="{ active: !!selectedKbId }">{{ selectedKbName() }}</span>
+              <svg class="kb-chevron" :class="{ open: kbDropdownOpen }" width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+
+            <!-- 知识库下拉 -->
+            <Transition name="picker">
+              <div v-if="kbDropdownOpen" class="kb-dropdown" @click.stop>
+                <button
+                  type="button"
+                  class="kb-option"
+                  :class="{ selected: !selectedKbId }"
+                  @click="selectKb(null)"
+                >
+                  <span class="kb-option-name">不绑定</span>
+                  <svg v-if="!selectedKbId" class="check" width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7L6 11L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  v-for="kb in kbList"
+                  :key="kb.id"
+                  type="button"
+                  class="kb-option"
+                  :class="{ selected: selectedKbId === kb.id }"
+                  @click="selectKb(kb.id)"
+                >
+                  <div class="kb-option-info">
+                    <span class="kb-option-name">{{ kb.name }}</span>
+                    <span class="kb-option-meta">{{ kb.docCount }} 文档 · {{ kb.chunkCount }} 切片</span>
+                  </div>
+                  <svg v-if="selectedKbId === kb.id" class="check" width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7L6 11L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </Transition>
+          </div>
+
+          <!-- 角色列表 -->
           <button
             v-for="c in charactersStore.list"
             :key="c.id"
             type="button"
             class="picker-item"
-            @click="$emit('select', `new:${c.id}`); closePicker()"
+            @click="pickCharacter(c.id)"
           >
             <div class="pi-avatar" :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''">
               <span v-if="!c.avatarUrl">{{ c.name.charAt(0) }}</span>
@@ -168,6 +263,118 @@ defineExpose({ closePicker })
   font-size: 11px;
   color: var(--text-muted);
   letter-spacing: 0.04em;
+}
+
+/* ---------- 知识库选择 (RAG) ---------- */
+.kb-section {
+  position: relative;
+  margin: 4px 4px 8px;
+}
+
+.kb-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.kb-btn:hover {
+  background: var(--bg-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.kb-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.kb-label {
+  color: var(--text-muted);
+}
+
+.kb-value {
+  flex: 1;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+.kb-value.active {
+  color: var(--brand-to);
+}
+
+.kb-chevron {
+  color: var(--text-muted);
+  transition: transform var(--duration-base) var(--ease-base);
+  flex-shrink: 0;
+}
+.kb-chevron.open {
+  transform: rotate(180deg);
+}
+
+.kb-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 21;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(15, 18, 32, 0.98);
+  backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.kb-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-base);
+  text-align: left;
+}
+.kb-option:hover { background: var(--bg-hover); }
+.kb-option.selected { background: rgba(94, 234, 212, 0.08); }
+
+.kb-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.kb-option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kb-option-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.kb-option .check {
+  color: var(--brand-to);
+  flex-shrink: 0;
 }
 
 .picker-item {

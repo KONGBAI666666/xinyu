@@ -159,6 +159,13 @@ function closeDropdown(): void {
               </svg>
               <span>长期记忆</span>
             </div>
+            <div class="dropdown-item manage" @click="router.push('/settings/knowledge-bases'); closeDropdown()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 3.5C2 2.7 2.7 2 3.5 2H6V12H3.5C2.7 12 2 11.3 2 10.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M8 2H10.5C11.3 2 12 2.7 12 3.5V10.5C12 11.3 11.3 12 10.5 12H8V2Z" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              <span>知识库 (RAG)</span>
+            </div>
           </div>
         </Transition>
       </div>

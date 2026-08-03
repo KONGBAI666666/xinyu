@@ -53,4 +53,10 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     component: () => import('@/views/CharactersView.vue'),
   },
+  {
+    path: '/settings/knowledge-bases',
+    name: 'knowledge-bases',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/KnowledgeBaseView.vue'),
+  },
 ]
