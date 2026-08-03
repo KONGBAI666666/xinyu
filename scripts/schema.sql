@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS `conversation` (
   `user_id`              BIGINT       NOT NULL COMMENT '归属用户',
   `character_id`         BIGINT       NOT NULL COMMENT '绑定角色',
   `model_id`             BIGINT       DEFAULT NULL COMMENT '会话级模型覆盖, NULL=用用户默认模型',
+  `kb_id`                BIGINT       DEFAULT NULL COMMENT '会话绑定的知识库ID (M3 RAG), NULL=普通聊天',
   `title`                VARCHAR(50)  NOT NULL COMMENT '默认取首条用户消息前20字, 可重命名',
   `last_message_at`      DATETIME     DEFAULT NULL COMMENT '冗余: 最新消息时间(列表排序)',
   `last_message_preview` VARCHAR(100) DEFAULT NULL COMMENT '冗余: 最新消息摘要(列表副标题)',
@@ -200,6 +201,45 @@ CREATE TABLE IF NOT EXISTS `file` (
   `deleted`       TINYINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='文件表(预留)';
+
+-- ------------------------------------------------------------
+-- 11. 知识库表 (M3 RAG, 用户级)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `knowledge_base` (
+  `id`            BIGINT       NOT NULL COMMENT '雪花ID',
+  `user_id`       BIGINT       NOT NULL COMMENT '归属用户',
+  `name`          VARCHAR(50)  NOT NULL COMMENT '知识库名称',
+  `description`   VARCHAR(200) DEFAULT NULL COMMENT '简介',
+  `doc_count`     INT          NOT NULL DEFAULT 0 COMMENT '冗余: 文档数',
+  `chunk_count`   INT          NOT NULL DEFAULT 0 COMMENT '冗余: 切片数(=Qdrant点数)',
+  `status`        VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE/PROCESSING/ERROR',
+  `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted`       TINYINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB COMMENT='知识库表(M3 RAG)';
+
+-- ------------------------------------------------------------
+-- 12. 知识库文档表 (M3 RAG, 记录用户上传的每个文档及其切片元数据)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `knowledge_document` (
+  `id`            BIGINT       NOT NULL COMMENT '雪花ID',
+  `kb_id`         BIGINT       NOT NULL COMMENT '所属知识库',
+  `user_id`       BIGINT       NOT NULL COMMENT '冗余: 上传者(权限校验免join)',
+  `file_name`     VARCHAR(255) NOT NULL COMMENT '原始文件名',
+  `file_type`     VARCHAR(20)  NOT NULL COMMENT 'PDF/MARKDOWN/TXT',
+  `file_size`     BIGINT       NOT NULL COMMENT '字节数',
+  `chunk_count`   INT          NOT NULL DEFAULT 0 COMMENT '切成的块数',
+  `status`        VARCHAR(20)  NOT NULL DEFAULT 'PROCESSING' COMMENT 'PROCESSING/READY/ERROR',
+  `error_msg`     VARCHAR(500) DEFAULT NULL COMMENT '处理失败原因',
+  `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted`       TINYINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_kb` (`kb_id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB COMMENT='知识库文档表(M3 RAG, 向量存Qdrant, 此表存元数据)';
 
 -- ============================================================
 -- 初始数据

@@ -52,3 +52,18 @@ xinyu:
     # 计费单价（元 / 1K tokens）, 取通义千问 qwen-plus 公开价; 切换模型同步调整
     input-price-per-1k: 0.0008
     output-price-per-1k: 0.002
+  rag:
+    # Qdrant 向量库地址: 部署走环境变量 XINYU_QDRANT_URL, 本地开发默认 localhost
+    # 注意: Java SDK 走 gRPC 端口 6334 (不是 REST 6333)
+    qdrant-url: ${XINYU_QDRANT_URL:http://localhost:6334}
+    # Qdrant 集合名 (一个项目一个集合, 用 payload.kb_id 区分知识库)
+    qdrant-collection: xinyu_kb
+    # 千问 Embedding 模型 (1536 维, 复用 xinyu.llm.api-key)
+    embedding-model: text-embedding-v2
+    embedding-dimension: 1536
+    # 文档分块: 1000 字/块, 50 字重叠避免切断语义
+    chunk-size: 1000
+    chunk-overlap: 50
+    # 检索 Top-K 与相似度下限 (cosine 分数 0~1, 越大越相关)
+    retrieve-top-k: 3
+    retrieve-score-threshold: 0.5

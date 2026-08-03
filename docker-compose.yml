@@ -1,11 +1,11 @@
 # ============================================================
-# 心屿 XinYu · Docker Compose 一键部署 (M1-7)
+# 心屿 XinYu · Docker Compose 一键部署 (M3)
 #
 # 启动: docker compose up -d      访问: http://localhost
 # 敏感配置在同目录 .env (不入库), 模板见 .env.example
 #
-# 拓扑: 浏览器 -> nginx(80) -> 静态资源 / -> backend(9000) -> mysql(3306)
-# backend/mysql 只在 compose 内网暴露, 唯一对外入口是 nginx —— 贴近生产形态
+# 拓扑: 浏览器 -> nginx(80) -> 静态资源 / -> backend(9000) -> mysql(3306) + qdrant(6333)
+# backend/mysql/qdrant 只在 compose 内网暴露, 唯一对外入口是 nginx —— 贴近生产形态
 # ============================================================
 
 services:
@@ -35,6 +35,26 @@ services:
       retries: 10
       start_period: 30s
 
+  qdrant:
+    # 向量数据库: 存知识库 chunk 的 embedding, 供 RAG 检索 (M3)
+    image: qdrant/qdrant:v1.12.4
+    container_name: xinyu-qdrant
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      # 向量数据落盘: 容器重建知识库不丢
+      - xinyu-qdrant-data:/qdrant/storage
+    expose:
+      - "6333"   # REST API (健康检查/调试)
+      - "6334"   # gRPC API (Java SDK 走此端口)
+    healthcheck:
+      # Qdrant 内置健康端点
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:6333/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
   backend:
     build: ./xinyu-server
     container_name: xinyu-server
@@ -48,9 +68,13 @@ services:
       XINYU_JWT_SECRET: ${XINYU_JWT_SECRET}
       # 缺省从宿主机环境变量透传 (也可写入 .env)
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      # Qdrant gRPC 地址 (compose 内网服务名, Java SDK 走 gRPC 6334 端口)
+      XINYU_QDRANT_URL: http://qdrant:6334
       TZ: Asia/Shanghai
     depends_on:
       mysql:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
     expose:
       - "9000"
@@ -80,3 +104,4 @@ services:
 
 volumes:
   xinyu-mysql-data:
+  xinyu-qdrant-data:

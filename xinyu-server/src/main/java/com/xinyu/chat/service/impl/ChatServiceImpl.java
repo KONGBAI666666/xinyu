@@ -24,6 +24,9 @@ import com.xinyu.llm.dto.LlmMessage;
 import com.xinyu.llm.mock.MockLlmClient;
 import com.xinyu.memory.service.MemoryExtractor;
 import com.xinyu.memory.service.MemoryInjector;
+import com.xinyu.rag.qdrant.QdrantService.RetrievedChunk;
+import com.xinyu.rag.service.RagInjector;
+import com.xinyu.rag.service.RagRetriever;
 import com.xinyu.message.entity.Message;
 import com.xinyu.message.enums.MessageRole;
 import com.xinyu.message.enums.MessageStatus;
@@ -90,6 +93,12 @@ public class ChatServiceImpl implements ChatService {
     /** 记忆提取器: ASSISTANT 完成后异步提取记忆 */
     private final MemoryExtractor memoryExtractor;
 
+    /** RAG 检索器: 会话绑定知识库时, 按用户输入检索 Top-K 知识片段 */
+    private final RagRetriever ragRetriever;
+
+    /** RAG 注入器: 把检索到的知识片段拼成可注入 system prompt 的文本块 */
+    private final RagInjector ragInjector;
+
     @Qualifier("chatExecutor")
     private final Executor chatExecutor;
 
@@ -105,6 +114,7 @@ public class ChatServiceImpl implements ChatService {
         Conversation conversation = new Conversation();
         conversation.setUserId(userId);
         conversation.setCharacterId(character.getId());
+        conversation.setKbId(dto.getKbId());
         conversation.setTitle(StringUtils.hasText(dto.getTitle())
                 ? dto.getTitle() : character.getName());
         conversation.setLastMessageAt(LocalDateTime.now());
@@ -182,9 +192,12 @@ public class ChatServiceImpl implements ChatService {
         assistantMsg.setModelCode(llmClient.modelCode());
         messageService.save(assistantMsg);
 
-        // 3. 上下文在请求线程组装（含刚落库的 USER 消息 + 记忆注入）, 异步线程不依赖 ThreadLocal
+        // 3. 上下文在请求线程组装（含刚落库的 USER 消息 + 记忆注入 + RAG 知识库注入）, 异步线程不依赖 ThreadLocal
         String memoryBlock = memoryInjector.inject(userId, conversation.getCharacterId());
-        List<LlmMessage> context = contextAssembler.assemble(character, memoryBlock,
+        // RAG: 会话绑定了知识库时, 按用户当前输入检索 Top-K 知识片段 (失败降级为空, 不阻断聊天)
+        List<RetrievedChunk> ragChunks = ragRetriever.retrieve(conversation.getKbId(), dto.getContent());
+        String ragBlock = ragInjector.inject(ragChunks);
+        List<LlmMessage> context = contextAssembler.assemble(character, memoryBlock, ragBlock,
                 messageService.listRecent(conversationId, ContextAssembler.MAX_CONTEXT_MESSAGES));
 
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);

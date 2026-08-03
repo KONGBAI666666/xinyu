@@ -3,7 +3,7 @@
 -- 由 mysql 容器 docker-entrypoint-initdb.d 在数据卷为空时自动执行
 -- (库 xinyu 已由 MYSQL_DATABASE 环境变量创建, 此处只建表 + 种子数据)
 --
--- 内容: 10 张表结构 + 种子数据 (ai_model 默认模型 / character 官方角色屿屿)
+-- 内容: 12 张表结构 + 种子数据 (ai_model 默认模型 / character 官方角色屿屿)
 -- 不含: 用户账号 / 会话 / 消息 —— 镜像启动必须是干净环境
 -- 来源: mysqldump 自本地开发库, 修改表结构请同步本文件
 -- ============================================================
@@ -91,6 +91,7 @@ CREATE TABLE `conversation` (
   `user_id` bigint NOT NULL COMMENT '归属用户',
   `character_id` bigint NOT NULL COMMENT '绑定角色',
   `model_id` bigint DEFAULT NULL COMMENT '会话级模型覆盖, NULL=用用户默认模型',
+  `kb_id` bigint DEFAULT NULL COMMENT '会话绑定的知识库ID (M3 RAG), NULL=普通聊天',
   `title` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '默认取首条用户消息前20字, 可重命名',
   `last_message_at` datetime DEFAULT NULL COMMENT '冗余: 最新消息时间(列表排序)',
   `last_message_preview` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '冗余: 最新消息摘要(列表副标题)',
@@ -115,6 +116,41 @@ CREATE TABLE `file` (
   `deleted` tinyint NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件表(预留)';
+
+DROP TABLE IF EXISTS `knowledge_base`;
+CREATE TABLE `knowledge_base` (
+  `id` bigint NOT NULL COMMENT '雪花ID',
+  `user_id` bigint NOT NULL COMMENT '归属用户',
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '知识库名称',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '简介',
+  `doc_count` int NOT NULL DEFAULT '0' COMMENT '冗余: 文档数',
+  `chunk_count` int NOT NULL DEFAULT '0' COMMENT '冗余: 切片数(=Qdrant点数)',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE/PROCESSING/ERROR',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库表(M3 RAG)';
+
+DROP TABLE IF EXISTS `knowledge_document`;
+CREATE TABLE `knowledge_document` (
+  `id` bigint NOT NULL COMMENT '雪花ID',
+  `kb_id` bigint NOT NULL COMMENT '所属知识库',
+  `user_id` bigint NOT NULL COMMENT '冗余: 上传者(权限校验免join)',
+  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '原始文件名',
+  `file_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'PDF/MARKDOWN/TXT',
+  `file_size` bigint NOT NULL COMMENT '字节数',
+  `chunk_count` int NOT NULL DEFAULT '0' COMMENT '切成的块数',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PROCESSING' COMMENT 'PROCESSING/READY/ERROR',
+  `error_msg` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '处理失败原因',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_kb` (`kb_id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库文档表(M3 RAG, 向量存Qdrant, 此表存元数据)';
 
 DROP TABLE IF EXISTS `memory`;
 CREATE TABLE `memory` (

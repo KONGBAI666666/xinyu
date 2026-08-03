@@ -14,6 +14,9 @@ public class ConversationCreateDTO {
     @NotNull(message = "角色ID不能为空")
     private Long characterId;
 
+    /** 绑定知识库ID (M3 RAG), 可空 = 普通聊天无知识库增强 */
+    private Long kbId;
+
     /** 标题可选, 缺省取角色名, 首条用户消息后自动改为其前20字 */
     @Size(max = 50, message = "标题最长50字")
     private String title;

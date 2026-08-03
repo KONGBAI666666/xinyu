@@ -32,6 +32,9 @@ public class Conversation {
     /** 会话级模型覆盖, NULL=用用户默认模型 */
     private Long modelId;
 
+    /** 会话绑定的知识库 ID (M3 RAG), NULL=普通聊天无知识库增强 */
+    private Long kbId;
+
     /** 标题: 创建时默认角色名, 首条用户消息后取其前20字, 可重命名 */
     private String title;
 
