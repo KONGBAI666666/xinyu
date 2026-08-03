@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xinyu.message.entity.Message;
 import com.xinyu.message.mapper.MessageMapper;
 import com.xinyu.message.service.MessageService;
+import com.xinyu.message.vo.UsageSummary;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -43,5 +45,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
     @Override
     public List<Message> listRecent(Long conversationId, int limit) {
         return listHistory(conversationId, null, limit);
+    }
+
+    @Override
+    public UsageSummary summarizeUsage(Long userId, LocalDateTime since) {
+        // 透传到 Mapper 的聚合 SQL; 返回 null 极端情况兜底（理论上 COUNT 不会为 null）
+        UsageSummary summary = baseMapper.summarizeUsage(userId, since);
+        return summary != null ? summary : UsageSummary.zero();
     }
 }

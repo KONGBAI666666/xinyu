@@ -35,8 +35,14 @@ public class MessageVO {
     /** GENERATING / COMPLETED / FAILED / STOPPED */
     private MessageStatus status;
 
+    /** 输入 token（仅 ASSISTANT） */
+    private Integer promptTokens;
+
     /** 输出 token（仅 ASSISTANT） */
     private Integer completionTokens;
+
+    /** 实际使用模型（仅 ASSISTANT） */
+    private String modelCode;
 
     private LocalDateTime createdAt;
 
@@ -48,7 +54,9 @@ public class MessageVO {
         vo.setMessageType(message.getMessageType());
         vo.setContent(message.getContent());
         vo.setStatus(message.getStatus());
+        vo.setPromptTokens(message.getPromptTokens());
         vo.setCompletionTokens(message.getCompletionTokens());
+        vo.setModelCode(message.getModelCode());
         vo.setCreatedAt(message.getCreatedAt());
         return vo;
     }

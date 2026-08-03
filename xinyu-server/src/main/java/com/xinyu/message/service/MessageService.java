@@ -2,7 +2,9 @@ package com.xinyu.message.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xinyu.message.entity.Message;
+import com.xinyu.message.vo.UsageSummary;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -32,4 +34,11 @@ public interface MessageService extends IService<Message> {
      * 取会话最近 limit 条消息, 按 sequence_no 升序返回（上下文组装用）
      */
     List<Message> listRecent(Long conversationId, int limit);
+
+    /**
+     * 聚合统计用户在 [since, +∞) 时间段内的 LLM 用量（stats 模块用）
+     *
+     * @param since 起始时间, null 表示全部历史
+     */
+    UsageSummary summarizeUsage(Long userId, LocalDateTime since);
 }
