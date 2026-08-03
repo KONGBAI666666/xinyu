@@ -11,10 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 上下文组装器: 角色 System Prompt + [M3 记忆] + 最近 N 条历史 + 当前输入
+ * 上下文组装器: 角色 System Prompt + [M2.1 记忆] + 最近 N 条历史 + 当前输入
  *
  * <p>上下文完全服务端组装, 前端只传当前输入。
- * M3 在 system 与历史之间追加长期记忆注入。
+ * 记忆块由 {@link com.xinyu.memory.service.MemoryInjector} 拼好透传进来, 追加到 system prompt 末尾,
+ * 本类不依赖 memory 模块（避免 chat → memory 横向依赖）。
  */
 @Component
 public class ContextAssembler {
@@ -23,14 +24,19 @@ public class ContextAssembler {
     public static final int MAX_CONTEXT_MESSAGES = 20;
 
     /**
-     * 组装 LLM 上下文
+     * 组装 LLM 上下文（含记忆注入）
      *
-     * @param character 角色（提供 system prompt）
-     * @param history   最近历史（升序, 已含刚落库的当前 USER 消息与 GENERATING 占位）
+     * @param character   角色（提供 system prompt）
+     * @param memoryBlock 拼好的记忆文本块, 空字符串表示无记忆; 追加到 system prompt 末尾
+     * @param history     最近历史（升序, 已含刚落库的当前 USER 消息与 GENERATING 占位）
      */
-    public List<LlmMessage> assemble(AiCharacter character, List<Message> history) {
+    public List<LlmMessage> assemble(AiCharacter character, String memoryBlock, List<Message> history) {
         List<LlmMessage> messages = new ArrayList<>();
-        messages.add(LlmMessage.system(character.getSystemPrompt()));
+        String systemPrompt = character.getSystemPrompt();
+        if (StringUtils.hasText(memoryBlock)) {
+            systemPrompt = systemPrompt + memoryBlock;
+        }
+        messages.add(LlmMessage.system(systemPrompt));
 
         for (Message msg : history) {
             switch (msg.getMessageType()) {
