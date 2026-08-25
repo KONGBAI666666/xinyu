@@ -15,18 +15,12 @@ import com.xinyu.common.result.ResultCode;
 import com.xinyu.conversation.entity.Conversation;
 import com.xinyu.conversation.service.ConversationService;
 import com.xinyu.conversation.vo.ConversationVO;
-import com.xinyu.llm.LlmClient;
+import com.xinyu.llm.AiServiceClient;
 import com.xinyu.llm.LlmClientFactory;
-import com.xinyu.llm.LlmException;
-import com.xinyu.llm.LlmStreamCallback;
-import com.xinyu.llm.LlmUsage;
+import com.xinyu.llm.LlmModelConfig;
 import com.xinyu.llm.dto.LlmMessage;
-import com.xinyu.llm.mock.MockLlmClient;
 import com.xinyu.memory.service.MemoryExtractor;
 import com.xinyu.memory.service.MemoryInjector;
-import com.xinyu.rag.qdrant.QdrantService.RetrievedChunk;
-import com.xinyu.rag.service.RagInjector;
-import com.xinyu.rag.service.RagRetriever;
 import com.xinyu.message.entity.Message;
 import com.xinyu.message.enums.MessageRole;
 import com.xinyu.message.enums.MessageStatus;
@@ -49,55 +43,33 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
- * 聊天编排实现
+ * 聊天编排实现 (重构: AI 能力委托给 Python xinyu-ai 服务)
  *
- * <p>SSE 主链路（chat 方法）:
+ * <p>SSE 主链路:
  * <pre>
- * 请求线程: 鉴权校验 → USER消息落库 → ASSISTANT占位(GENERATING)落库
- *          → 组装上下文 → 返回 SseEmitter
- * 异步线程: meta → LLM流式回调 delta* → done(COMPLETED) | error(FAILED)
- *          前端断连(IOException) → STOPPED, 保留已生成文本
+ * 请求线程: 鉴权 → USER消息落库 → ASSISTANT占位(GENERATING) → 组装上下文 → 返回 SseEmitter
+ * 异步线程: meta → 调用 Python /ai/chat/stream → delta* → done(COMPLETED) | error(FAILED)
+ *          前端断连 → STOPPED
  * </pre>
  *
- * <p>状态流转全部用条件更新（仅 GENERATING 可迁出）, 保证
- * 完成/失败/停止三种终态互斥, 不会互相覆盖。
+ * <p>Java 负责业务 (消息持久化/归属校验/模型配置解密), Python 负责AI (LLM/RAG/Memory)。
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
-    /** SSE 超时: 3 分钟（覆盖长回复; Mock 秒级, 为真实 LLM 预留） */
     private static final long SSE_TIMEOUT_MS = 180_000L;
-
-    /** 会话标题自动截取长度（取首条用户消息前20字） */
     private static final int TITLE_MAX_LEN = 20;
 
     private final ConversationService conversationService;
-
     private final MessageService messageService;
-
     private final CharacterService characterService;
-
     private final LlmClientFactory llmClientFactory;
-
-    /** dev 环境无用户模型时兜底（@Profile("dev") 保证仅 dev 注册） */
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private MockLlmClient mockLlmClient;
-
     private final ContextAssembler contextAssembler;
-
-    /** 记忆注入器: 组装上下文时拼记忆块到 system prompt */
     private final MemoryInjector memoryInjector;
-
-    /** 记忆提取器: ASSISTANT 完成后异步提取记忆 */
     private final MemoryExtractor memoryExtractor;
-
-    /** RAG 检索器: 会话绑定知识库时, 按用户输入检索 Top-K 知识片段 */
-    private final RagRetriever ragRetriever;
-
-    /** RAG 注入器: 把检索到的知识片段拼成可注入 system prompt 的文本块 */
-    private final RagInjector ragInjector;
+    private final AiServiceClient aiServiceClient;
 
     @Qualifier("chatExecutor")
     private final Executor chatExecutor;
@@ -105,7 +77,6 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ConversationVO createConversation(Long userId, ConversationCreateDTO dto) {
-        // 可聊性校验: 官方 PUBLISHED 任何人可聊; 用户自建任意状态创建者可聊; 其余拒绝
         AiCharacter character = characterService.getChattable(dto.getCharacterId(), userId);
         if (character == null) {
             throw new BizException(ResultCode.NOT_FOUND, "角色不存在或不可用");
@@ -121,7 +92,6 @@ public class ChatServiceImpl implements ChatService {
         conversation.setLastMessagePreview(character.getGreeting());
         conversationService.save(conversation);
 
-        // greeting 作为首条 ASSISTANT 消息, 让新会话一进来就有开场白
         Message greeting = new Message();
         greeting.setConversationId(conversation.getId());
         greeting.setUserId(userId);
@@ -151,10 +121,10 @@ public class ChatServiceImpl implements ChatService {
             throw new BizException(ResultCode.NOT_FOUND, "角色不存在");
         }
 
-        // 解析本次使用的 LLM client（会话级覆盖 > 用户默认 > dev Mock 兜底）
-        LlmClient llmClient = resolveClient(conversation, userId);
+        // 解析模型配置 (解密 API Key, 传给 Python)
+        LlmModelConfig modelConfig = resolveModelConfig(conversation, userId);
 
-        // 1. USER 消息落库（幂等: uk(user_id, client_message_id)）
+        // 1. USER 消息落库
         int seq = messageService.nextSequenceNo(conversationId);
         Message userMsg = new Message();
         userMsg.setConversationId(conversationId);
@@ -170,7 +140,7 @@ public class ChatServiceImpl implements ChatService {
             throw new BizException(ResultCode.PARAM_ERROR, "重复的消息请求");
         }
 
-        // 首条用户消息且标题仍是默认角色名 → 自动改为消息前20字
+        // 首条用户消息自动改标题
         if (seq == 2 && conversation.getTitle().equals(character.getName())) {
             Conversation rename = new Conversation();
             rename.setId(conversationId);
@@ -180,7 +150,7 @@ public class ChatServiceImpl implements ChatService {
         }
         conversationService.refreshLastMessage(conversationId, dto.getContent(), LocalDateTime.now());
 
-        // 2. ASSISTANT 占位先落 GENERATING（SSE 中断容错: 任何时刻库中都有这条消息可追溯）
+        // 2. ASSISTANT 占位 (GENERATING)
         Message assistantMsg = new Message();
         assistantMsg.setConversationId(conversationId);
         assistantMsg.setUserId(userId);
@@ -189,118 +159,114 @@ public class ChatServiceImpl implements ChatService {
         assistantMsg.setMessageType(MessageRole.ASSISTANT);
         assistantMsg.setContent("");
         assistantMsg.setStatus(MessageStatus.GENERATING);
-        assistantMsg.setModelCode(llmClient.modelCode());
+        assistantMsg.setModelCode(modelConfig.modelCode());
         messageService.save(assistantMsg);
 
-        // 3. 上下文在请求线程组装（含刚落库的 USER 消息 + 记忆注入 + RAG 知识库注入）, 异步线程不依赖 ThreadLocal
+        // 3. 组装上下文 (Java 侧: system prompt + memory + history, Python 侧: RAG 检索 + LLM 调用)
         String memoryBlock = memoryInjector.inject(userId, conversation.getCharacterId());
-        // RAG: 会话绑定了知识库时, 按用户当前输入检索 Top-K 知识片段 (失败降级为空, 不阻断聊天)
-        List<RetrievedChunk> ragChunks = ragRetriever.retrieve(conversation.getKbId(), dto.getContent());
-        String ragBlock = ragInjector.inject(ragChunks);
-        List<LlmMessage> context = contextAssembler.assemble(character, memoryBlock, ragBlock,
+        List<LlmMessage> context = contextAssembler.assemble(character, memoryBlock, "",
                 messageService.listRecent(conversationId, ContextAssembler.MAX_CONTEXT_MESSAGES));
 
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
-        // 超时兜底: 仍在 GENERATING 则按 STOPPED 收尾（条件更新, 不覆盖终态）
         emitter.onTimeout(() -> markStopped(assistantMsg.getId(), conversationId, null));
 
+        // RAG 参数: 会话绑定了知识库时, 由 Python 负责检索 + 注入
+        String ragKbId = conversation.getKbId() != null ? String.valueOf(conversation.getKbId()) : null;
+
         chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userId,
-                conversation.getCharacterId(), userMsg, assistantMsg, context, llmClient));
+                conversation.getCharacterId(), userMsg, assistantMsg, context, modelConfig,
+                ragKbId, dto.getContent(), memoryBlock,
+                character.getTemperature() != null ? character.getTemperature().doubleValue() : 0.8,
+                character.getMaxTokens() != null ? character.getMaxTokens() : 1024));
         return emitter;
     }
 
     /**
-     * 解析本次对话使用的 LLM client
-     *
-     * <p>优先级:
-     * <ol>
-     *   <li>会话级模型 conversation.model_id（不为 null）</li>
-     *   <li>用户默认模型 ai_model.is_default=1</li>
-     *   <li>dev 环境: MockLlmClient 兜底; 否则抛异常提示先配置模型</li>
-     * </ol>
+     * 解析模型配置 (解密后传给 Python)
      */
-    private LlmClient resolveClient(Conversation conversation, Long userId) {
+    private LlmModelConfig resolveModelConfig(Conversation conversation, Long userId) {
         if (conversation.getModelId() != null) {
-            return llmClientFactory.get(conversation.getModelId(), userId);
+            return llmClientFactory.resolveConfig(conversation.getModelId(), userId);
         }
-        LlmClient defaultClient = llmClientFactory.getDefaultClient(userId);
-        if (defaultClient != null) {
-            return defaultClient;
+        LlmModelConfig defaultConfig = llmClientFactory.resolveDefaultConfig(userId);
+        if (defaultConfig != null) {
+            return defaultConfig;
         }
-        // 无任何模型配置: dev 走 Mock, 否则提示用户配置
-        if (mockLlmClient != null) {
-            return mockLlmClient;
+        if (llmClientFactory.isDevProfile()) {
+            // dev 环境: 传 dummy 配置, Python 的 mock 模式会兜底
+            return new LlmModelConfig("mock", "mock", "mock");
         }
         throw new BizException(ResultCode.PARAM_ERROR,
                 "尚未配置 AI 模型, 请先在「模型管理」添加一个模型");
     }
 
     /**
-     * 异步流式推送并持久化（SSE 生命周期全在此方法内闭环）
-     *
-     * <p>记忆提取钩子: ASSISTANT 落 COMPLETED 后, 异步触发 {@link MemoryExtractor} 提取长期记忆,
-     * 投递到 memoryExecutor, 不阻塞 SSE 线程, 失败静默不影响主链路。
+     * 异步流式推送: 调用 Python AI 服务, 转发 SSE 给前端
      */
-    private void streamAndPersist(SseEmitter emitter, Long conversationId, Long userId, Long characterId,
-                                  Message userMsg, Message assistantMsg, List<LlmMessage> context,
-                                  LlmClient llmClient) {
+    private void streamAndPersist(SseEmitter emitter, Long conversationId, Long userId,
+                                  Long characterId, Message userMsg, Message assistantMsg,
+                                  List<LlmMessage> context, LlmModelConfig modelConfig,
+                                  String ragKbId, String userQuery, String memoryBlock,
+                                  double temperature, int maxTokens) {
         StringBuilder generated = new StringBuilder();
         try {
             sendEvent(emitter, "meta",
                     new SseMetaVO(String.valueOf(userMsg.getId()), String.valueOf(assistantMsg.getId())));
 
-            llmClient.streamChat(context, new LlmStreamCallback() {
-                @Override
-                public void onDelta(String delta) {
-                    generated.append(delta);
-                    sendEvent(emitter, "delta", new SseDeltaVO(delta));
-                }
+            aiServiceClient.streamChat(modelConfig, context,
+                    temperature, maxTokens,
+                    ragKbId, userQuery, memoryBlock,
+                    new AiServiceClient.SseCallback() {
+                        @Override
+                        public void onMeta(String um, String am) { /* meta 已发送 */ }
 
-                @Override
-                public void onComplete(LlmUsage usage) {
-                    // 先落库再推 done: 即使 done 推送失败, 消息也已是 COMPLETED 终态
-                    String content = generated.toString();
-                    messageService.lambdaUpdate()
-                            .eq(Message::getId, assistantMsg.getId())
-                            .eq(Message::getStatus, MessageStatus.GENERATING)
-                            .set(Message::getContent, content)
-                            .set(Message::getStatus, MessageStatus.COMPLETED)
-                            .set(Message::getPromptTokens, usage.promptTokens())
-                            .set(Message::getCompletionTokens, usage.completionTokens())
-                            .update();
-                    conversationService.refreshLastMessage(conversationId, content, LocalDateTime.now());
-                    sendEvent(emitter, "done",
-                            new SseDoneVO(String.valueOf(assistantMsg.getId()),
-                                    usage.promptTokens(), usage.completionTokens(),
-                                    MessageStatus.COMPLETED.name()));
-                    emitter.complete();
-                    // 异步触发记忆提取（投递到 memoryExecutor, 不阻塞 SSE 线程, 失败静默）
-                    memoryExtractor.extractAsync(userId, characterId, conversationId, context, llmClient);
-                }
+                        @Override
+                        public void onDelta(String delta) {
+                            generated.append(delta);
+                            sendEvent(emitter, "delta", new SseDeltaVO(delta));
+                        }
 
-                @Override
-                public void onError(Throwable cause) {
-                    log.error("LLM 生成失败: assistantMessageId={}", assistantMsg.getId(), cause);
-                    messageService.lambdaUpdate()
-                            .eq(Message::getId, assistantMsg.getId())
-                            .eq(Message::getStatus, MessageStatus.GENERATING)
-                            .set(Message::getContent, generated.toString())
-                            .set(Message::getStatus, MessageStatus.FAILED)
-                            .update();
-                    // LlmException 携带精确错误码(51002超时/51003超长/51004拦截), 其余按 51001 兜底
-                    ResultCode code = cause instanceof LlmException le
-                            ? le.getResultCode() : ResultCode.LLM_CONNECT_ERROR;
-                    sendEvent(emitter, "error", new SseErrorVO(code.getCode(), code.getMessage()));
-                    emitter.complete();
-                }
-            });
+                        @Override
+                        public void onDone(int promptTokens, int completionTokens, String status) {
+                            String content = generated.toString();
+                            messageService.lambdaUpdate()
+                                    .eq(Message::getId, assistantMsg.getId())
+                                    .eq(Message::getStatus, MessageStatus.GENERATING)
+                                    .set(Message::getContent, content)
+                                    .set(Message::getStatus, MessageStatus.COMPLETED)
+                                    .set(Message::getPromptTokens, promptTokens)
+                                    .set(Message::getCompletionTokens, completionTokens)
+                                    .update();
+                            conversationService.refreshLastMessage(conversationId, content, LocalDateTime.now());
+                            sendEvent(emitter, "done",
+                                    new SseDoneVO(String.valueOf(assistantMsg.getId()),
+                                            promptTokens, completionTokens,
+                                            MessageStatus.COMPLETED.name()));
+                            emitter.complete();
+                            // 异步触发记忆提取 (委托 MemoryExtractor → Python)
+                            memoryExtractor.extractAsync(
+                                    userId, characterId, conversationId, context, modelConfig);
+                        }
+
+                        @Override
+                        public void onError(int code, String message) {
+                            log.error("AI 生成失败: assistantMessageId={}, code={}, msg={}",
+                                    assistantMsg.getId(), code, message);
+                            messageService.lambdaUpdate()
+                                    .eq(Message::getId, assistantMsg.getId())
+                                    .eq(Message::getStatus, MessageStatus.GENERATING)
+                                    .set(Message::getContent, generated.toString())
+                                    .set(Message::getStatus, MessageStatus.FAILED)
+                                    .update();
+                            sendEvent(emitter, "error", new SseErrorVO(code, message));
+                            emitter.complete();
+                        }
+                    });
         } catch (UncheckedIOException e) {
-            // 前端 AbortController 断连 → STOPPED, 保留已生成文本（设计约定: 不做独立 stop 接口）
             log.info("SSE 客户端断连, 消息置 STOPPED: assistantMessageId={}", assistantMsg.getId());
             markStopped(assistantMsg.getId(), conversationId, generated.toString());
             emitter.complete();
         } catch (Exception e) {
-            // 兜底: 编排自身异常按 FAILED 收尾（条件更新, 若已是终态则不动）
             log.error("SSE 编排异常: assistantMessageId={}", assistantMsg.getId(), e);
             messageService.lambdaUpdate()
                     .eq(Message::getId, assistantMsg.getId())
@@ -311,7 +277,6 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    /** GENERATING → STOPPED（条件更新, content 为 null 时不覆盖已有文本） */
     private void markStopped(Long messageId, Long conversationId, String content) {
         boolean updated = messageService.lambdaUpdate()
                 .eq(Message::getId, messageId)
@@ -324,7 +289,6 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    /** SSE 发送, IOException 统一转 UncheckedIOException 由主流程按断连处理 */
     private void sendEvent(SseEmitter emitter, String name, Object data) {
         try {
             emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
@@ -333,7 +297,6 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    /** 会话归属校验: 不存在与越权统一 40400, 不暴露资源存在性 */
     private Conversation requireOwned(Long conversationId, Long userId) {
         Conversation conversation = conversationService.getOwned(conversationId, userId);
         if (conversation == null) {
@@ -345,9 +308,8 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void switchModel(Long userId, Long conversationId, Long modelId) {
         requireOwned(conversationId, userId);
-        // modelId 非空时校验模型存在且属于该用户
         if (modelId != null) {
-            llmClientFactory.get(modelId, userId);
+            llmClientFactory.resolveConfig(modelId, userId);
         }
         Conversation update = new Conversation();
         update.setId(conversationId);

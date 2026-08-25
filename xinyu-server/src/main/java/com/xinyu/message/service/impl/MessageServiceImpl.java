@@ -49,8 +49,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
 
     @Override
     public UsageSummary summarizeUsage(Long userId, LocalDateTime since) {
-        // 透传到 Mapper 的聚合 SQL; 返回 null 极端情况兜底（理论上 COUNT 不会为 null）
         UsageSummary summary = baseMapper.summarizeUsage(userId, since);
         return summary != null ? summary : UsageSummary.zero();
+    }
+
+    @Override
+    public void deleteByConversation(Long conversationId) {
+        lambdaUpdate()
+                .eq(Message::getConversationId, conversationId)
+                .set(Message::getDeleted, 1)
+                .update();
     }
 }

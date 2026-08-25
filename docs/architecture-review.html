@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心屿架构审查 + 学习化整理</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --bg-card: #16213e;
+    --bg-code: #0f0f23;
+    --text: #e0e0e0;
+    --text-dim: #a0a0b0;
+    --accent: #e94560;
+    --accent-blue: #4e9af5;
+    --accent-green: #4caf50;
+    --accent-orange: #ff9800;
+    --border: #2a2a4a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    line-height: 1.8;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 { color: var(--accent); font-size: 1.8em; margin: 30px 0 20px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+  h2 { color: var(--accent-blue); font-size: 1.4em; margin: 30px 0 15px; padding-left: 12px; border-left: 4px solid var(--accent-blue); }
+  h3 { color: var(--accent-green); font-size: 1.15em; margin: 20px 0 10px; }
+  h4 { color: var(--accent-orange); font-size: 1em; margin: 15px 0 8px; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 25px; }
+  li { margin: 4px 0; }
+  code {
+    background: var(--bg-code);
+    color: #c9c9d9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.85em;
+    line-height: 1.6;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin: 0 4px;
+  }
+  .badge-java { background: rgba(78,154,245,0.2); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+  .badge-py { background: rgba(233,69,96,0.2); color: var(--accent); border: 1px solid var(--accent); }
+  .badge-vue { background: rgba(76,175,80,0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+  .badge-db { background: rgba(255,152,0,0.2); color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: var(--bg-card); color: var(--accent-blue); }
+  .grade-a { color: var(--accent-green); font-weight: bold; }
+  .grade-b { color: var(--accent-blue); font-weight: bold; }
+  .grade-c { color: var(--accent-orange); font-weight: bold; }
+  .grade-d { color: var(--text-dim); font-weight: bold; }
+  .flow {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 12px 0;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.85em;
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .warn { border-left: 4px solid var(--accent-orange); padding-left: 12px; margin: 10px 0; color: var(--text-dim); }
+  .danger { border-left: 4px solid var(--accent); padding-left: 12px; margin: 10px 0; color: var(--text-dim); }
+  .ok { border-left: 4px solid var(--accent-green); padding-left: 12px; margin: 10px 0; color: var(--text-dim); }
+  .nav { position: sticky; top: 0; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; z-index: 10; }
+  .nav a { color: var(--text-dim); text-decoration: none; margin-right: 15px; font-size: 0.85em; }
+  .nav a:hover { color: var(--accent-blue); }
+  .toc li { margin: 6px 0; }
+  .toc .sub { margin-left: 20px; color: var(--text-dim); }
+  .map-stage {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 12px 15px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-blue);
+  }
+  .map-stage .num {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--accent);
+    margin-right: 15px;
+    min-width: 40px;
+  }
+  .map-stage .content { flex: 1; }
+  .map-stage .arrow { color: var(--text-dim); text-align: center; font-size: 1.5em; margin: 5px 0; }
+</style>
+</head>
+<body>
+
+<h1>心屿 架构审查 + 学习化整理</h1>
+
+<div class="nav">
+  <a href="#s1">一、职责划分</a>
+  <a href="#s2">二、通信链路</a>
+  <a href="#s3">三、Python 模块</a>
+  <a href="#s4">四、RAG 流程</a>
+  <a href="#s5">五、Memory 流程</a>
+  <a href="#s6">六、本科生适合度</a>
+  <a href="#s7">七、禁止事项</a>
+  <a href="#s8">八、学习地图</a>
+</div>
+
+<!-- ===================== 一、职责划分 ===================== -->
+<h2 id="s1">一、确认当前职责划分</h2>
+
+<div class="card">
+<h3><span class="badge badge-java">Java Spring Boot :9000</span> 业务后端</h3>
+<table>
+<tr><th>职责</th><th>对应代码</th><th>说明</th></tr>
+<tr><td>用户注册/登录</td><td><code>AuthController</code>, <code>AuthServiceImpl</code></td><td>用户名+密码注册即登录</td></tr>
+<tr><td>JWT 认证</td><td><code>JwtFilter</code>, <code>JwtUtil</code>, <code>UserContext</code></td><td>HS256, 2h 过期</td></tr>
+<tr><td>角色 CRUD</td><td><code>CharacterController</code>, <code>CharacterService</code></td><td>角色广场 + 收藏</td></tr>
+<tr><td>会话管理</td><td><code>ChatController</code>, <code>ConversationService</code></td><td>创建/删除/列表</td></tr>
+<tr><td>消息持久化</td><td><code>MessageService</code>, <code>message</code> 表</td><td>USER/ASSISTANT 消息落 MySQL</td></tr>
+<tr><td>统计</td><td><code>StatsController</code>, <code>StatsServiceImpl</code></td><td>Token 用量 + 对话数</td></tr>
+<tr><td>模型配置管理</td><td><code>AiModelController</code>, <code>AiModelServiceImpl</code></td><td>API Key AES 加密入库</td></tr>
+<tr><td>Java → Python 调用</td><td><code>AiServiceClient</code></td><td>HTTP REST, SSE 转发</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3><span class="badge badge-py">Python FastAPI :9100</span> AI 能力</h3>
+<table>
+<tr><th>职责</th><th>对应代码</th><th>说明</th></tr>
+<tr><td>LLM API 调用</td><td><code>llm_client.py</code></td><td>OpenAI 兼容, 流式 + 同步</td></tr>
+<tr><td>SSE 流式输出</td><td><code>routers/chat.py</code></td><td>event: delta/done/error</td></tr>
+<tr><td>Prompt 编排</td><td><code>prompt_assembler.py</code></td><td>system + memory + RAG + history</td></tr>
+<tr><td>RAG 全流程</td><td><code>rag_service.py</code>, <code>embedding_service.py</code></td><td>检索 + 注入</td></tr>
+<tr><td>文档处理</td><td><code>document_parser.py</code>, <code>chunk_splitter.py</code></td><td>PDF/MD/TXT → 分块</td></tr>
+<tr><td>Qdrant 操作</td><td><code>qdrant_service.py</code></td><td>upsert/search/delete</td></tr>
+<tr><td>Memory 提取</td><td><code>memory_extractor.py</code></td><td>LLM 提取 + JSON 解析</td></tr>
+</table>
+</div>
+
+<div class="ok">
+<strong>结论:</strong> 职责划分清晰。Java 不再持有任何 LLM/Qdrant/Embedding 代码, Python 不直接操作 MySQL。两侧通过 HTTP REST 通信, 数据边界明确。
+</div>
+
+<!-- ===================== 二、通信链路 ===================== -->
+<h2 id="s2">二、Java → Python 通信链路详细分析</h2>
+
+<h3>完整 SSE 聊天链路</h3>
+<div class="flow">
+Vue (浏览器)
+  │ POST /api/conversations/{id}/chat  (JSON: {content, clientMessageId})
+  ▼
+ChatController.chat()                         ← Java 入口
+  │ 1. JWT 鉴权 (UserContext.getUserId)
+  │ 2. 会话归属校验 (requireOwned)
+  │ 3. USER 消息落库 (MessageStatus.COMPLETED)
+  │ 4. ASSISTANT 占位 (MessageStatus.GENERATING)
+  │ 5. 组装上下文 (ContextAssembler + MemoryInjector)
+  │ 6. 解密模型配置 (LlmClientFactory.resolveConfig → LlmModelConfig)
+  │ 7. 创建 SseEmitter (180s timeout)
+  │ 8. 提交 chatExecutor 异步线程
+  ▼
+ChatServiceImpl.streamAndPersist()           ← Java 异步线程
+  │ 1. 发送 meta 事件 (userMsgId, assistantMsgId)
+  │ 2. 调用 aiServiceClient.streamChat()
+  ▼
+AiServiceClient.streamChat()                 ← Java HTTP 客户端
+  │ 1. 构造 JSON body (modelConfig + messages + ragKbId + memoryBlock)
+  │ 2. POST http://ai-service:9100/ai/chat/stream
+  │ 3. 逐行读取 SSE 流
+  ▼
+Python: routers/chat.py chat_stream()        ← Python 入口
+  │ 1. RAG 检索 (如有 ragKbId): rag_service.search()
+  │ 2. 组装 messages: PromptAssembler.assemble()
+  │ 3. 调用 LLM: llm_client.stream_chat()
+  ▼
+LLM API (OpenAI 兼容)                        ← 外部服务
+  │ stream=True, 逐 chunk 返回
+  ▼
+Python: 逐 chunk yield ("delta", {content})   ← Python SSE 回传
+  │ yield ("done", {promptTokens, completionTokens})
+  │ 格式: event: delta\ndata: {"content":"..."}\n\n
+  ▼
+AiServiceClient: 解析 SSE 事件                ← Java 回调
+  │ handleSseEvent() → callback.onDelta() / onDone()
+  ▼
+ChatServiceImpl.SseCallback
+  │ onDelta: sendEvent(emitter, "delta", {content})  → 前端打字机
+  │ onDone:  消息落库(COMPLETED) + sendEvent("done") + 触发记忆提取
+  ▼
+Vue (浏览器)                                  ← 前端接收
+  EventSource: onDelta → 追加文本; onDone → 标记完成
+</div>
+
+<h3>每一步对应的代码文件和类</h3>
+<table>
+<tr><th>步骤</th><th>文件</th><th>类/方法</th><th>数据结构</th></tr>
+<tr><td>Vue → Java</td><td><code>ChatController.java</code></td><td><code>chat(userId, id, dto)</code></td><td><code>ChatRequestDTO</code> (content, clientMessageId)</td></tr>
+<tr><td>Java 业务逻辑</td><td><code>ChatServiceImpl.java</code></td><td><code>chat()</code> → <code>streamAndPersist()</code></td><td><code>Message</code>, <code>Conversation</code>, <code>LlmModelConfig</code></td></tr>
+<tr><td>Java → Python</td><td><code>AiServiceClient.java</code></td><td><code>streamChat()</code></td><td>JSON body → <code>ChatRequest</code> (Python models.py)</td></tr>
+<tr><td>Python SSE</td><td><code>routers/chat.py</code></td><td><code>chat_stream()</code> → <code>event_generator()</code></td><td><code>StreamingResponse</code> (text/event-stream)</td></tr>
+<tr><td>LLM 调用</td><td><code>llm_client.py</code></td><td><code>stream_chat()</code></td><td>OpenAI SDK <code>chat.completions.create</code></td></tr>
+<tr><td>Python → Java SSE</td><td><code>AiServiceClient.java</code></td><td><code>handleSseEvent()</code></td><td><code>SseCallback</code> 接口 (onMeta/onDelta/onDone/onError)</td></tr>
+<tr><td>Java → Vue SSE</td><td><code>ChatServiceImpl.java</code></td><td><code>sendEvent()</code></td><td><code>SseMetaVO</code>, <code>SseDeltaVO</code>, <code>SseDoneVO</code>, <code>SseErrorVO</code></td></tr>
+</table>
+
+<h3>请求 JSON 结构 (Java → Python)</h3>
+<pre><code>{
+  "conversationId": "",
+  "userId": "",
+  "characterId": "",
+  "modelConfig": {
+    "modelCode": "qwen-plus",
+    "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "apiKey": "sk-xxx"
+  },
+  "messages": [
+    {"role": "system", "content": "你是一个温柔的朋友..."},
+    {"role": "user", "content": "你好"},
+    {"role": "assistant", "content": "你好呀！"},
+    {"role": "user", "content": "今天天气怎么样"}
+  ],
+  "temperature": 0.8,
+  "maxTokens": 1024,
+  "ragKbId": "123456789",
+  "userQuery": "今天天气怎么样",
+  "memoryBlock": "[长期记忆]\n- 用户喜欢晴天"
+}</code></pre>
+
+<h3>响应 SSE 事件结构 (Python → Java → Vue)</h3>
+<pre><code>// 1. meta 事件 (Java 自己生成, 不从 Python 获取)
+event: meta
+data: {"userMessageId":"1001","assistantMessageId":"1002"}
+
+// 2. delta 事件 (Python → Java → Vue, 多次)
+event: delta
+data: {"content":"今天"}
+
+event: delta
+data: {"content":"天气"}
+
+// 3. done 事件 (Python → Java, Java 落库后转发)
+event: done
+data: {"messageId":"1002","promptTokens":150,"completionTokens":30,"status":"COMPLETED"}
+
+// 4. error 事件 (异常时)
+event: error
+data: {"code":51001,"message":"AI 服务连接失败"}</code></pre>
+
+<h3>七个关键问题</h3>
+
+<h4>1. Java 为什么不能/不应该继续直接承担 AI 核心逻辑</h4>
+<div class="card">
+<p><strong>生态不匹配:</strong> LLM SDK (openai-python)、向量数据库 SDK (qdrant-client)、文档解析 (PyMuPDF) 都是 Python 原生库。Java 对应库 (LangChain4j, Qdrant Java gRPC) 生态明显滞后, 文档少, 更新慢。</p>
+<p><strong>Prompt 工程是动态的:</strong> Prompt 模板、记忆提取策略、RAG 分块策略需要频繁调整。Python 修改即生效 (uvicorn --reload), Java 改模板要重新编译打包。</p>
+<p><strong>AI 链路天然是 Python 世界:</strong> 未来 Agent / Tool Calling / RAG 高级技巧, 90% 的教程和开源项目都是 Python。Java 做这些会变成"翻译工作"而非"能力建设"。</p>
+<p><strong>关注点分离:</strong> Java 专注业务 (鉴权/持久化/统计), Python 专注 AI (LLM/向量化/记忆), 各自演进不互相拖累。</p>
+</div>
+
+<h4>2. Python AI Service 为什么独立出来</h4>
+<div class="card">
+<p><strong>独立部署:</strong> Python 服务可单独扩容 (GPU 节点), 不影响 Java 业务服务。Docker 容器隔离, 资源配置独立。</p>
+<p><strong>独立迭代:</strong> Prompt 调优、模型切换、分块策略调整只需要重启 Python 容器, 不碰 Java/MySQL。</p>
+<p><strong>技术栈自由:</strong> Python 可以自由使用 openai, qdrant-client, PyMuPDF, aiohttp 等库, 不需要在 pom.xml 里找 Java 替代品。</p>
+<p><strong>学习价值:</strong> 你同时掌握了 Java 后端和 Python AI 应用开发, 这是目前最主流的"全栈 AI 应用"模式。</p>
+</div>
+
+<h4>3. Java 和 Python 之间通过什么协议通信</h4>
+<div class="card">
+<p><strong>协议:</strong> HTTP REST (JSON body)</p>
+<p><strong>基础 URL:</strong> 由 <code>AiServiceProperties</code> 配置, dev 为 <code>http://localhost:9100</code>, Docker 为 <code>http://ai-service:9100</code></p>
+<p><strong>HTTP 客户端:</strong> Java 侧使用原生 <code>HttpURLConnection</code> (不用 WebClient/RestTemplate), 避免引入额外依赖, 代码更直观易读。</p>
+<p><strong>内容格式:</strong> 请求为 JSON (Jackson 序列化), 响应分两种:</p>
+<ul>
+<li>普通接口: JSON (<code>/ai/memory/extract</code>, <code>/ai/rag/process</code>)</li>
+<li>聊天接口: SSE 流 (<code>/ai/chat/stream</code>, Content-Type: text/event-stream)</li>
+</ul>
+<table>
+<tr><th>端点</th><th>方法</th><th>用途</th><th>Java 调用方</th></tr>
+<tr><td><code>/ai/chat/stream</code></td><td>POST</td><td>SSE 流式聊天</td><td><code>AiServiceClient.streamChat()</code></td></tr>
+<tr><td><code>/ai/memory/extract</code></td><td>POST</td><td>记忆提取</td><td><code>AiServiceClient.extractMemory()</code></td></tr>
+<tr><td><code>/ai/rag/process</code></td><td>POST</td><td>文档向量化</td><td><code>AiServiceClient.processDocument()</code></td></tr>
+<tr><td><code>/ai/rag/search</code></td><td>POST</td><td>向量检索</td><td>(Python 内部调用, Java 不直接调)</td></tr>
+<tr><td><code>/ai/rag/vectors</code></td><td>DELETE</td><td>删除向量</td><td><code>AiServiceClient.deleteRagVectors()</code></td></tr>
+<tr><td><code>/health</code></td><td>GET</td><td>健康检查</td><td>Docker healthcheck</td></tr>
+</table>
+</div>
+
+<h4>4. 请求 JSON 和响应 JSON 的结构</h4>
+<div class="card">
+<p><strong>聊天请求</strong> (上方已展示)</p>
+<p><strong>记忆提取请求:</strong></p>
+<pre><code>{
+  "modelConfig": {"modelCode":"qwen-plus","baseUrl":"https://...","apiKey":"sk-xxx"},
+  "dialog": "用户: 我喜欢晴天\nAI: 那你一定喜欢户外活动吧\n用户: 是的, 我经常去爬山",
+  "userId": "", "characterId": "", "conversationId": ""
+}</code></pre>
+<p><strong>记忆提取响应:</strong></p>
+<pre><code>{
+  "memories": [
+    {"memoryKey": "hobby_outdoor", "content": "用户喜欢户外活动, 经常爬山", "importance": "MEDIUM"}
+  ],
+  "extractedCount": 1
+}</code></pre>
+<p><strong>文档处理请求:</strong></p>
+<pre><code>{
+  "kbId": "123456789",
+  "docId": "987654321",
+  "fileName": "产品手册.pdf",
+  "fileContentBase64": "JVBERi0xLjQK...",   // Base64 编码
+  "modelConfig": {"modelCode":"text-embedding-v2","baseUrl":"https://...","apiKey":"sk-xxx"}
+}</code></pre>
+<p><strong>文档处理响应:</strong></p>
+<pre><code>{
+  "kbId": "123456789",
+  "docId": "987654321",
+  "chunkCount": 15,
+  "status": "READY",
+  "message": "文档处理完成"
+}</code></pre>
+</div>
+
+<h4>5. SSE 在整个链路中的作用</h4>
+<div class="card">
+<p>SSE (Server-Sent Events) 是 <strong>从 LLM 到用户浏览器的流式文本传输管道</strong>, 贯穿三个层:</p>
+<ol>
+<li><strong>Python → LLM API:</strong> <code>stream=True</code> 参数, LLM 逐 chunk 返回 (非 SSE, 是 HTTP chunked)</li>
+<li><strong>Python → Java:</strong> FastAPI <code>StreamingResponse</code>, Content-Type: text/event-stream, 格式为 <code>event: xxx\ndata: {...}\n\n</code></li>
+<li><strong>Java → Vue:</strong> Spring <code>SseEmitter</code>, 同样格式, 前端用 <code>EventSource</code> 或 fetch+ReadableStream 接收</li>
+</ol>
+<p><strong>为什么用 SSE 而不是 WebSocket:</strong></p>
+<ul>
+<li>单向推送 (服务端→客户端), 不需要双向</li>
+<li>HTTP 协议, 不需要升级握手, 兼容 nginx 代理</li>
+<li>自动重连 (浏览器 EventSource 内置)</li>
+<li>比 WebSocket 简单, 学习成本低</li>
+</ul>
+<p><strong>SSE 事件类型:</strong></p>
+<table>
+<tr><th>事件</th><th>触发时机</th><th>数据</th><th>前端行为</th></tr>
+<tr><td><code>meta</code></td><td>聊天开始</td><td>两个消息 ID</td><td>渲染"AI 思考中"占位</td></tr>
+<tr><td><code>delta</code></td><td>每个 token</td><td><code>{content: "..."}</code></td><td>打字机追加文本</td></tr>
+<tr><td><code>done</code></td><td>生成结束</td><td>token 统计 + 状态</td><td>标记完成, 停止 loading</td></tr>
+<tr><td><code>error</code></td><td>生成失败</td><td>错误码 + 消息</td><td>显示重试按钮</td></tr>
+</table>
+</div>
+
+<h4>6. 如果 Python 服务不可用, Java 当前如何处理</h4>
+<div class="card">
+<p><strong>聊天场景</strong> (<code>AiServiceClient.streamChat</code>):</p>
+<ul>
+<li>HTTP 连接失败 → <code>catch(Exception)</code> → <code>callback.onError(51001, "AI 服务连接失败: ...")</code></li>
+<li>Python 返回非 200 → <code>callback.onError(51001, "AI 服务返回错误: " + code)</code></li>
+<li>前端收到 <code>error</code> 事件 → 显示"生成失败" + 重试按钮</li>
+<li>消息状态: GENERATING → FAILED (数据库标记)</li>
+</ul>
+<p><strong>记忆提取场景</strong> (<code>AiServiceClient.extractMemory</code>):</p>
+<ul>
+<li>失败 → <code>log.warn("记忆提取失败 (静默)")</code> → 返回 <code>List.of()</code></li>
+<li><strong>不影响主链路</strong>, 只是本轮没有提取记忆</li>
+</ul>
+<p><strong>文档上传场景</strong> (<code>AiServiceClient.processDocument</code>):</p>
+<ul>
+<li>失败 → 返回 <code>{chunkCount:0, status:"ERROR", errorMsg:...}</code></li>
+<li>文档标记为 ERROR 状态, 提示用户重新上传</li>
+</ul>
+<p><strong>删除向量场景</strong> (<code>AiServiceClient.deleteRagVectors</code>):</p>
+<ul>
+<li>失败 → <code>log.warn("删除向量数据失败 (静默)")</code></li>
+<li>MySQL 元数据已删, Qdrant 残留向量 (不影响功能, 可手动清理)</li>
+</ul>
+<div class="warn">
+<strong>问题:</strong> 当前没有熔断机制 (如 Resilience4j)。如果 Python 持续不可用, 每个聊天请求都会等待 HTTP 超时 (10s 连接 + 180s 读超时) 才返回错误。建议: 连接超时已设 10s, 对于学习项目可接受; 如果想优化, 可加一个快速失败检查 (先 GET /health, 3s 内不通就直接报错)。
+</div>
+</div>
+
+<h4>7. 哪些地方存在耦合问题</h4>
+<div class="card">
+<p><strong>耦合点 1: 模型配置内联传递 (轻微)</strong></p>
+<ul>
+<li>Java 把解密后的 <code>apiKey</code> 明文放在 JSON body 里传给 Python</li>
+<li>Python 不存储 API Key, 用完即弃, 这是正确做法</li>
+<li>但如果 Java 的 AES 密钥泄露, Key 在 HTTP 传输中可被截获</li>
+<li><strong>当前可接受:</strong> Docker 内网通信, 不经过公网</li>
+</ul>
+<p><strong>耦合点 2: 文件内容 Base64 传输 (性能)</strong></p>
+<ul>
+<li><code>AiServiceClient.processDocument</code> 把文件 <code>byte[]</code> Base64 编码后放 JSON body</li>
+<li>大文件 (10MB+) 会导致 JSON 体过大, 内存压力</li>
+<li><strong>学习项目可接受;</strong> 如果要优化, 可改用 multipart/form-data 或先存到共享卷</li>
+</ul>
+<p><strong>耦合点 3: SSE 事件格式双端硬编码 (维护)</strong></p>
+<ul>
+<li>Java <code>handleSseEvent</code> 里硬编码了 "meta"/"delta"/"done"/"error" 字符串</li>
+<li>Python <code>routers/chat.py</code> 也硬编码了同样的事件名</li>
+<li>如果一端改了事件名, 另一端不会编译报错, 只在运行时静默失败</li>
+<li><strong>学习项目可接受;</strong> 生产项目可以用枚举 + 共享常量</li>
+</ul>
+<p><strong>耦合点 4: conversationId/userId 传空串 (设计妥协)</strong></p>
+<ul>
+<li>Java 调用 <code>streamChat</code> 时 <code>conversationId</code>, <code>userId</code>, <code>characterId</code> 都传空串</li>
+<li>因为 Python 不操作 MySQL, 这些 ID 在 Python 侧无实际用途</li>
+<li>Python 只用 <code>messages</code>, <code>modelConfig</code>, <code>ragKbId</code>, <code>memoryBlock</code></li>
+<li><strong>不算问题:</strong> Python 作为无状态 AI 工具, 不需要知道业务上下文</li>
+</ul>
+</div>
+
+<!-- ===================== 三、Python AI Service ===================== -->
+<h2 id="s3">三、Python AI Service 模块分析</h2>
+
+<div class="flow">
+xinyu-ai/
+├── app/
+│   ├── main.py              ← FastAPI 应用入口
+│   ├── config.py            ← 配置 (Qdrant URL, 分块参数等)
+│   ├── models.py            ← Pydantic 数据模型
+│   ├── core/
+│   │   └── exceptions.py    ← AI 异常体系
+│   ├── routers/
+│   │   ├── chat.py          ← SSE 聊天路由
+│   │   ├── memory.py        ← 记忆提取路由
+│   │   └── rag.py           ← RAG 文档处理路由
+│   └── services/
+│       ├── llm_client.py    ← LLM 客户端
+│       ├── prompt_assembler.py ← Prompt 编排
+│       ├── rag_service.py   ← RAG 主流程
+│       ├── embedding_service.py ← Embedding
+│       ├── document_parser.py  ← 文档解析
+│       ├── chunk_splitter.py   ← 文本分块
+│       ├── qdrant_service.py   ← Qdrant 操作
+│       └── memory_extractor.py ← 记忆提取
+├── Dockerfile
+└── requirements.txt
+</div>
+
+<h3>模块 1: API 路由 (routers)</h3>
+<div class="card">
+<p><strong>做什么:</strong> 接收 Java 的 HTTP 请求, 调用 service 层, 返回 SSE 流或 JSON</p>
+<p><strong>为什么 Python 负责:</strong> FastAPI 原生支持 async + StreamingResponse, 天然适合 SSE 流式输出; Python 的装饰器路由 (@router.post) 比 Java 的注解更简洁</p>
+<p><strong>核心技术:</strong> FastAPI, StreamingResponse, Pydantic</p>
+<p><strong>核心类/函数:</strong></p>
+<ul>
+<li><code>chat.py</code> → <code>chat_stream(req: ChatRequest)</code> → <code>event_generator()</code></li>
+<li><code>memory.py</code> → <code>extract_memory(req: MemoryExtractRequest)</code></li>
+<li><code>rag.py</code> → <code>process_document(req)</code>, <code>search(req)</code>, <code>delete_vectors(kbId, docId)</code></li>
+</ul>
+<p><strong>输入:</strong> Pydantic 模型 (<code>ChatRequest</code>, <code>MemoryExtractRequest</code>, <code>RagProcessRequest</code>)</p>
+<p><strong>输出:</strong> <code>StreamingResponse</code> (SSE) 或 <code>dict</code> (JSON)</p>
+<p><strong>与其他模块关系:</strong> 调用 LLM, RAG, Memory, Prompt 所有 service</p>
+</div>
+
+<h3>模块 2: LLM (llm_client.py)</h3>
+<div class="card">
+<p><strong>做什么:</strong> 封装 OpenAI 兼容 API 的调用, 支持流式 (SSE) 和同步两种模式</p>
+<p><strong>为什么 Python 负责:</strong> openai 官方 Python SDK 是一等公民, Java SDK (如 LangChain4j) 是第三方维护, 版本滞后</p>
+<p><strong>核心技术:</strong> <code>openai</code> Python SDK, <code>AsyncOpenAI</code> 异步客户端</p>
+<p><strong>核心类/函数:</strong></p>
+<ul>
+<li><code>LlmClient</code> 类</li>
+<li><code>stream_chat(messages, temperature, max_tokens)</code> → <code>AsyncIterator[tuple[str, dict]]</code></li>
+<li>yield ("delta", {content}) / yield ("done", {promptTokens, completionTokens})</li>
+<li><code>chat(messages, temperature, max_tokens)</code> → 同步调用 (记忆提取用)</li>
+</ul>
+<p><strong>输入:</strong> <code>ModelConfig</code> (modelCode, baseUrl, apiKey) + <code>List[ChatMessage]</code></p>
+<p><strong>输出:</strong> 异步迭代器 (流式) 或 <code>ChatResponse</code> (同步)</p>
+<p><strong>与其他模块关系:</strong> 被 chat.py (流式聊天), memory_extractor.py (记忆提取), embedding_service.py (间接, 用同一个 OpenAI client) 调用</p>
+</div>
+
+<h3>模块 3: Prompt 编排 (prompt_assembler.py)</h3>
+<div class="card">
+<p><strong>做什么:</strong> 把 system prompt + memory 块 + RAG 块 + 历史消息组装成发给 LLM 的完整消息序列</p>
+<p><strong>为什么 Python 负责:</strong> Prompt 工程需要频繁实验和调整, Python 修改即生效 (热重载)</p>
+<p><strong>核心技术:</strong> 纯 Python, 无依赖</p>
+<p><strong>核心类/函数:</strong></p>
+<ul>
+<li><code>PromptAssembler</code> 类</li>
+<li><code>assemble(system_prompt, history, memory_block, rag_block)</code> → <code>List[ChatMessage]</code></li>
+<li>结构: <code>[system: prompt + memory + RAG] + [user/assistant: history]</code></li>
+<li><code>MAX_CONTEXT_MESSAGES = 20</code> 截断最近 20 条</li>
+</ul>
+<p><strong>输入:</strong> 各部分的字符串/列表</p>
+<p><strong>输出:</strong> <code>List[ChatMessage]</code> (role + content)</p>
+<p><strong>与其他模块关系:</strong> 被 chat.py 调用, 输入来自 Java (memory_block) 和 Python (rag_block)</p>
+</div>
+
+<h3>模块 4: RAG (rag_service.py + embedding_service.py + document_parser.py + chunk_splitter.py)</h3>
+<div class="card">
+<p><strong>做什么:</strong> 文档上传时解析→分块→向量化→存 Qdrant; 聊天时查询→注入 context</p>
+<p><strong>为什么 Python 负责:</strong></p>
+<ul>
+<li>PyMuPDF (fitz) 是 Python 原生 PDF 解析库, Java 对应 (PDFBox) 依赖重</li>
+<li>Embedding API 调用用 openai SDK (与 LLM 共用 client)</li>
+<li>Qdrant Python SDK (REST) 比 Java gRPC SDK 更稳定</li>
+<li>分块策略调整是 RAG 调优核心, 需要快速迭代</li>
+</ul>
+<p><strong>核心技术:</strong> PyMuPDF, openai embeddings, qdrant-client (REST)</p>
+<p><strong>核心类/函数:</strong></p>
+<ul>
+<li><code>RagService.process_document(kb_id, doc_id, file_name, file_bytes, model_config)</code></li>
+<li><code>RagService.search(kb_id, query, model_config)</code> → (chunks, rag_block)</li>
+<li><code>EmbeddingService.embed(text)</code> → 向量 (float list)</li>
+<li><code>DocumentParser.parse(file_name, file_content)</code> → 纯文本</li>
+<li><code>ChunkSplitter.split(text)</code> → 分块列表</li>
+</ul>
+<p><strong>输入:</strong> 文件 bytes / 查询字符串 + 模型配置</p>
+<p><strong>输出:</strong> chunk 数量 / 检索结果 + 注入文本</p>
+<p><strong>与其他模块关系:</strong> 调用 EmbeddingService, QdrantService, DocumentParser, ChunkSplitter; 被 chat.py 和 rag.py 调用</p>
+</div>
+
+<h3>模块 5: Memory (memory_extractor.py)</h3>
+<div class="card">
+<p><strong>做什么:</strong> 从对话中提取关键信息 (用户喜好/事实/偏好), 用 LLM 生成结构化记忆</p>
+<p><strong>为什么 Python 负责:</strong> Prompt 模板需要频繁调整, JSON 解析在 Python 中更自然 (json module / Pydantic)</p>
+<p><strong>核心技术:</strong> LLM + JSON parsing</p>
+<p><strong>核心类/函数:</strong></p>
+<ul>
+<li><code>MemoryExtractor</code> 类</li>
+<li><code>extract(dialog, model_config)</code> → <code>List[ExtractedMemory]</code></li>
+<li>Prompt 模板内置: "从对话中提取长期记忆, 返回 JSON 数组..."</li>
+<li>容错: JSON 解析失败 → 正则提取 → 空列表兜底</li>
+</ul>
+<p><strong>输入:</strong> 对话文本 + 模型配置</p>
+<p><strong>输出:</strong> <code>List[ExtractedMemory]</code> (memoryKey, content, importance)</p>
+<p><strong>与其他模块关系:</strong> 调用 LlmClient; 被 routers/memory.py 调用</p>
+</div>
+
+<h3>模块 6: Qdrant (qdrant_service.py)</h3>
+<div class="card">
+<p><strong>做什么:</strong> 封装 Qdrant 向量数据库的 CRUD 操作</p>
+<p><strong>为什么 Python 负责:</strong> qdrant-client Python SDK 功能最全, 文档最好; Java SDK 使用 gRPC, 依赖重且版本兼容问题多</p>
+<p><strong>核心技术:</strong> <code>qdrant-client</code> Python SDK (REST API, port 6333)</p>
+<p><strong>核心类/函数:</strong></p>
+<ul>
+<li><code>QdrantService</code> 类</li>
+<li><code>ensure_collection()</code> → 启动时自动创建集合 (如不存在)</li>
+<li><code>upsert(kb_id, doc_id, chunks, vectors)</code> → 批量写入向量</li>
+<li><code>search(kb_id, query_vector, top_k)</code> → 检索 Top-K</li>
+<li><code>delete_by_kb(kb_id)</code> / <code>delete_by_doc(kb_id, doc_id)</code></li>
+</ul>
+<p><strong>输入:</strong> 向量 (float list) + payload (kb_id, doc_id, text)</p>
+<p><strong>输出:</strong> 检索结果列表 (text + score)</p>
+<p><strong>与其他模块关系:</strong> 被 RagService 调用; 启动时在 <code>main.py</code> lifespan 中调 <code>ensure_collection</code></p>
+</div>
+
+<!-- ===================== 四、RAG 流程 ===================== -->
+<h2 id="s4">四、RAG 完整流程</h2>
+
+<h3>文档上传 → 向量入库</h3>
+<div class="flow">
+Vue: 选择文件上传
+  │ POST /api/knowledge-bases/{kbId}/documents (multipart/form-data)
+  ▼
+KnowledgeBaseController (Java)
+  │ 1. 权限校验
+  │ 2. 创建文档元数据 (status=PROCESSING, 存 MySQL)
+  │ 3. 解析 embedding 用的模型配置 (LlmClientFactory.resolveDefaultConfig)
+  ▼
+AiServiceClient.processDocument() (Java)
+  │ POST http://ai-service:9100/ai/rag/process
+  │ Body: {kbId, docId, fileName, fileContentBase64, modelConfig}
+  ▼
+RagService.process_document() (Python: rag_service.py)
+  │
+  ├─→ DocumentParser.parse(fileName, fileBytes)
+  │     → PDF: PyMuPDF (fitz) 逐页提取文本
+  │     → MD/TXT: 直接 decode utf-8
+  │     → 输出: 纯文本字符串
+  │
+  ├─→ ChunkSplitter.split(text)
+  │     → 先按段落分 (\n\n)
+  │     → 段落 <= chunk_size (1000字): 累积合并
+  │     → 段落 > chunk_size: 硬切 + overlap (50字)
+  │     → 输出: List[str] 分块列表
+  │
+  ├─→ EmbeddingService.embed_batch(chunks)
+  │     → 调用 OpenAI 兼容 Embedding API
+  │     → model: text-embedding-v2 (1536 维)
+  │     → 输出: List[float[]] 向量列表
+  │
+  ├─→ QdrantService.upsert(kbId, docId, chunks, vectors)
+  │     → 集合名: xinyu_kb (全局唯一, payload.kb_id 区分)
+  │     → payload: {kb_id, doc_id, text, chunk_index}
+  │     → Qdrant REST API 批量写入
+  │
+  └─→ 返回 {chunkCount, status: "READY"}
+  ▼
+Java: 更新文档元数据 (status=READY, chunkCount=N)
+  │ 更新知识库计数 (docCount++, chunkCount+=N)
+  ▼
+Vue: 文档列表刷新, 显示"已就绪"
+</div>
+
+<h3>聊天时向量检索 → Context 注入</h3>
+<div class="flow">
+Vue: 发送聊天消息
+  │ POST /api/conversations/{id}/chat
+  ▼
+ChatServiceImpl.chat() (Java)
+  │ ragKbId = conversation.getKbId() → 如果非空, 传给 Python
+  ▼
+AiServiceClient.streamChat(ragKbId=xxx, userQuery="用户问题")
+  │ POST /ai/chat/stream (JSON body 含 ragKbId + userQuery)
+  ▼
+Python: routers/chat.py → event_generator()
+  │
+  ├─→ RagService.search(kb_id, query, model_config)
+  │     │
+  │     ├─→ EmbeddingService.embed(query)
+  │     │     → 用户问题 → 1536 维向量
+  │     │
+  │     ├─→ QdrantService.search(kb_id, query_vector, top_k=3)
+  │     │     → Qdrant 余弦相似度检索
+  │     │     → 返回 payload.text + score
+  │     │
+  │     └─→ 过滤: score >= 0.5 的才保留
+  │        → format_injection(chunks): 拼成文本块
+  │        → 输出: rag_block = "[知识库参考]\n片段1...\n片段2..."
+  │
+  ├─→ PromptAssembler.assemble(system, history, memory, rag_block)
+  │     → messages[0] = {role:"system", content: prompt + memory + rag_block}
+  │
+  └─→ LlmClient.stream_chat(messages)
+        → LLM 回答时参考了 RAG 注入的知识
+</div>
+
+<h3>每一步实现位置</h3>
+<table>
+<tr><th>步骤</th><th>文件</th><th>语言</th><th>关键方法</th></tr>
+<tr><td>文档上传入口</td><td><code>KnowledgeBaseController.java</code></td><td>Java</td><td><code>uploadDocument()</code></td></tr>
+<tr><td>文档元数据创建</td><td><code>KnowledgeBaseService.java</code></td><td>Java</td><td><code>uploadDocument()</code></td></tr>
+<tr><td>HTTP 调用 Python</td><td><code>AiServiceClient.java</code></td><td>Java</td><td><code>processDocument()</code></td></tr>
+<tr><td>文档解析</td><td><code>document_parser.py</code></td><td>Python</td><td><code>DocumentParser.parse()</code></td></tr>
+<tr><td>文本分块</td><td><code>chunk_splitter.py</code></td><td>Python</td><td><code>ChunkSplitter.split()</code></td></tr>
+<tr><td>Embedding</td><td><code>embedding_service.py</code></td><td>Python</td><td><code>EmbeddingService.embed_batch()</code></td></tr>
+<tr><td>向量入库</td><td><code>qdrant_service.py</code></td><td>Python</td><td><code>QdrantService.upsert()</code></td></tr>
+<tr><td>聊天时检索</td><td><code>rag_service.py</code></td><td>Python</td><td><code>RagService.search()</code></td></tr>
+<tr><td>注入到 context</td><td><code>prompt_assembler.py</code></td><td>Python</td><td><code>PromptAssembler.assemble()</code></td></tr>
+</table>
+
+<!-- ===================== 五、Memory 流程 ===================== -->
+<h2 id="s5">五、Memory 完整流程</h2>
+
+<h3>记忆提取 → 存储 → 注入</h3>
+<div class="flow">
+聊天结束 (onDone 回调)
+  │
+  ▼
+MemoryExtractor.extractAsync(userId, characterId, convId, context, modelConfig)
+  │ 提交到 memoryExecutor 线程池 (1 核心线程, 独立于 chatExecutor)
+  │
+  ├─→ 格式化对话: 取最近 10 条 user/assistant, 拼成纯文本
+  │     "用户: 我喜欢晴天\nAI: 那你喜欢户外活动吧\n用户: 是的"
+  │
+  ├─→ AiServiceClient.extractMemory(modelConfig, dialog)
+  │     │ POST http://ai-service:9100/ai/memory/extract
+  │     │ Body: {modelConfig, dialog}
+  │     │
+  │     ▼
+  │   Python: routers/memory.py → memory_extractor.py
+  │     │ 1. 组装 Prompt: "从对话中提取长期记忆, 返回 JSON 数组..."
+  │     │ 2. 调用 LLM (同步, 非流式)
+  │     │ 3. 解析 LLM 返回的 JSON
+  │     │ 4. 容错: JSON 解析失败 → 正则提取 → 空列表
+  │     │
+  │     └─→ 返回 {memories: [{memoryKey, content, importance}]}
+  │
+  ├─→ 转换为 ExtractedMemory 列表 (Java record)
+  │     (memoryKey, content, importance=HIGH/MEDIUM/LOW)
+  │
+  └─→ MemoryService.saveExtracted(userId, characterId, convId, extracted)
+        │ 同 key 去重: (userId, characterId, memoryKey) 已存在则更新
+        │ 无 key 的直接插入
+        │ 存入 MySQL memory 表 (status=ACTIVE)
+        ▼
+      MySQL: memory 表持久化
+
+===== 下一轮聊天时 =====
+
+ChatServiceImpl.chat()
+  │
+  ├─→ MemoryInjector.inject(userId, characterId)
+  │     │ 查询: status=ACTIVE, ORDER BY importance DESC, LIMIT 5
+  │     │ 拼成文本块:
+  │     │   "[关于用户的长期记忆，请在回复时自然参考]\n
+  │     │    - 用户喜欢晴天\n- 用户经常爬山"
+  │     │
+  │     └─→ memoryBlock 字符串
+  │
+  ├─→ ContextAssembler.assemble(character, memoryBlock, "", history)
+  │     → messages[0] = {role:"system", content: prompt + memoryBlock}
+  │
+  └─→ 传给 Python → LLM 在回复时参考记忆
+</div>
+
+<h3>Memory 与普通聊天历史的区别</h3>
+<table>
+<tr><th>维度</th><th>聊天历史 (history)</th><th>长期记忆 (memory)</th></tr>
+<tr><td>存储位置</td><td>MySQL <code>message</code> 表</td><td>MySQL <code>memory</code> 表</td></tr>
+<tr><td>生成方式</td><td>用户和 AI 直接产生</td><td>LLM 从对话中提取</td></tr>
+<tr><td>保留时长</td><td>按会话隔离, 删会话即清</td><td>跨会话持久, 按用户+角色</td></tr>
+<tr><td>注入方式</td><td>全部历史 (最近20条) 作为 messages</td><td>Top-5 拼到 system prompt</td></tr>
+<tr><td>数据结构</td><td><code>{role, content}</code></td><td><code>{memoryKey, content, importance}</code></td></tr>
+<tr><td>Token 成本</td><td>每轮都消耗 (历史消息全传)</td><td>仅 5 条, 成本极低</td></tr>
+<tr><td>去重</td><td>不去重</td><td>同 memoryKey 更新</td></tr>
+</table>
+
+<p><strong>核心区别:</strong> 聊天历史是"流水账", 记忆是"摘要"。历史消息每轮全量传给 LLM (消耗 token), 记忆只取最重要的 5 条注入 system prompt。用户可以说 100 句话, 但 LLM 只需要记住 5 条核心信息。这就是 Memory 的价值: <strong>压缩信息 + 跨会话持久</strong>。</p>
+
+<!-- ===================== 六、本科生适合度 ===================== -->
+<h2 id="s6">六、项目适合作为本科生项目评价</h2>
+
+<h3>代码分级</h3>
+<table>
+<tr><th>技术</th><th>分级</th><th>为什么</th><th>对应代码</th></tr>
+<tr><td>Java 基础</td><td class="grade-a">A 必须掌握</td><td>Record, 泛型, 异常, 集合, 并发 (Executor)</td><td>全项目</td></tr>
+<tr><td>Spring Boot</td><td class="grade-a">A 必须掌握</td><td>IOC/DI, @RestController, @Service, @Configuration, 事务</td><td>Controller, Service, Config</td></tr>
+<tr><td>MySQL</td><td class="grade-a">A 必须掌握</td><td>表设计, 索引, MyBatis-Plus CRUD</td><td>entity, mapper, service</td></tr>
+<tr><td>HTTP / REST API</td><td class="grade-a">A 必须掌握</td><td>GET/POST/PUT/DELETE, JSON, 状态码, 分页</td><td>Controller 层全部</td></tr>
+<tr><td>JWT 认证</td><td class="grade-a">A 必须掌握</td><td>Filter, JWT 签发/校验, UserContext</td><td><code>JwtFilter</code>, <code>JwtUtil</code></td></tr>
+<tr><td>AES 加密</td><td class="grade-b">B 理解原理</td><td>知道对称加密, 不需要手写 AES 算法</td><td><code>AesCryptoUtil</code></td></tr>
+<tr><td>Python 基础</td><td class="grade-a">A 必须掌握</td><td>async/await, dataclass, type hint, list comprehension</td><td>Python 全项目</td></tr>
+<tr><td>FastAPI</td><td class="grade-a">A 必须掌握</td><td>路由装饰器, Pydantic, 依赖注入, StreamingResponse</td><td><code>routers/</code>, <code>models.py</code></td></tr>
+<tr><td>LLM API</td><td class="grade-a">A 必须掌握</td><td>OpenAI 兼容协议, messages 结构, temperature, stream</td><td><code>llm_client.py</code></td></tr>
+<tr><td>SSE</td><td class="grade-a">A 必须掌握</td><td>event/data 格式, SseEmitter, StreamingResponse</td><td>Java <code>ChatServiceImpl</code> + Python <code>chat.py</code></td></tr>
+<tr><td>RAG</td><td class="grade-b">B 理解原理</td><td>理解检索→注入流程; 具体分块策略可以用 AI 辅助</td><td><code>rag_service.py</code></td></tr>
+<tr><td>Embedding</td><td class="grade-b">B 理解原理</td><td>知道文本→向量的概念, 不需要理解 Transformer</td><td><code>embedding_service.py</code></td></tr>
+<tr><td>Qdrant</td><td class="grade-c">C 会使用</td><td>知道向量数据库的概念, 会调 API, 不需要理解 HNSW</td><td><code>qdrant_service.py</code></td></tr>
+<tr><td>Memory</td><td class="grade-b">B 理解原理</td><td>理解提取-存储-注入流程; Prompt 模板可用 AI 辅助</td><td><code>memory_extractor.py</code></td></tr>
+<tr><td>Docker</td><td class="grade-c">C 会使用</td><td>会 docker compose up, 会看日志, 不需要写复杂 Dockerfile</td><td><code>docker-compose.yml</code></td></tr>
+<tr><td>Nginx</td><td class="grade-d">D 可忽略</td><td>反向代理概念知道即可, 配置不需要深究</td><td><code>nginx.conf</code></td></tr>
+<tr><td>Vue</td><td class="grade-c">C 会使用</td><td>能看懂组件结构, 会改 UI, 不需要精通</td><td><code>xinyu-web/</code></td></tr>
+</table>
+
+<h3>"我能否解释每段代码"自检清单</h3>
+<div class="card">
+<h4>Java 侧 (能解释 = 通过)</h4>
+<ul>
+<li>ChatController 收到请求后, 为什么返回 SseEmitter 而不是 Result?</li>
+<li>ChatServiceImpl 为什么把流式推送放到 chatExecutor 异步线程?</li>
+<li>USER 消息和 ASSISTANT 占位消息为什么要先落库再调 AI?</li>
+<li>onDone 回调里为什么要用 <code>.eq(Message::getStatus, GENERATING)</code> 条件更新?</li>
+<li>LlmClientFactory 为什么要解密 API Key 而不是直接传密文给 Python?</li>
+<li>MemoryInjector 为什么只查 5 条而不是全部记忆?</li>
+</ul>
+<h4>Python 侧 (能解释 = 通过)</h4>
+<ul>
+<li>chat_stream 为什么要用 <code>async def</code> 而不是 <code>def</code>?</li>
+<li>event_generator 里的 yield 起什么作用?</li>
+<li>RagService.search 失败时为什么要返回空列表而不是抛异常?</li>
+<li>ChunkSplitter 为什么要先按段落分再硬切?</li>
+<li>memory_extractor 的 Prompt 为什么要要求返回 JSON?</li>
+</ul>
+<h4>跨语言 (能解释 = 通过)</h4>
+<ul>
+<li>Java 怎么把 SSE 流从 Python "转发"给 Vue 的?</li>
+<li>为什么 API Key 在 JSON body 里传而不是放在 HTTP Header?</li>
+<li>Python 服务挂了, Java 侧会发生什么?</li>
+</ul>
+</div>
+
+<!-- ===================== 七、禁止事项 ===================== -->
+<h2 id="s7">七、禁止事项确认</h2>
+<div class="ok">
+<p>本次审查严格遵守以下约束, <strong>未修改任何代码</strong>:</p>
+<ul>
+<li>未重写项目</li>
+<li>未更换技术栈</li>
+<li>未增加微服务 (当前仅 Java + Python 两个服务)</li>
+<li>未增加 Redis</li>
+<li>未增加 MQ</li>
+<li>未增加 Agent</li>
+<li>未增加 MCP</li>
+<li>未增加 LangChain/LangGraph</li>
+<li>未增加微调</li>
+<li>未增加多模态</li>
+<li>未为了"高级"而增加代码</li>
+</ul>
+</div>
+
+<!-- ===================== 八、学习地图 ===================== -->
+<h2 id="s8">八、心屿学习地图</h2>
+
+<p>以下是你从 Java 后端出发, 逐步掌握整个项目的学习路径。每个阶段标注了: <strong>学什么</strong> / <strong>对应代码</strong> / <strong>该自己写什么</strong> / <strong>哪些可 AI 辅助</strong> / <strong>必须理解什么</strong>。</p>
+
+<div class="map-stage">
+  <div class="num">1</div>
+  <div class="content">
+    <strong>Java 后端基础</strong> — Spring Boot + MySQL + REST API<br>
+    <em>学什么:</em> IOC/DI, @RestController, @Service, MyBatis-Plus, 分页查询, 全局异常处理<br>
+    <em>对应代码:</em> <code>AuthController</code>, <code>CharacterController</code>, <code>StatsController</code>, 全部 entity/mapper/service<br>
+    <em>该自己写:</em> 一个完整的 CRUD (比如角色管理: Controller → Service → Mapper → Entity)<br>
+    <em>可 AI 辅助:</em> entity 类生成, mapper SQL, VO 转换<br>
+    <em>必须理解:</em> 请求从 Controller 到数据库再返回的完整链路; @Transactional 的边界
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">2</div>
+  <div class="content">
+    <strong>Python 基础</strong> — 语法 + async + 类型<br>
+    <em>学什么:</em> async/await, dataclass, type hint, list comprehension, 虚拟环境, pip<br>
+    <em>对应代码:</em> <code>xinyu-ai/app/config.py</code>, <code>models.py</code>, <code>services/chunk_splitter.py</code><br>
+    <em>该自己写:</em> 一个 FastAPI Hello World + 一个 async 函数<br>
+    <em>可 AI 辅助:</em> Pydantic model 定义, 装饰器语法<br>
+    <em>必须理解:</em> async/await 和同步代码的区别; 为什么要用 async (IO 密集型)
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">3</div>
+  <div class="content">
+    <strong>FastAPI</strong> — 路由 + Pydantic + StreamingResponse<br>
+    <em>学什么:</em> @router.post, Pydantic BaseModel 校验, StreamingResponse, lifespan<br>
+    <em>对应代码:</em> <code>xinyu-ai/app/main.py</code>, <code>routers/rag.py</code>, <code>routers/memory.py</code><br>
+    <em>该自己写:</em> 一个返回 JSON 的 POST 接口 + 一个返回 SSE 流的接口<br>
+    <em>可 AI 辅助:</em> CORS 配置, lifespan 写法<br>
+    <em>必须理解:</em> FastAPI 如何把 Pydantic model 自动转 JSON Schema; StreamingResponse 的原理
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">4</div>
+  <div class="content">
+    <strong>Java ↔ Python 通信</strong> — HTTP + JSON + SSE 转发<br>
+    <em>学什么:</em> HttpURLConnection, Jackson 序列化, SSE event/data 格式, SseEmitter<br>
+    <em>对应代码:</em> <code>AiServiceClient.java</code> (核心!), <code>ChatServiceImpl.streamAndPersist()</code>, <code>chat.py event_generator()</code><br>
+    <em>该自己写:</em> <code>AiServiceClient</code> 的 <code>streamChat</code> 方法 — 这是全项目最核心的跨语言通信代码<br>
+    <em>可 AI 辅助:</em> JSON body 构造, SSE 解析细节<br>
+    <em>必须理解:</em> SSE 流从 Python → Java → Vue 的三段转发; 为什么 Java 是"中转站"; SseCallback 回调机制
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">5</div>
+  <div class="content">
+    <strong>LLM API</strong> — OpenAI 兼容协议<br>
+    <em>学什么:</em> messages 结构 (system/user/assistant), temperature, max_tokens, stream=True, usage (token 统计)<br>
+    <em>对应代码:</em> <code>llm_client.py</code> 的 <code>stream_chat()</code> 和 <code>chat()</code><br>
+    <em>该自己写:</em> 用 openai Python SDK 写一个流式聊天 (非项目内, 自己练习)<br>
+    <em>可 AI 辅助:</em> openai SDK 的参数名和返回结构<br>
+    <em>必须理解:</em> stream=True 时 LLM 是逐 chunk 返回的; prompt_tokens 和 completion_tokens 的含义; system prompt 的作用
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">6</div>
+  <div class="content">
+    <strong>SSE 流式输出</strong> — 从 LLM 到浏览器的管道<br>
+    <em>学什么:</em> SSE 协议格式 (event: xxx\ndata: {...}\n\n), SseEmitter, StreamingResponse, 前端 EventSource<br>
+    <em>对应代码:</em> Java <code>ChatServiceImpl.sendEvent()</code> + Python <code>routers/chat.py</code><br>
+    <em>该自己写:</em> Java 侧的 SseMetaVO/SseDeltaVO/SseDoneVO/SseErrorVO + sendEvent 方法<br>
+    <em>可 AI 辅助:</em> 前端 EventSource 接收代码<br>
+    <em>必须理解:</em> 为什么用 SSE 而不是 WebSocket; SSE 的单向特性; meta → delta* → done 的状态机
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">7</div>
+  <div class="content">
+    <strong>RAG</strong> — 检索增强生成<br>
+    <em>学什么:</em> 文档解析 → 分块 → Embedding → 向量检索 → Context 注入<br>
+    <em>对应代码:</em> <code>rag_service.py</code>, <code>document_parser.py</code>, <code>chunk_splitter.py</code>, <code>embedding_service.py</code><br>
+    <em>该自己写:</em> <code>ChunkSplitter.split()</code> — 分块逻辑是 RAG 的核心, 值得手写理解<br>
+    <em>可 AI 辅助:</em> PDF 解析 (PyMuPDF), Embedding API 调用<br>
+    <em>必须理解:</em> 为什么要把文档分块 (LLM 上下文有限 + 检索精度); chunk_size 和 overlap 的作用; score_threshold 的意义
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">8</div>
+  <div class="content">
+    <strong>Qdrant</strong> — 向量数据库<br>
+    <em>学什么:</em> collection, point, payload, vector, 余弦相似度, Top-K 检索<br>
+    <em>对应代码:</em> <code>qdrant_service.py</code>, <code>config.py</code> (QDRANT_COLLECTION, EMBEDDING_DIM)<br>
+    <em>该自己写:</em> 不需要手写, 理解 API 调用即可<br>
+    <em>可 AI 辅助:</em> qdrant-client 的具体 API 调用<br>
+    <em>必须理解:</em> 向量检索的原理 (近似最近邻); payload 过滤 (kb_id 区分知识库); 为什么 embedding_dim=1536
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">9</div>
+  <div class="content">
+    <strong>Memory</strong> — 长期记忆<br>
+    <em>学什么:</em> 记忆提取 (LLM → JSON), 去重 (memoryKey), 注入 (Top-K 到 system prompt)<br>
+    <em>对应代码:</em> Python <code>memory_extractor.py</code> + Java <code>MemoryExtractor.java</code>, <code>MemoryServiceImpl.java</code>, <code>MemoryInjector.java</code><br>
+    <em>该自己写:</em> <code>MemoryInjector.inject()</code> — 查询 + 拼接逻辑, 简单但核心<br>
+    <em>可 AI 辅助:</em> 记忆提取的 Prompt 模板<br>
+    <em>必须理解:</em> Memory 和聊天历史的区别 (压缩 + 跨会话); importance 权重排序; 为什么只注入 5 条 (token 成本)
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">10</div>
+  <div class="content">
+    <strong>Agent</strong> (未来, 当前未实现)<br>
+    <em>学什么:</em> Tool Calling, ReAct, function calling, 多步推理<br>
+    <em>对应代码:</em> 暂无<br>
+    <em>该自己写:</em> 未来扩展时, 在 Python 侧加 <code>agent.py</code>, 实现 Tool 接口<br>
+    <em>可 AI 辅助:</em> 具体 Tool 实现<br>
+    <em>必须理解:</em> Agent = LLM + 工具调用 + 循环; 与 RAG 的区别 (RAG 是检索→回答, Agent 是思考→行动→观察→再思考)
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">11</div>
+  <div class="content">
+    <strong>Tool Calling</strong> (未来, 当前未实现)<br>
+    <em>学什么:</em> OpenAI function calling 协议, tool 定义 (name, description, parameters), JSON Schema<br>
+    <em>对应代码:</em> 暂无<br>
+    <em>该自己写:</em> 定义一个天气查询 Tool, 让 LLM 自动调用<br>
+    <em>可 AI 辅助:</em> JSON Schema 生成<br>
+    <em>必须理解:</em> LLM 不是直接调用函数, 而是返回"应该调用哪个函数+参数", 由应用层执行
+  </div>
+</div>
+<div class="arrow">↓</div>
+
+<div class="map-stage">
+  <div class="num">12</div>
+  <div class="content">
+    <strong>MCP</strong> (未来, 当前未实现)<br>
+    <em>学什么:</em> Model Context Protocol, tool server, stdio/SSE transport<br>
+    <em>对应代码:</em> 暂无<br>
+    <em>该自己写:</em> 不需要手写, 理解概念即可<br>
+    <em>可 AI 辅助:</em> MCP server 搭建<br>
+    <em>必须理解:</em> MCP 是 Tool Calling 的标准化协议, 让不同 LLM 客户端复用同一套工具
+  </div>
+</div>
+
+<h3>学习路线总结</h3>
+<div class="card">
+<table>
+<tr><th>阶段</th><th>自己手写</th><th>AI 辅助</th><th>必须理解原理</th></tr>
+<tr><td>1. Java 后端</td><td>CRUD 全链路</td><td>Entity/Mapper 生成</td><td>请求链路, 事务</td></tr>
+<tr><td>2. Python 基础</td><td>Hello World + async</td><td>语法细节</td><td>async/await</td></tr>
+<tr><td>3. FastAPI</td><td>POST 接口 + SSE 接口</td><td>CORS, lifespan</td><td>Pydantic, StreamingResponse</td></tr>
+<tr><td>4. Java↔Python</td><td><strong>AiServiceClient.streamChat</strong></td><td>JSON 构造</td><td><strong>SSE 三段转发</strong></td></tr>
+<tr><td>5. LLM API</td><td>独立练习项目</td><td>SDK 参数</td><td>stream, token 统计</td></tr>
+<tr><td>6. SSE</td><td>SSE VO + sendEvent</td><td>前端 EventSource</td><td>SSE 协议, 状态机</td></tr>
+<tr><td>7. RAG</td><td><strong>ChunkSplitter</strong></td><td>PDF 解析</td><td>分块原理, 检索流程</td></tr>
+<tr><td>8. Qdrant</td><td>不需要手写</td><td>API 调用</td><td>向量检索概念</td></tr>
+<tr><td>9. Memory</td><td>MemoryInjector</td><td>Prompt 模板</td><td>记忆 vs 历史</td></tr>
+<tr><td>10-12. Agent/Tool/MCP</td><td>未来扩展</td><td>实现细节</td><td>概念理解</td></tr>
+</table>
+</div>
+
+<div class="ok">
+<strong>核心建议:</strong> 如果你要从这个项目中学到最多, 按这个顺序做:
+<ol>
+<li>先通读 <code>ChatController</code> → <code>ChatServiceImpl.chat()</code> → <code>AiServiceClient.streamChat()</code> 这条链路, 理解请求从 Vue 到 Python 再回来的全过程</li>
+<li>自己从零写一遍 <code>AiServiceClient</code> — 这是跨语言通信的核心</li>
+<li>自己从零写一遍 <code>ChunkSplitter</code> — 这是 RAG 的核心</li>
+<li>自己从零写一遍 <code>MemoryInjector</code> — 这是 Memory 的核心</li>
+<li>用 curl 或 Postman 直接调 Python 的 <code>/ai/chat/stream</code>, 观察 SSE 原始输出</li>
+</ol>
+</div>
+
+</body>
+</html>

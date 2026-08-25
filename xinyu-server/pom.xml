@@ -21,8 +21,6 @@
         <java.version>21</java.version>
         <mybatis-plus.version>3.5.12</mybatis-plus.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <qdrant.version>1.13.0</qdrant.version>
-        <pdfbox.version>3.0.3</pdfbox.version>
     </properties>
 
     <dependencies>
@@ -89,32 +87,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- M3 RAG: Qdrant 向量数据库客户端 (gRPC) -->
-        <dependency>
-            <groupId>io.qdrant</groupId>
-            <artifactId>client</artifactId>
-            <version>${qdrant.version}</version>
-        </dependency>
-
-        <!-- Qdrant client 的传递依赖声明为 runtime, 编译期不可见, 需显式声明 compile scope -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-stub</artifactId>
-            <version>1.65.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.25.5</version>
-        </dependency>
-
-        <!-- M3 RAG: PDF 文本抽取 -->
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>${pdfbox.version}</version>
         </dependency>
 
         <dependency>

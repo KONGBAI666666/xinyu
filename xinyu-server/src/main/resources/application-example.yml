@@ -14,8 +14,8 @@ spring:
     username: root
     password: 填入你的MySQL密码
 
-# 大模型公共配置(base-url/model/超时)在 application.yml;
-# API Key 只从环境变量 DASHSCOPE_API_KEY 注入: setx DASHSCOPE_API_KEY "sk-xxx" 后重启终端
+# LLM 计费单价配置在 application.yml;
+# API Key 已改为用户在「模型管理」页面配置, 存储于数据库
 xinyu:
   jwt:
     # HS256 要求密钥至少 256 bit (32 个 ASCII 字符), 请换成自己的随机字符串

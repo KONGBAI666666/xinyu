@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router'
 import { useConversationStore } from '@/stores/conversation'
 import { useCharactersStore } from '@/stores/character'
 import { knowledgeApi } from '@/api/modules/knowledge'
+import { BizError } from '@/utils/BizError'
 import type { KnowledgeBaseVO } from '@/types/api'
 import ConversationItem from './ConversationItem.vue'
 
@@ -26,6 +27,35 @@ const emit = defineEmits<{
   /** 普通切换: [id]; 新建: ['new:<characterId>', kbId?] */
   select: [id: string, kbId?: string | null]
 }>()
+
+/** 待确认删除的会话 ID (非空时显示确认弹窗) */
+const deletingId = ref<string | null>(null)
+const deleteError = ref('')
+const deleting = ref(false)
+
+function requestDelete(id: string): void {
+  deletingId.value = id
+  deleteError.value = ''
+}
+
+function cancelDelete(): void {
+  deletingId.value = null
+  deleteError.value = ''
+}
+
+async function confirmDelete(): Promise<void> {
+  if (!deletingId.value || deleting.value) return
+  deleting.value = true
+  try {
+    await conversationStore.remove(deletingId.value)
+    deletingId.value = null
+  } catch (e) {
+    deleteError.value = e instanceof BizError ? e.message : '删除失败，请稍后重试'
+    window.setTimeout(() => { deleteError.value = '' }, 3000)
+  } finally {
+    deleting.value = false
+  }
+}
 
 /** 角色选择浮层 */
 const pickerOpen = ref(false)
@@ -83,12 +113,27 @@ function pickCharacter(characterId: string): void {
   emit('select', `new:${characterId}`, kbId)
 }
 
+/** 重命名会话 */
+const renameError = ref('')
+
+async function handleRename(id: string, title: string): Promise<void> {
+  try {
+    await conversationStore.updateTitle(id, title)
+  } catch (e) {
+    renameError.value = e instanceof BizError ? e.message : '重命名失败，请稍后重试'
+    window.setTimeout(() => { renameError.value = '' }, 3000)
+  }
+}
+
 defineExpose({ closePicker })
 </script>
 
 <template>
   <aside class="sidebar flex h-full flex-col">
     <h1 class="brand px-4 pt-5 text-xl font-bold">心屿</h1>
+
+    <!-- 操作提示 (重命名/删除等错误) -->
+    <p v-if="renameError" class="toast mx-3 mt-2 text-xs">{{ renameError }}</p>
 
     <div class="px-3 pt-4 relative">
       <button
@@ -197,9 +242,28 @@ defineExpose({ closePicker })
           :conversation="item"
           :active="item.id === conversationStore.activeId"
           @select="$emit('select', $event)"
+          @delete="requestDelete"
+          @rename="handleRename"
         />
       </div>
     </nav>
+
+    <!-- 删除确认弹窗 -->
+    <Transition name="confirm">
+      <div v-if="deletingId" class="confirm-mask" @click="cancelDelete">
+        <div class="confirm-dialog" @click.stop>
+          <p class="confirm-title">删除会话</p>
+          <p class="confirm-desc">删除后无法恢复，确定要删除这个会话吗？</p>
+          <p v-if="deleteError" class="confirm-error">{{ deleteError }}</p>
+          <div class="confirm-actions">
+            <button type="button" class="confirm-cancel" @click="cancelDelete">取消</button>
+            <button type="button" class="confirm-ok" :disabled="deleting" @click="confirmDelete">
+              {{ deleting ? '删除中…' : '删除' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </aside>
 </template>
 
@@ -469,5 +533,99 @@ defineExpose({ closePicker })
 .picker-enter-from, .picker-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* ---------- 删除确认弹窗 ---------- */
+.confirm-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-dialog {
+  width: 280px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(20, 24, 40, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.confirm-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.confirm-error {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.toast {
+  padding: 6px 10px;
+  border-radius: var(--radius-btn);
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--color-danger);
+  text-align: center;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.confirm-cancel {
+  padding: 6px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.confirm-cancel:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.confirm-ok {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--color-danger);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.confirm-ok:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.25);
+}
+.confirm-ok:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm-enter-active, .confirm-leave-active {
+  transition: opacity var(--duration-base) var(--ease-base);
+}
+.confirm-enter-from, .confirm-leave-to {
+  opacity: 0;
 }
 </style>

@@ -39,5 +39,28 @@ export const useConversationStore = defineStore('conversation', () => {
     activeId.value = id
   }
 
-  return { list, activeId, loading, active, fetchList, create, setActive }
+  /**
+   * 删除会话: 调后端逻辑删除, 从列表移除;
+   * 若删的是当前会话则清空 activeId（ChatView 的 watch 会自动 stop + clear 消息）
+   */
+  async function remove(id: string): Promise<void> {
+    await conversationApi.deleteConversation(id)
+    list.value = list.value.filter((c) => c.id !== id)
+    if (activeId.value === id) {
+      activeId.value = null
+    }
+  }
+
+  /**
+   * 重命名会话: 调后端更新标题, 同时更新本地列表
+   */
+  async function updateTitle(id: string, title: string): Promise<void> {
+    const updated = await conversationApi.renameConversation(id, title)
+    const idx = list.value.findIndex((c) => c.id === id)
+    if (idx !== -1) {
+      list.value[idx] = updated
+    }
+  }
+
+  return { list, activeId, loading, active, fetchList, create, setActive, remove, updateTitle }
 })

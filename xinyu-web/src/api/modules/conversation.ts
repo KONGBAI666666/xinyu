@@ -1,4 +1,4 @@
-import { get, post } from '@/api/request'
+import { del, get, post, put } from '@/api/request'
 import type { ConversationVO, CreateConversationDTO, MessageVO } from '@/types/api'
 
 /**
@@ -14,6 +14,16 @@ export const conversationApi = {
   /** 创建会话: 后端同时落库角色 greeting 消息; 40400 = 角色不存在 */
   createConversation(dto: CreateConversationDTO): Promise<ConversationVO> {
     return post('/conversations', dto)
+  },
+
+  /** 删除会话: 逻辑删除会话及关联消息 */
+  deleteConversation(conversationId: string): Promise<void> {
+    return del(`/conversations/${conversationId}`)
+  },
+
+  /** 重命名会话 */
+  renameConversation(conversationId: string, title: string): Promise<ConversationVO> {
+    return put(`/conversations/${conversationId}/title`, { title })
   },
 
   /** 历史消息: 游标分页, 返回升序（旧→新）; before 缺省取最新一页 */

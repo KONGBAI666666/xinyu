@@ -15,7 +15,7 @@ import java.util.List;
  *
  * <p>上下文完全服务端组装, 前端只传当前输入。
  * 记忆块由 {@link com.xinyu.memory.service.MemoryInjector} 拼好透传进来,
- * 知识库块由 {@link com.xinyu.rag.service.RagInjector} 拼好透传进来,
+ * 知识库块由 Python AI 服务在 /ai/chat/stream 内部检索并注入 (Java 侧 ragBlock 传空串),
  * 两者均追加到 system prompt 末尾, 本类不依赖 memory/rag 模块（避免横向依赖）。
  */
 @Component

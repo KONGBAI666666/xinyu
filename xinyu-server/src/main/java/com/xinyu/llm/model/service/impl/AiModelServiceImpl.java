@@ -5,14 +5,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.xinyu.common.exception.BizException;
 import com.xinyu.common.result.ResultCode;
 import com.xinyu.common.security.AesCryptoUtil;
-import com.xinyu.llm.LlmClientFactory;
 import com.xinyu.llm.model.entity.AiModel;
 import com.xinyu.llm.model.mapper.AiModelMapper;
 import com.xinyu.llm.model.service.AiModelService;
 import com.xinyu.llm.model.vo.AiModelSaveRequest;
 import com.xinyu.llm.model.vo.AiModelVO;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -29,21 +27,16 @@ import java.util.Objects;
  *   <li>默认模型唯一性: setDefault 时先把同用户其他模型 is_default=0, 事务保证</li>
  *   <li>删除默认模型: 自动把最近创建的一个置为默认, 避免用户无默认模型</li>
  * </ul>
- *
- * <p>注: {@link LlmClientFactory} 用 {@link Lazy} 注入, 打断 Factory↔Service 循环依赖
- * (Factory 构造需要 Service 查模型, Service 变更需要 Factory 清缓存)。
  */
 @Service
 public class AiModelServiceImpl implements AiModelService {
 
     private final AiModelMapper modelMapper;
     private final AesCryptoUtil crypto;
-    private final LlmClientFactory clientFactory;
 
-    public AiModelServiceImpl(AiModelMapper modelMapper, AesCryptoUtil crypto, @Lazy LlmClientFactory clientFactory) {
+    public AiModelServiceImpl(AiModelMapper modelMapper, AesCryptoUtil crypto) {
         this.modelMapper = modelMapper;
         this.crypto = crypto;
-        this.clientFactory = clientFactory;
     }
 
     @Override
@@ -112,7 +105,6 @@ public class AiModelServiceImpl implements AiModelService {
             model.setIsDefault(0);
         }
         modelMapper.updateById(model);
-        clientFactory.evict(model.getId());
         return toVO(model);
     }
 
@@ -122,7 +114,6 @@ public class AiModelServiceImpl implements AiModelService {
         AiModel model = getByIdAndUser(id, userId);
         boolean wasDefault = model.getIsDefault() != null && model.getIsDefault() == 1;
         modelMapper.deleteById(id);
-        clientFactory.evict(id);
 
         // 删除的是默认模型 → 自动选最近创建的一个为默认
         if (wasDefault) {
@@ -133,7 +124,6 @@ public class AiModelServiceImpl implements AiModelService {
             if (next != null) {
                 next.setIsDefault(1);
                 modelMapper.updateById(next);
-                clientFactory.evict(next.getId());
             }
         }
     }
@@ -145,7 +135,6 @@ public class AiModelServiceImpl implements AiModelService {
         clearDefaultForUser(userId);
         model.setIsDefault(1);
         modelMapper.updateById(model);
-        clientFactory.evict(id);
     }
 
     /** 把该用户所有模型的 is_default 置 0 */

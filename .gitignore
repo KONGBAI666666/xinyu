@@ -28,3 +28,10 @@ xinyu-web/node_modules/
 xinyu-web/dist/
 xinyu-web/.env.local
 xinyu-web/.env.*.local
+
+# ---------- Qdrant 本地数据 ----------
+qdrant/
+
+# ---------- Python ----------
+__pycache__/
+*.pyc

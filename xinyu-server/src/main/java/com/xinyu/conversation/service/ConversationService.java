@@ -32,4 +32,21 @@ public interface ConversationService extends IService<Conversation> {
      * <p>M1 阶段单用户会话量小, 不分页; 会话数大后再演进为分页。
      */
     List<Conversation> listByUser(Long userId);
+
+    /**
+     * 删除会话（逻辑删除会话 + 关联消息）
+     *
+     * @return true=删除成功; false=会话不存在或不属于该用户
+     */
+    boolean delete(Long conversationId, Long userId);
+
+    /**
+     * 重命名会话
+     *
+     * @param conversationId 会话 ID
+     * @param userId         用户 ID（鉴权）
+     * @param newTitle       新标题
+     * @return 更新后的会话; 不存在或越权返回 null
+     */
+    Conversation rename(Long conversationId, Long userId, String newTitle);
 }

@@ -41,4 +41,9 @@ public interface MessageService extends IService<Message> {
      * @param since 起始时间, null 表示全部历史
      */
     UsageSummary summarizeUsage(Long userId, LocalDateTime since);
+
+    /**
+     * 逻辑删除指定会话下的全部消息（删除会话时调用）
+     */
+    void deleteByConversation(Long conversationId);
 }

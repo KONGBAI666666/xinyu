@@ -40,30 +40,12 @@ xinyu:
   jwt:
     # access_token 有效期: 2小时 (对应 API 设计 3.1)
     expire-ms: 7200000
+  ai-service:
+    # Python AI 服务地址 (dev: localhost, Docker: 环境变量覆盖)
+    base-url: ${XINYU_AI_SERVICE_BASE_URL:http://localhost:9100}
+    connect-timeout-sec: 10
+    read-timeout-sec: 180
   llm:
-    # OpenAI 兼容模式: 换 DeepSeek/OpenAI 只改 base-url + model, 代码零改动
-    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-    model: qwen-plus
-    # Key 只从环境变量注入, 绝不写进任何配置文件; dev(Mock) 用不到, 缺省空串
-    api-key: ${DASHSCOPE_API_KEY:}
-    connect-timeout-ms: 10000
-    # 建连到响应头到达的超时; 流式 body 总时长由 SSE 180s 兜底
-    read-timeout-ms: 120000
     # 计费单价（元 / 1K tokens）, 取通义千问 qwen-plus 公开价; 切换模型同步调整
     input-price-per-1k: 0.0008
     output-price-per-1k: 0.002
-  rag:
-    # Qdrant 向量库地址: 部署走环境变量 XINYU_QDRANT_URL, 本地开发默认 localhost
-    # 注意: Java SDK 走 gRPC 端口 6334 (不是 REST 6333)
-    qdrant-url: ${XINYU_QDRANT_URL:http://localhost:6334}
-    # Qdrant 集合名 (一个项目一个集合, 用 payload.kb_id 区分知识库)
-    qdrant-collection: xinyu_kb
-    # 千问 Embedding 模型 (1536 维, 复用 xinyu.llm.api-key)
-    embedding-model: text-embedding-v2
-    embedding-dimension: 1536
-    # 文档分块: 1000 字/块, 50 字重叠避免切断语义
-    chunk-size: 1000
-    chunk-overlap: 50
-    # 检索 Top-K 与相似度下限 (cosine 分数 0~1, 越大越相关)
-    retrieve-top-k: 3
-    retrieve-score-threshold: 0.5

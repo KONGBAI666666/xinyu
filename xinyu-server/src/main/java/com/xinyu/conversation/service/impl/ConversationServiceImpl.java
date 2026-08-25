@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xinyu.conversation.entity.Conversation;
 import com.xinyu.conversation.mapper.ConversationMapper;
 import com.xinyu.conversation.service.ConversationService;
+import com.xinyu.message.service.MessageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,8 +16,11 @@ import java.util.List;
  * 会话服务实现
  */
 @Service
+@RequiredArgsConstructor
 public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Conversation>
         implements ConversationService {
+
+    private final MessageService messageService;
 
     @Override
     public Conversation getOwned(Long conversationId, Long userId) {
@@ -27,7 +33,6 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
     @Override
     public void refreshLastMessage(Long conversationId, String preview, LocalDateTime messageAt) {
-        // 摘要列上限100字符, 超长截断
         String truncated = preview != null && preview.length() > 100 ? preview.substring(0, 100) : preview;
         lambdaUpdate()
                 .eq(Conversation::getId, conversationId)
@@ -38,10 +43,43 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
     @Override
     public List<Conversation> listByUser(Long userId) {
-        // 命中 idx_user_last(user_id, last_message_at); 刚创建时 lastMessageAt 已写 greeting 时间, 不为 NULL
         return lambdaQuery()
                 .eq(Conversation::getUserId, userId)
                 .orderByDesc(Conversation::getLastMessageAt)
                 .list();
+    }
+
+    @Override
+    @Transactional
+    public boolean delete(Long conversationId, Long userId) {
+        Conversation conversation = getOwned(conversationId, userId);
+        if (conversation == null) {
+            return false;
+        }
+        messageService.deleteByConversation(conversationId);
+        removeById(conversationId);
+        return true;
+    }
+
+    @Override
+    public Conversation rename(Long conversationId, Long userId, String newTitle) {
+        Conversation conversation = getOwned(conversationId, userId);
+        if (conversation == null) {
+            return null;
+        }
+        String trimmed = newTitle != null ? newTitle.trim() : "";
+        if (trimmed.isEmpty()) {
+            return conversation;
+        }
+        // 标题长度限制 50 字符
+        if (trimmed.length() > 50) {
+            trimmed = trimmed.substring(0, 50);
+        }
+        lambdaUpdate()
+                .eq(Conversation::getId, conversationId)
+                .set(Conversation::getTitle, trimmed)
+                .update();
+        conversation.setTitle(trimmed);
+        return conversation;
     }
 }
