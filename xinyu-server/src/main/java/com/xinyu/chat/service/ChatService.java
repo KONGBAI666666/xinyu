@@ -40,6 +40,13 @@ public interface ChatService {
     SseEmitter chat(Long userId, Long conversationId, ChatRequestDTO dto);
 
     /**
+     * 停止会话当前生成: 断开到 AI 服务的连接, 消息置 STOPPED 并保留已生成文本
+     *
+     * <p>幂等: 无进行中的生成时直接成功返回。
+     */
+    void stopGeneration(Long userId, Long conversationId);
+
+    /**
      * 切换会话使用的模型
      *
      * @param modelId 模型 ID, null 表示清除会话级覆盖回到用户默认模型

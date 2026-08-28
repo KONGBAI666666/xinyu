@@ -13,8 +13,10 @@ import java.util.Base64;
 /**
  * AES-GCM 对称加密工具（用于 API Key 等敏感数据入库加密）
  *
- * <p>复用 xinyu.jwt.secret 作为密钥来源（取前 32 字节作 AES-256 密钥）,
- * 避免新增独立配置。密钥变更会导致历史密文无法解密, 需同步重置。
+ * <p>密钥来源: 优先 xinyu.crypto.secret (独立密钥); 未配置时回退
+ * xinyu.jwt.secret, 兼容与 JWT 共用密钥的存量部署。新部署建议配置
+ * 独立密钥: JWT 密钥泄露不再连带暴露用户 API Key 的解密密钥。
+ * 密钥变更会导致历史密文无法解密, 需同步重置。
  *
  * <p>采用 GCM 模式: 同时提供机密性 + 完整性认证, 比 ECB/CBC 更安全;
  * 输出格式: Base64(IV[12B] || ciphertext+tag), IV 每次随机。
@@ -30,7 +32,9 @@ public class AesCryptoUtil {
 
     private final SecretKeySpec keySpec;
 
-    public AesCryptoUtil(@Value("${xinyu.jwt.secret}") String secret) {
+    public AesCryptoUtil(@Value("${xinyu.crypto.secret:}") String cryptoSecret,
+                         @Value("${xinyu.jwt.secret}") String jwtSecret) {
+        String secret = (cryptoSecret == null || cryptoSecret.isBlank()) ? jwtSecret : cryptoSecret;
         // 取 secret 前 32 字节作 AES-256 密钥（不足 32 字节则右补 0, 但 JwtUtil 已要求 ≥32）
         byte[] keyBytes = new byte[32];
         byte[] src = secret.getBytes(StandardCharsets.UTF_8);

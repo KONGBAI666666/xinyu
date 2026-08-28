@@ -6,7 +6,6 @@ import com.xinyu.character.service.CharacterService;
 import com.xinyu.common.security.JwtUtil;
 import com.xinyu.conversation.entity.Conversation;
 import com.xinyu.conversation.service.ConversationService;
-import com.xinyu.llm.mock.MockLlmClient;
 import com.xinyu.message.entity.Message;
 import com.xinyu.message.enums.MessageRole;
 import com.xinyu.message.enums.MessageStatus;
@@ -34,18 +33,18 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * M1-3 聊天核心验收测试（真实 MySQL, 走完整 Filter + Interceptor 链路）
  *
- * <p>覆盖: 会话创建(greeting落库) / 消息历史 / SSE 事件流(meta→delta→done) /
- * 消息状态机(COMPLETED/FAILED) / LLM 异常(event:error + 51001) / 越权与鉴权。
+ * <p>覆盖: 会话创建(greeting落库) / 消息历史 / 越权与鉴权 / 参数校验 / 会话列表。
+ *
+ * <p>SSE 流式链路 (meta→delta→done/error) 依赖 Python xinyu-ai 服务,
+ * 不在本测试覆盖, 通过 Docker 整栈 + Mock 模式端到端验证。
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -175,67 +174,6 @@ class ChatFlowTest {
     }
 
     @Test
-    @Order(4)
-    @DisplayName("SSE 聊天: meta→delta→done 事件流 + 双消息落库 COMPLETED")
-    void chatStreaming() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/conversations/{id}/chat", conversationId)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"content\":\"你好\",\"clientMessageId\":\"cmid-1\"}"))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        String body = awaitSse(result, 15_000);
-        assertTrue(body.contains("event:meta"), "应包含 meta 事件: " + body);
-        assertTrue(body.contains("event:delta"), "应包含 delta 事件: " + body);
-        assertTrue(body.contains("event:done"), "应包含 done 事件: " + body);
-        assertTrue(body.contains("\"userMessageId\""), "meta 应含 userMessageId");
-        assertTrue(body.contains("\"assistantMessageId\""), "meta 应含 assistantMessageId");
-
-        // 数据库: USER + ASSISTANT 各一条, ASSISTANT 为完整拼接文本且 COMPLETED
-        List<Message> messages = messageService.listRecent(conversationId, 10);
-        assertEquals(3, messages.size());
-        Message userMsg = messages.get(1);
-        assertEquals(MessageRole.USER, userMsg.getMessageType());
-        assertEquals("你好", userMsg.getContent());
-        assertEquals(MessageStatus.COMPLETED, userMsg.getStatus());
-
-        Message assistantMsg = messages.get(2);
-        assertEquals(MessageRole.ASSISTANT, assistantMsg.getMessageType());
-        assertEquals(MessageStatus.COMPLETED, assistantMsg.getStatus());
-        assertTrue(assistantMsg.getContent().startsWith("你好呀，"), "应保存完整拼接文本");
-        assertNotNull(assistantMsg.getCompletionTokens());
-        assertTrue(assistantMsg.getCompletionTokens() > 0);
-        assertEquals(userMsg.getId(), assistantMsg.getParentMessageId());
-
-        // 会话冗余字段: 标题改为首条用户消息, 摘要为最新 AI 回复
-        Conversation conversation = conversationService.getById(conversationId);
-        assertEquals("你好", conversation.getTitle());
-        assertEquals(assistantMsg.getContent(), conversation.getLastMessagePreview());
-    }
-
-    @Test
-    @Order(5)
-    @DisplayName("SSE 聊天: LLM 失败 → event:error(51001) + 消息置 FAILED")
-    void chatLlmFailure() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/conversations/{id}/chat", conversationId)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"content\":\"触发失败 " + MockLlmClient.FAIL_TRIGGER + "\"}"))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        String body = awaitSse(result, 15_000);
-        assertTrue(body.contains("event:error"), "应包含 error 事件: " + body);
-        assertTrue(body.contains("51001"), "error 事件应携带 51001: " + body);
-
-        List<Message> messages = messageService.listRecent(conversationId, 10);
-        Message last = messages.get(messages.size() - 1);
-        assertEquals(MessageRole.ASSISTANT, last.getMessageType());
-        assertEquals(MessageStatus.FAILED, last.getStatus());
-    }
-
-    @Test
     @Order(6)
     @DisplayName("鉴权: 无 token 访问聊天接口 40100")
     void chatWithoutToken() throws Exception {
@@ -301,24 +239,6 @@ class ChatFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.length()").value(0));
-    }
-
-    /**
-     * 轮询等待 SSE 流结束标记（done/error）出现, MockHttpServletResponse
-     * 的缓冲区随 emitter.send 增长, 无需真实网络
-     */
-    private String awaitSse(MvcResult result, long timeoutMs) throws Exception {
-        long deadline = System.currentTimeMillis() + timeoutMs;
-        while (System.currentTimeMillis() < deadline) {
-            String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
-            if (body.contains("event:done") || body.contains("event:error")) {
-                // 终态事件后 DB 更新已完成(先落库再推送), 稍等确保 emitter.complete
-                Thread.sleep(200);
-                return result.getResponse().getContentAsString(StandardCharsets.UTF_8);
-            }
-            Thread.sleep(100);
-        }
-        return result.getResponse().getContentAsString(StandardCharsets.UTF_8);
     }
 
     private Long createUser(String username) {

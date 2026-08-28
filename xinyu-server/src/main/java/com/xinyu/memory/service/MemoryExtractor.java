@@ -84,7 +84,8 @@ public class MemoryExtractor {
         String dialogText = formatDialog(dialog);
 
         // 2. 调用 Python 提取记忆 (Python 负责 LLM 调用 + JSON 解析)
-        List<Map<String, Object>> memories = aiServiceClient.extractMemory(modelConfig, dialogText);
+        List<Map<String, Object>> memories = aiServiceClient.extractMemory(
+                modelConfig, dialogText, userId, characterId, conversationId);
         if (memories == null || memories.isEmpty()) {
             return;
         }

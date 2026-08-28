@@ -30,4 +30,9 @@ export const conversationApi = {
   fetchMessages(conversationId: string, params?: { before?: string; size?: number }): Promise<MessageVO[]> {
     return get(`/conversations/${conversationId}/messages`, { params })
   },
+
+  /** 停止当前生成: 后端断开 AI 调用, 消息置 STOPPED 保留已生成文本 (幂等) */
+  stopGeneration(conversationId: string): Promise<void> {
+    return post(`/conversations/${conversationId}/stop`)
+  },
 }

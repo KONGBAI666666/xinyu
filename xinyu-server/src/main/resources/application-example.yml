@@ -20,3 +20,6 @@ xinyu:
   jwt:
     # HS256 要求密钥至少 256 bit (32 个 ASCII 字符), 请换成自己的随机字符串
     secret: CHANGE_ME_TO_RANDOM_STRING_AT_LEAST_32_CHARS
+  crypto:
+    # (可选) 用户 API Key 加密的独立密钥; 留空/不配则回退 jwt.secret
+    # secret: CHANGE_ME_TO_ANOTHER_RANDOM_STRING

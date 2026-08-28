@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -48,8 +49,42 @@ public class AiServiceClient {
     }
 
     /**
+     * 停止生成句柄: 编排层持有, 可随时取消进行中的 AI 服务调用。
+     *
+     * <p>取消 = 断开到 Python 的 HTTP 连接; 读线程随即抛 IOException 退出,
+     * Python 侧检测到客户端断连后中止 LLM 流 (不再消耗后续 token)。
+     */
+    public static class StreamCancellation {
+        private volatile HttpURLConnection connection;
+        private volatile boolean cancelled;
+
+        void register(HttpURLConnection conn) {
+            this.connection = conn;
+            // 取消先于连接建立到达时, 注册即断开
+            if (cancelled) {
+                conn.disconnect();
+            }
+        }
+
+        public void cancel() {
+            cancelled = true;
+            HttpURLConnection conn = this.connection;
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+
+        public boolean isCancelled() {
+            return cancelled;
+        }
+    }
+
+    /**
      * SSE 流式聊天: 调用 Python /ai/chat/stream, 逐事件回调
      *
+     * @param conversationId 会话 ID (Python 侧日志/追踪用)
+     * @param userId         用户 ID
+     * @param characterId    角色 ID
      * @param modelConfig  解密后的模型配置
      * @param messages     已组装的上下文消息 (system 中已含角色人设+记忆)
      * @param temperature  采样温度
@@ -57,9 +92,13 @@ public class AiServiceClient {
      * @param ragKbId      知识库 ID (可空, Python 侧负责检索并注入)
      * @param userQuery    用户原始输入 (用于 RAG 检索, 可空)
      * @param ragEmbeddingModel 知识库锁定的 Embedding 模型 (可空, 检索必须与入库一致)
+     * @param cancellation 停止生成句柄 (可空); 取消时断开连接, 读循环退出且不触发 onError
      * @param callback     SSE 回调
      */
     public void streamChat(
+            String conversationId,
+            String userId,
+            String characterId,
             LlmModelConfig modelConfig,
             List<LlmMessage> messages,
             double temperature,
@@ -67,13 +106,14 @@ public class AiServiceClient {
             String ragKbId,
             String userQuery,
             String ragEmbeddingModel,
+            StreamCancellation cancellation,
             SseCallback callback
     ) {
         try {
             Map<String, Object> body = Map.of(
-                    "conversationId", "",
-                    "userId", "",
-                    "characterId", "",
+                    "conversationId", conversationId != null ? conversationId : "",
+                    "userId", userId != null ? userId : "",
+                    "characterId", characterId != null ? characterId : "",
                     "modelConfig", Map.of(
                             "modelCode", modelConfig.modelCode(),
                             "baseUrl", modelConfig.baseUrl(),
@@ -92,6 +132,9 @@ public class AiServiceClient {
 
             String json = objectMapper.writeValueAsString(body);
             HttpURLConnection conn = openConnection("/ai/chat/stream", "POST");
+            if (cancellation != null) {
+                cancellation.register(conn);
+            }
             writeBody(conn, json);
 
             int code = conn.getResponseCode();
@@ -118,6 +161,10 @@ public class AiServiceClient {
                 }
             }
         } catch (Exception e) {
+            if (cancellation != null && cancellation.isCancelled()) {
+                log.info("AI 流式调用已被停止 (主动取消)");
+                return;
+            }
             log.error("调用 AI 服务失败", e);
             callback.onError(51001, "AI 服务连接失败: " + e.getMessage());
         }
@@ -128,7 +175,8 @@ public class AiServiceClient {
      */
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> extractMemory(
-            LlmModelConfig modelConfig, String dialog
+            LlmModelConfig modelConfig, String dialog,
+            Long userId, Long characterId, Long conversationId
     ) {
         try {
             Map<String, Object> body = Map.of(
@@ -138,9 +186,9 @@ public class AiServiceClient {
                             "apiKey", modelConfig.apiKey()
                     ),
                     "dialog", dialog,
-                    "userId", "",
-                    "characterId", "",
-                    "conversationId", ""
+                    "userId", userId != null ? String.valueOf(userId) : "",
+                    "characterId", characterId != null ? String.valueOf(characterId) : "",
+                    "conversationId", conversationId != null ? String.valueOf(conversationId) : ""
             );
             String json = objectMapper.writeValueAsString(body);
             HttpURLConnection conn = openConnection("/ai/memory/extract", "POST");
@@ -196,19 +244,32 @@ public class AiServiceClient {
 
     /**
      * 删除向量数据: 调用 Python /ai/rag/vectors
+     *
+     * <p>有限重试后仍失败则抛出: 调用方处于事务中, 抛错会连同 MySQL 元数据
+     * 删除一起回滚, 避免"库里记录删了、Qdrant 残留孤儿向量"。
      */
     public void deleteRagVectors(String kbId, String docId) {
-        try {
-            String urlPath = "/ai/rag/vectors?kbId=" + kbId;
-            if (docId != null) {
-                urlPath += "&docId=" + docId;
-            }
-            HttpURLConnection conn = openConnection(urlPath, "DELETE");
-            conn.getResponseCode();
-            conn.disconnect();
-        } catch (Exception e) {
-            log.warn("删除向量数据失败 (静默): {}", e.getMessage());
+        String urlPath = "/ai/rag/vectors?kbId=" + kbId;
+        if (docId != null) {
+            urlPath += "&docId=" + docId;
         }
+        Exception lastError = null;
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                HttpURLConnection conn = openConnection(urlPath, "DELETE");
+                int code = conn.getResponseCode();
+                conn.disconnect();
+                if (code >= 200 && code < 300) {
+                    return;
+                }
+                lastError = new IOException("AI 服务返回错误码 " + code);
+            } catch (Exception e) {
+                lastError = e;
+            }
+            log.warn("删除向量数据失败 (第 {}/3 次): {}", attempt, lastError.getMessage());
+        }
+        throw new BizException(ResultCode.SYSTEM_ERROR,
+                "向量清理失败, 删除操作已中止, 请稍后重试: " + lastError.getMessage());
     }
 
     // ---------- 内部方法 ----------

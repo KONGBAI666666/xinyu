@@ -45,7 +45,9 @@ services:
       - "6333"   # REST API (Python SDK 走此端口)
       - "6334"   # gRPC API
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:6333/healthz"]
+      # qdrant 官方镜像 (debian-slim) 不带 wget/curl, 用 bash 内置 /dev/tcp 探测
+      # (若失败镜像永远 unhealthy, depends_on 会卡死整个栈, 故不依赖额外二进制)
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -89,6 +91,8 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       XINYU_JWT_SECRET: ${XINYU_JWT_SECRET}
+      # 用户 API Key 加密密钥 (可选): 留空则回退 XINYU_JWT_SECRET; 存量库勿随意变更
+      XINYU_CRYPTO_SECRET: ${XINYU_CRYPTO_SECRET:-}
       # Python AI 服务地址 (compose 内网服务名)
       XINYU_AI_SERVICE_BASE_URL: http://ai-service:9100
       # 内部接口令牌: 与 ai-service 的 AI_INTERNAL_TOKEN 保持一致; 留空则不校验

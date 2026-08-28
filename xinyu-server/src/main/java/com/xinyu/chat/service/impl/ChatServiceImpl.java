@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 /**
@@ -62,6 +64,9 @@ public class ChatServiceImpl implements ChatService {
 
     private static final long SSE_TIMEOUT_MS = 180_000L;
     private static final int TITLE_MAX_LEN = 20;
+
+    /** 进行中的生成: conversationId → 停止句柄 (每会话同时至多一个流) */
+    private final Map<Long, AiServiceClient.StreamCancellation> activeStreams = new ConcurrentHashMap<>();
 
     private final ConversationService conversationService;
     private final MessageService messageService;
@@ -178,12 +183,26 @@ public class ChatServiceImpl implements ChatService {
         String ragEmbeddingModel = conversation.getKbId() != null
                 ? knowledgeBaseService.getEmbeddingModel(conversation.getKbId()) : null;
 
+        // 停止句柄先登记再派发异步任务: 停止请求早于连接建立到达时也能生效
+        AiServiceClient.StreamCancellation cancellation = new AiServiceClient.StreamCancellation();
+        activeStreams.put(conversationId, cancellation);
+
         chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userId,
                 conversation.getCharacterId(), userMsg, assistantMsg, context, modelConfig,
-                ragKbId, dto.getContent(), ragEmbeddingModel,
+                ragKbId, dto.getContent(), ragEmbeddingModel, cancellation,
                 character.getTemperature() != null ? character.getTemperature().doubleValue() : 0.8,
                 character.getMaxTokens() != null ? character.getMaxTokens() : 1024));
         return emitter;
+    }
+
+    @Override
+    public void stopGeneration(Long userId, Long conversationId) {
+        requireOwned(conversationId, userId);
+        AiServiceClient.StreamCancellation cancellation = activeStreams.get(conversationId);
+        if (cancellation != null) {
+            cancellation.cancel();
+        }
+        // 无进行中流: 可能已完成或尚未建立连接, 幂等成功
     }
 
     /**
@@ -212,15 +231,18 @@ public class ChatServiceImpl implements ChatService {
                                   Long characterId, Message userMsg, Message assistantMsg,
                                   List<LlmMessage> context, LlmModelConfig modelConfig,
                                   String ragKbId, String userQuery, String ragEmbeddingModel,
+                                  AiServiceClient.StreamCancellation cancellation,
                                   double temperature, int maxTokens) {
         StringBuilder generated = new StringBuilder();
         try {
             sendEvent(emitter, "meta",
                     new SseMetaVO(String.valueOf(userMsg.getId()), String.valueOf(assistantMsg.getId())));
 
-            aiServiceClient.streamChat(modelConfig, context,
+            aiServiceClient.streamChat(
+                    String.valueOf(conversationId), String.valueOf(userId), String.valueOf(characterId),
+                    modelConfig, context,
                     temperature, maxTokens,
-                    ragKbId, userQuery, ragEmbeddingModel,
+                    ragKbId, userQuery, ragEmbeddingModel, cancellation,
                     new AiServiceClient.SseCallback() {
                         @Override
                         public void onMeta(String um, String am) { /* meta 已发送 */ }
@@ -267,6 +289,14 @@ public class ChatServiceImpl implements ChatService {
                             emitter.complete();
                         }
                     });
+
+            // 停止生成收尾: 取消后 streamChat 静默返回, 消息仍为 GENERATING 时置 STOPPED
+            // (若取消瞬间流恰好自然结束, markStopped 的 GENERATING 守卫保证幂等)
+            if (cancellation.isCancelled()) {
+                log.info("生成已停止: assistantMessageId={}", assistantMsg.getId());
+                markStopped(assistantMsg.getId(), conversationId, generated.toString());
+                emitter.complete();
+            }
         } catch (UncheckedIOException e) {
             log.info("SSE 客户端断连, 消息置 STOPPED: assistantMessageId={}", assistantMsg.getId());
             markStopped(assistantMsg.getId(), conversationId, generated.toString());
@@ -279,6 +309,9 @@ public class ChatServiceImpl implements ChatService {
                     .set(Message::getStatus, MessageStatus.FAILED)
                     .update();
             emitter.completeWithError(e);
+        } finally {
+            // 条件移除: 不误删同会话后续新流的句柄
+            activeStreams.remove(conversationId, cancellation);
         }
     }
 

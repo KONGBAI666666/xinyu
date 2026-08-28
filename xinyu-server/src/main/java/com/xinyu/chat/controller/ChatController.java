@@ -55,6 +55,13 @@ public class ChatController {
         return chatService.chat(UserContext.getUserId(), id, dto);
     }
 
+    /** 停止当前生成: 断开 AI 调用, 消息置 STOPPED 并保留已生成文本 (幂等) */
+    @PostMapping("/{id}/stop")
+    public Result<Void> stop(@PathVariable Long id) {
+        chatService.stopGeneration(UserContext.getUserId(), id);
+        return Result.success(null);
+    }
+
     /** 切换会话使用的模型（modelId=null 表示回到用户默认模型） */
     @PutMapping("/{id}/model")
     public Result<Void> switchModel(@PathVariable Long id,

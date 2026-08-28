@@ -40,6 +40,10 @@ xinyu:
   jwt:
     # access_token 有效期: 2小时 (对应 API 设计 3.1)
     expire-ms: 7200000
+  crypto:
+    # 用户 API Key 等敏感数据的 AES 加密密钥 (独立于 JWT);
+    # 留空 = 回退 xinyu.jwt.secret (兼容存量密文), 新部署建议配置独立值
+    secret: ${XINYU_CRYPTO_SECRET:}
   ai-service:
     # Python AI 服务地址 (dev: localhost, Docker: 环境变量覆盖)
     base-url: ${XINYU_AI_SERVICE_BASE_URL:http://localhost:9100}
