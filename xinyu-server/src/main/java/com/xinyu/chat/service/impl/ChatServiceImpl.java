@@ -26,6 +26,7 @@ import com.xinyu.message.enums.MessageRole;
 import com.xinyu.message.enums.MessageStatus;
 import com.xinyu.message.service.MessageService;
 import com.xinyu.message.vo.MessageVO;
+import com.xinyu.rag.service.KnowledgeBaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -70,6 +71,7 @@ public class ChatServiceImpl implements ChatService {
     private final MemoryInjector memoryInjector;
     private final MemoryExtractor memoryExtractor;
     private final AiServiceClient aiServiceClient;
+    private final KnowledgeBaseService knowledgeBaseService;
 
     @Qualifier("chatExecutor")
     private final Executor chatExecutor;
@@ -172,10 +174,13 @@ public class ChatServiceImpl implements ChatService {
 
         // RAG 参数: 会话绑定了知识库时, 由 Python 负责检索 + 注入
         String ragKbId = conversation.getKbId() != null ? String.valueOf(conversation.getKbId()) : null;
+        // 检索必须使用入库时锁定的 Embedding 模型, 否则向量空间不一致
+        String ragEmbeddingModel = conversation.getKbId() != null
+                ? knowledgeBaseService.getEmbeddingModel(conversation.getKbId()) : null;
 
         chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userId,
                 conversation.getCharacterId(), userMsg, assistantMsg, context, modelConfig,
-                ragKbId, dto.getContent(),
+                ragKbId, dto.getContent(), ragEmbeddingModel,
                 character.getTemperature() != null ? character.getTemperature().doubleValue() : 0.8,
                 character.getMaxTokens() != null ? character.getMaxTokens() : 1024));
         return emitter;
@@ -206,7 +211,7 @@ public class ChatServiceImpl implements ChatService {
     private void streamAndPersist(SseEmitter emitter, Long conversationId, Long userId,
                                   Long characterId, Message userMsg, Message assistantMsg,
                                   List<LlmMessage> context, LlmModelConfig modelConfig,
-                                  String ragKbId, String userQuery,
+                                  String ragKbId, String userQuery, String ragEmbeddingModel,
                                   double temperature, int maxTokens) {
         StringBuilder generated = new StringBuilder();
         try {
@@ -215,7 +220,7 @@ public class ChatServiceImpl implements ChatService {
 
             aiServiceClient.streamChat(modelConfig, context,
                     temperature, maxTokens,
-                    ragKbId, userQuery,
+                    ragKbId, userQuery, ragEmbeddingModel,
                     new AiServiceClient.SseCallback() {
                         @Override
                         public void onMeta(String um, String am) { /* meta 已发送 */ }

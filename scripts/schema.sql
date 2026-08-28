@@ -214,6 +214,8 @@ CREATE TABLE IF NOT EXISTS `knowledge_base` (
   `doc_count`     INT          NOT NULL DEFAULT 0 COMMENT '冗余: 文档数',
   `chunk_count`   INT          NOT NULL DEFAULT 0 COMMENT '冗余: 切片数(=Qdrant点数)',
   `status`        VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE/PROCESSING/ERROR',
+  `embedding_model` VARCHAR(64) DEFAULT NULL COMMENT '首次上传锁定的Embedding模型',
+  `embedding_dim` INT          DEFAULT NULL COMMENT '首次上传锁定的向量维度',
   `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`       TINYINT      NOT NULL DEFAULT 0,

@@ -14,6 +14,8 @@ public class KnowledgeBaseVO {
     private Integer docCount;
     private Integer chunkCount;
     private String status;
+    private String embeddingModel;
+    private Integer embeddingDim;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

@@ -127,9 +127,11 @@ public class KnowledgeBaseService {
             LlmModelConfig modelConfig = resolveEmbeddingModelConfig(userId);
 
             // 3. 调用 Python 处理文档 (解析 → 分块 → 向量化 → 入 Qdrant)
+            //    传入知识库已锁定的向量化配置, 保证同库内向量维度一致
             Map<String, Object> result = aiServiceClient.processDocument(
                     String.valueOf(kbId), String.valueOf(doc.getId()),
-                    file.getOriginalFilename(), file.getBytes(), modelConfig);
+                    file.getOriginalFilename(), file.getBytes(), modelConfig,
+                    kb.getEmbeddingModel(), kb.getEmbeddingDim());
 
             int chunkCount = ((Number) result.getOrDefault("chunkCount", 0)).intValue();
             String status = (String) result.getOrDefault("status", "ERROR");
@@ -142,6 +144,12 @@ public class KnowledgeBaseService {
 
                 kb.setDocCount(kb.getDocCount() + 1);
                 kb.setChunkCount(kb.getChunkCount() + chunkCount);
+                // 首次上传: 锁定本次使用的 Embedding 模型/维度
+                if (kb.getEmbeddingModel() == null && result.get("embeddingModel") != null) {
+                    kb.setEmbeddingModel((String) result.get("embeddingModel"));
+                    Object dim = result.get("embeddingDim");
+                    kb.setEmbeddingDim(dim != null ? ((Number) dim).intValue() : null);
+                }
                 kbMapper.updateById(kb);
 
                 log.info("文档上传成功: docId={}, kbId={}, 块数={}", doc.getId(), kbId, chunkCount);
@@ -184,6 +192,12 @@ public class KnowledgeBaseService {
     }
 
     // ==================== 内部工具 ====================
+
+    /** 知识库锁定的 Embedding 模型 (聊天时 RAG 检索用; 未上传过文档返回 null) */
+    public String getEmbeddingModel(Long kbId) {
+        KnowledgeBase kb = kbMapper.selectById(kbId);
+        return kb != null ? kb.getEmbeddingModel() : null;
+    }
 
     /** 获取用户拥有的知识库 (权限校验) */
     private KnowledgeBase getOwnedKb(Long kbId, Long userId) {

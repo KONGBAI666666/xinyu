@@ -20,10 +20,12 @@ class Settings:
     # --- Qdrant ---
     qdrant_url: str = os.getenv("XINYU_QDRANT_URL", "http://localhost:6333")
     qdrant_collection: str = os.getenv("QDRANT_COLLECTION", "xinyu_kb")
-    embedding_dim: int = int(os.getenv("EMBEDDING_DIM", "1536"))
 
-    # --- Embedding ---
-    embedding_model: str = os.getenv("EMBEDDING_MODEL", "text-embedding-v2")
+    # --- Embedding (可选覆盖) ---
+    # 留空 = 按默认模型的服务商自动映射 (见 embedding_profiles.py);
+    # 配置后所有知识库统一使用该模型, 需同时指定维度
+    embedding_model_override: str = os.getenv("EMBEDDING_MODEL", "")
+    embedding_dim_override: int = int(os.getenv("EMBEDDING_DIM") or "0")
 
     # --- RAG 参数 ---
     chunk_size: int = int(os.getenv("CHUNK_SIZE", "1000"))

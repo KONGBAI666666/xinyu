@@ -153,7 +153,7 @@ flowchart LR
 | 业务后端 | Java 21 · Spring Boot 3.5 · MyBatis-Plus · JWT (jjwt) · SSE (SseEmitter) · HttpURLConnection |
 | AI 服务 | Python 3.10+ · FastAPI · Uvicorn · OpenAI SDK · Qdrant Client · httpx |
 | 数据 | MySQL 8（业务元数据） · Qdrant 1.12（向量检索, REST 协议） |
-| 模型 | 任意 OpenAI 兼容 API（对话 + Embedding） |
+| 模型 | 任意 OpenAI 兼容 API（对话）；Embedding 按默认模型服务商自动映射（通义 / OpenAI / 智谱），可环境变量覆盖 |
 | 部署 | Docker Compose · Nginx · 多阶段镜像构建 |
 
 ## 🚀 快速开始

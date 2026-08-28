@@ -31,6 +31,7 @@ class ChatRequest(BaseModel):
     # RAG 检索参数 (可选)
     ragKbId: Optional[str] = None
     userQuery: Optional[str] = None  # 用于 RAG 检索的原始用户输入
+    ragEmbeddingModel: Optional[str] = None  # 知识库锁定的向量化模型, 检索时必须一致
 
 # ---------- Memory 相关 ----------
 
@@ -62,6 +63,7 @@ class RagSearchRequest(BaseModel):
     topK: int = 3
     scoreThreshold: float = 0.5
     modelConfig: Optional[ModelConfig] = None  # embedding 用的模型配置
+    embeddingModel: Optional[str] = None  # 知识库锁定的向量化模型
 
 
 class RagChunk(BaseModel):
@@ -81,9 +83,15 @@ class RagProcessRequest(BaseModel):
     fileName: str
     fileContentBase64: str  # 文件内容 (base64 编码)
     modelConfig: Optional[ModelConfig] = None
+    # 知识库已锁定的向量化配置 (首次上传时为空, 成功后由响应回传并持久化)
+    kbEmbeddingModel: Optional[str] = None
+    kbEmbeddingDim: Optional[int] = None
 
 
 class RagProcessResponse(BaseModel):
     chunkCount: int
     status: str = "READY"
     errorMsg: Optional[str] = None
+    # 本次实际使用的向量化配置, Java 侧首次上传成功后写入知识库记录
+    embeddingModel: Optional[str] = None
+    embeddingDim: Optional[int] = None

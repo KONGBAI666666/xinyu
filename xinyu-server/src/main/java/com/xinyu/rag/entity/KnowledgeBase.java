@@ -41,6 +41,12 @@ public class KnowledgeBase {
     /** 状态: ACTIVE/PROCESSING/ERROR */
     private String status;
 
+    /** 首次上传锁定的 Embedding 模型 (未上传过为 null) */
+    private String embeddingModel;
+
+    /** 首次上传锁定的向量维度 */
+    private Integer embeddingDim;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 

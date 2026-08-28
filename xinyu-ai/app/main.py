@@ -13,13 +13,7 @@ from app.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 启动时确保 Qdrant 集合存在 (复用全局 RagService 的长连接)
-    try:
-        await get_rag_service().ensure_collection()
-        print(f"[xinyu-ai] Qdrant 集合就绪: {settings.qdrant_collection}")
-    except Exception as e:
-        print(f"[xinyu-ai] Qdrant 初始化失败 (非致命): {e}")
-
+    # Qdrant 集合按知识库在文档入库时创建, 启动阶段不再需要全局集合
     print(f"[xinyu-ai] 服务启动: {settings.host}:{settings.port}, mock={settings.mock_mode}")
     yield
     get_rag_service().close()

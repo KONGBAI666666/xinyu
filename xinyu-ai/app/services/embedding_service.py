@@ -4,13 +4,13 @@ from openai import AsyncOpenAI
 import httpx
 
 from app.models import ModelConfig
-from app.config import settings
 
 
 class EmbeddingService:
 
-    def __init__(self, config: ModelConfig):
+    def __init__(self, config: ModelConfig, model_name: str):
         self.config = config
+        self.model_name = model_name
         self._client = AsyncOpenAI(
             api_key=config.apiKey,
             base_url=config.baseUrl,
@@ -24,7 +24,7 @@ class EmbeddingService:
     async def embed(self, text: str) -> list[float]:
         """单条文本 → 向量"""
         resp = await self._client.embeddings.create(
-            model=settings.embedding_model,
+            model=self.model_name,
             input=text,
         )
         return resp.data[0].embedding
@@ -35,7 +35,7 @@ class EmbeddingService:
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
             resp = await self._client.embeddings.create(
-                model=settings.embedding_model,
+                model=self.model_name,
                 input=batch,
             )
             # 按 index 排序确保顺序

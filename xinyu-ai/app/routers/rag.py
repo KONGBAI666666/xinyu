@@ -12,7 +12,7 @@ from app.config import settings
 
 router = APIRouter(prefix="/ai/rag", tags=["rag"])
 
-# 集合创建由 main.py lifespan 统一兜底 (on_event 在提供 lifespan 后不会执行)
+# 集合按知识库创建 (ensure_kb_collection 在文档入库时保证), 无需全局初始化
 
 
 @router.post("/search", response_model=RagSearchResponse)
@@ -24,6 +24,7 @@ async def search(req: RagSearchRequest):
         model_config=req.modelConfig,
         top_k=req.topK,
         score_threshold=req.scoreThreshold,
+        embedding_model=req.embeddingModel,
     )
     return RagSearchResponse(chunks=chunks, ragBlock=rag_block)
 
@@ -47,6 +48,8 @@ async def process_document(req: RagProcessRequest):
         file_name=req.fileName,
         file_content=file_content,
         model_config=req.modelConfig,
+        kb_embedding_model=req.kbEmbeddingModel,
+        kb_embedding_dim=req.kbEmbeddingDim,
     )
 
 

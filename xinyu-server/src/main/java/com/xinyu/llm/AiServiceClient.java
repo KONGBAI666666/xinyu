@@ -56,6 +56,7 @@ public class AiServiceClient {
      * @param maxTokens    最大输出 token
      * @param ragKbId      知识库 ID (可空, Python 侧负责检索并注入)
      * @param userQuery    用户原始输入 (用于 RAG 检索, 可空)
+     * @param ragEmbeddingModel 知识库锁定的 Embedding 模型 (可空, 检索必须与入库一致)
      * @param callback     SSE 回调
      */
     public void streamChat(
@@ -65,6 +66,7 @@ public class AiServiceClient {
             int maxTokens,
             String ragKbId,
             String userQuery,
+            String ragEmbeddingModel,
             SseCallback callback
     ) {
         try {
@@ -84,7 +86,8 @@ public class AiServiceClient {
                     "temperature", temperature,
                     "maxTokens", maxTokens,
                     "ragKbId", ragKbId != null ? ragKbId : "",
-                    "userQuery", userQuery != null ? userQuery : ""
+                    "userQuery", userQuery != null ? userQuery : "",
+                    "ragEmbeddingModel", ragEmbeddingModel != null ? ragEmbeddingModel : ""
             );
 
             String json = objectMapper.writeValueAsString(body);
@@ -153,25 +156,33 @@ public class AiServiceClient {
 
     /**
      * 文档向量化: 调用 Python /ai/rag/process
+     *
+     * @param kbEmbeddingModel 知识库已锁定的 Embedding 模型 (首次上传为 null)
+     * @param kbEmbeddingDim   知识库已锁定的向量维度 (首次上传为 null)
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> processDocument(
             String kbId, String docId, String fileName, byte[] fileContent,
-            LlmModelConfig modelConfig
+            LlmModelConfig modelConfig, String kbEmbeddingModel, Integer kbEmbeddingDim
     ) {
         try {
             String base64 = java.util.Base64.getEncoder().encodeToString(fileContent);
-            Map<String, Object> body = Map.of(
-                    "kbId", kbId,
-                    "docId", docId,
-                    "fileName", fileName,
-                    "fileContentBase64", base64,
-                    "modelConfig", Map.of(
-                            "modelCode", modelConfig.modelCode(),
-                            "baseUrl", modelConfig.baseUrl(),
-                            "apiKey", modelConfig.apiKey()
-                    )
-            );
+            Map<String, Object> body = new java.util.HashMap<>();
+            body.put("kbId", kbId);
+            body.put("docId", docId);
+            body.put("fileName", fileName);
+            body.put("fileContentBase64", base64);
+            body.put("modelConfig", Map.of(
+                    "modelCode", modelConfig.modelCode(),
+                    "baseUrl", modelConfig.baseUrl(),
+                    "apiKey", modelConfig.apiKey()
+            ));
+            if (kbEmbeddingModel != null) {
+                body.put("kbEmbeddingModel", kbEmbeddingModel);
+            }
+            if (kbEmbeddingDim != null) {
+                body.put("kbEmbeddingDim", kbEmbeddingDim);
+            }
             String json = objectMapper.writeValueAsString(body);
             HttpURLConnection conn = openConnection("/ai/rag/process", "POST");
             writeBody(conn, json);

@@ -34,6 +34,7 @@ async def chat_stream(req: ChatRequest):
                 kb_id=req.ragKbId,
                 query=req.userQuery,
                 model_config=req.modelConfig,
+                embedding_model=req.ragEmbeddingModel or None,
             )
 
         # 2. RAG 结果只追加一次到 Java 的 system 消息末尾

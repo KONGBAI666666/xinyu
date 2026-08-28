@@ -61,8 +61,9 @@ services:
       # Python 用 REST 端口 6333 (不是 Java 的 gRPC 6334)
       XINYU_QDRANT_URL: http://qdrant:6333
       QDRANT_COLLECTION: xinyu_kb
-      EMBEDDING_DIM: "1536"
-      EMBEDDING_MODEL: text-embedding-v2
+      # Embedding 模型可选覆盖: 留空 = 按默认模型的服务商自动映射 (模型名+维度)
+      EMBEDDING_MODEL: ${XINYU_EMBEDDING_MODEL:-}
+      EMBEDDING_DIM: ${XINYU_EMBEDDING_DIM:-}
       # 内部接口令牌: 与 backend 的 XINYU_AI_SERVICE_INTERNAL_TOKEN 保持一致; 留空则不校验
       AI_INTERNAL_TOKEN: ${XINYU_AI_INTERNAL_TOKEN:-}
       TZ: Asia/Shanghai
