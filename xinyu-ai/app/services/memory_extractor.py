@@ -25,8 +25,8 @@ class MemoryExtractor:
         model_config: ModelConfig, dialog: str
     ) -> MemoryExtractResponse:
         """调用 LLM 提取记忆, 返回结构化结果"""
+        client = LlmClient(model_config)
         try:
-            client = LlmClient(model_config)
             messages = [
                 ChatMessage(role="system", content=EXTRACT_PROMPT),
                 ChatMessage(role="user", content=dialog),
@@ -38,6 +38,8 @@ class MemoryExtractor:
             raise
         except Exception as e:
             raise AiError(f"记忆提取失败: {e}", code=50000)
+        finally:
+            await client.aclose()
 
     @staticmethod
     def _parse_response(content: str) -> list[ExtractedMemory]:

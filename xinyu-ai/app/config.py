@@ -4,7 +4,7 @@
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -12,6 +12,10 @@ class Settings:
     # --- 服务 ---
     host: str = os.getenv("AI_HOST", "0.0.0.0")
     port: int = int(os.getenv("AI_PORT", "9100"))
+
+    # --- 内部接口鉴权 (DELETE /ai/rag/vectors 等破坏性操作) ---
+    # 与 Java 侧 xinyu.ai-service.internal-token 保持一致; 留空表示不校验 (本地开发)
+    internal_token: str = os.getenv("AI_INTERNAL_TOKEN", "")
 
     # --- Qdrant ---
     qdrant_url: str = os.getenv("XINYU_QDRANT_URL", "http://localhost:6333")
@@ -26,10 +30,6 @@ class Settings:
     chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "50"))
     retrieve_top_k: int = int(os.getenv("RETRIEVE_TOP_K", "3"))
     retrieve_score_threshold: float = float(os.getenv("RETRIEVE_SCORE_THRESHOLD", "0.5"))
-
-    # --- LLM 默认值 (兜底, 实际由 Java 传入) ---
-    default_connect_timeout: int = int(os.getenv("LLM_CONNECT_TIMEOUT", "10"))
-    default_read_timeout: int = int(os.getenv("LLM_READ_TIMEOUT", "120"))
 
     # --- Mock 模式 (无 LLM 调用, 返回假数据) ---
     mock_mode: bool = os.getenv("AI_MOCK_MODE", "false").lower() == "true"

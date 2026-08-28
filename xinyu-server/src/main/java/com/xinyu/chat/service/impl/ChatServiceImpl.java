@@ -175,7 +175,7 @@ public class ChatServiceImpl implements ChatService {
 
         chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userId,
                 conversation.getCharacterId(), userMsg, assistantMsg, context, modelConfig,
-                ragKbId, dto.getContent(), memoryBlock,
+                ragKbId, dto.getContent(),
                 character.getTemperature() != null ? character.getTemperature().doubleValue() : 0.8,
                 character.getMaxTokens() != null ? character.getMaxTokens() : 1024));
         return emitter;
@@ -206,7 +206,7 @@ public class ChatServiceImpl implements ChatService {
     private void streamAndPersist(SseEmitter emitter, Long conversationId, Long userId,
                                   Long characterId, Message userMsg, Message assistantMsg,
                                   List<LlmMessage> context, LlmModelConfig modelConfig,
-                                  String ragKbId, String userQuery, String memoryBlock,
+                                  String ragKbId, String userQuery,
                                   double temperature, int maxTokens) {
         StringBuilder generated = new StringBuilder();
         try {
@@ -215,7 +215,7 @@ public class ChatServiceImpl implements ChatService {
 
             aiServiceClient.streamChat(modelConfig, context,
                     temperature, maxTokens,
-                    ragKbId, userQuery, memoryBlock,
+                    ragKbId, userQuery,
                     new AiServiceClient.SseCallback() {
                         @Override
                         public void onMeta(String um, String am) { /* meta 已发送 */ }

@@ -1,8 +1,9 @@
 -- ============================================================
 -- 心屿 XinYu · 数据库初始化脚本
 -- 版本: v1.0 (对应 docs/design.md 第 2 节)
--- 说明: 10 张表一次建齐; M1 只使用 user/character/conversation/
---       message/ai_model, 其余表为后续里程碑预留
+-- 说明: 12 张表一次建齐; M1 使用 user/character/conversation/
+--       message/ai_model, 其余表 (tag/character_tag/character_favorite/
+--       memory/file/knowledge_base/knowledge_document) 随后续里程碑启用
 -- 执行: mysql -u root -p < scripts/schema.sql
 -- ============================================================
 

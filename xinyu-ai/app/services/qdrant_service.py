@@ -48,15 +48,15 @@ class QdrantService:
     def _search_sync(
         self, kb_id: str, query_vec: list[float], top_k: int = 3
     ) -> list[RagChunk]:
-        results = self._client.search(
+        results = self._client.query_points(
             collection_name=self._collection,
-            query_vector=query_vec,
+            query=query_vec,
             query_filter=Filter(
                 must=[FieldCondition(key="kb_id", match=MatchValue(value=kb_id))]
             ),
             limit=top_k,
             with_payload=True,
-        )
+        ).points
         return [
             RagChunk(text=r.payload.get("text", ""), score=r.score)
             for r in results

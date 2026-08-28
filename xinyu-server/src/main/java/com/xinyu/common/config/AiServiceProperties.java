@@ -19,10 +19,15 @@ public class AiServiceProperties {
     /** 读取超时 (秒) */
     private int readTimeoutSec = 180;
 
+    /** 内部接口令牌 (与 Python 侧 AI_INTERNAL_TOKEN 一致; 空表示不启用) */
+    private String internalToken = "";
+
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
     public int getConnectTimeoutSec() { return connectTimeoutSec; }
     public void setConnectTimeoutSec(int v) { this.connectTimeoutSec = v; }
     public int getReadTimeoutSec() { return readTimeoutSec; }
     public void setReadTimeoutSec(int v) { this.readTimeoutSec = v; }
+    public String getInternalToken() { return internalToken; }
+    public void setInternalToken(String v) { this.internalToken = v; }
 }

@@ -2,11 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# 安装系统依赖 (PyMuPDF 需要)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
-# 先装依赖 (利用 Docker 层缓存)
+# 先装依赖 (利用 Docker 层缓存; PyMuPDF 自带二进制轮子, 无需额外系统包)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

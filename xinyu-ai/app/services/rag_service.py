@@ -6,7 +6,6 @@ from app.services.qdrant_service import QdrantService
 from app.services.document_parser import DocumentParser
 from app.services.chunk_splitter import ChunkSplitter
 from app.config import settings
-from app.core.exceptions import AiError
 from app.models import RagProcessResponse
 
 
@@ -31,13 +30,16 @@ class RagService:
         score_threshold = score_threshold or settings.retrieve_score_threshold
         try:
             emb_svc = EmbeddingService(model_config)
-            query_vec = await emb_svc.embed(query)
+            try:
+                query_vec = await emb_svc.embed(query)
+            finally:
+                await emb_svc.aclose()
             chunks = await self._qdrant.search(kb_id, query_vec, top_k)
             # 分数过滤
             filtered = [c for c in chunks if c.score >= score_threshold]
             rag_block = self.format_injection(filtered) if filtered else None
             return filtered, rag_block or ""
-        except Exception as e:
+        except Exception:
             # RAG 失败降级为空, 不阻断聊天
             return [], ""
 
@@ -56,7 +58,10 @@ class RagService:
                 return RagProcessResponse(chunkCount=0, status="ERROR", errorMsg="分块结果为空")
 
             emb_svc = EmbeddingService(model_config)
-            embeddings = await emb_svc.embed_batch(chunks)
+            try:
+                embeddings = await emb_svc.embed_batch(chunks)
+            finally:
+                await emb_svc.aclose()
 
             await self._qdrant.upsert_chunks(kb_id, doc_id, chunks, embeddings)
             return RagProcessResponse(chunkCount=len(chunks), status="READY")
@@ -69,6 +74,10 @@ class RagService:
     async def delete_kb(self, kb_id: str):
         await self._qdrant.delete_by_kb(kb_id)
 
+    def close(self):
+        """释放 Qdrant 连接 (进程退出时调用)"""
+        self._qdrant.close()
+
     @staticmethod
     def format_injection(chunks: list[RagChunk]) -> str:
         if not chunks:
@@ -77,3 +86,14 @@ class RagService:
         for i, c in enumerate(chunks, 1):
             parts.append(f"【片段{i}】\n{c.text}")
         return "\n\n".join(parts)
+
+
+# 全局单例: QdrantClient 长连接复用, 避免每请求新建客户端导致连接泄漏
+_shared_service: RagService | None = None
+
+
+def get_rag_service() -> RagService:
+    global _shared_service
+    if _shared_service is None:
+        _shared_service = RagService()
+    return _shared_service

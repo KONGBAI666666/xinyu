@@ -23,6 +23,10 @@ class LlmClient:
     def model_code(self) -> str:
         return self.config.modelCode
 
+    async def aclose(self) -> None:
+        """释放底层 HTTP 连接 (每请求新建的客户端用完必须关闭)"""
+        await self._client.close()
+
     async def stream_chat(
         self, messages: list[ChatMessage], temperature: float = 0.8, max_tokens: int = 1024
     ) -> AsyncIterator[tuple[str, dict]]:
@@ -107,6 +111,9 @@ class LlmClient:
 
 class MockLlmClient:
     """开发环境 Mock, 不调用真实 LLM"""
+
+    async def aclose(self) -> None:
+        pass
 
     async def stream_chat(
         self, messages: list[ChatMessage], temperature: float = 0.8, max_tokens: int = 1024

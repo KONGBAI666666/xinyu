@@ -45,6 +45,8 @@ xinyu:
     base-url: ${XINYU_AI_SERVICE_BASE_URL:http://localhost:9100}
     connect-timeout-sec: 10
     read-timeout-sec: 180
+    # 内部接口令牌: 需与 Python 侧 AI_INTERNAL_TOKEN 一致; 空表示不校验 (本地开发)
+    internal-token: ${XINYU_AI_SERVICE_INTERNAL_TOKEN:}
   llm:
     # 计费单价（元 / 1K tokens）, 取通义千问 qwen-plus 公开价; 切换模型同步调整
     input-price-per-1k: 0.0008

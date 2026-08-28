@@ -61,6 +61,10 @@ public class AuthServiceImpl implements AuthService {
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BizException(ResultCode.UNAUTHORIZED, "用户名或密码错误");
         }
+        // 状态机接线: BANNED 用户禁止登录 (放在密码校验之后, 避免泄露账号状态)
+        if ("BANNED".equals(user.getStatus())) {
+            throw new BizException(ResultCode.FORBIDDEN, "账号已被禁用");
+        }
 
         User update = new User();
         update.setId(user.getId());

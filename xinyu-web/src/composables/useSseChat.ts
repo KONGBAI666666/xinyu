@@ -131,7 +131,8 @@ export function useSseChat() {
       // 主动 abort（停止/收尾）时 fetch 会以 AbortError 结束, 属正常路径
       if (!finished && !signal.aborted) {
         flushDelta()
-        messageStore.failAssistant()
+        // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的 USER 消息
+        messageStore.failOrRollback()
         cleanup()
         throw e
       }

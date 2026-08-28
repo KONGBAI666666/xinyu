@@ -31,8 +31,6 @@ class ChatRequest(BaseModel):
     # RAG 检索参数 (可选)
     ragKbId: Optional[str] = None
     userQuery: Optional[str] = None  # 用于 RAG 检索的原始用户输入
-    # Memory 注入文本 (Java 已查库格式化好)
-    memoryBlock: Optional[str] = None
 
 # ---------- Memory 相关 ----------
 

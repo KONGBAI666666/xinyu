@@ -51,12 +51,11 @@ public class AiServiceClient {
      * SSE 流式聊天: 调用 Python /ai/chat/stream, 逐事件回调
      *
      * @param modelConfig  解密后的模型配置
-     * @param messages     已组装的上下文消息
+     * @param messages     已组装的上下文消息 (system 中已含角色人设+记忆)
      * @param temperature  采样温度
      * @param maxTokens    最大输出 token
-     * @param ragKbId      知识库 ID (可空)
+     * @param ragKbId      知识库 ID (可空, Python 侧负责检索并注入)
      * @param userQuery    用户原始输入 (用于 RAG 检索, 可空)
-     * @param memoryBlock  记忆注入文本 (可空)
      * @param callback     SSE 回调
      */
     public void streamChat(
@@ -66,7 +65,6 @@ public class AiServiceClient {
             int maxTokens,
             String ragKbId,
             String userQuery,
-            String memoryBlock,
             SseCallback callback
     ) {
         try {
@@ -86,8 +84,7 @@ public class AiServiceClient {
                     "temperature", temperature,
                     "maxTokens", maxTokens,
                     "ragKbId", ragKbId != null ? ragKbId : "",
-                    "userQuery", userQuery != null ? userQuery : "",
-                    "memoryBlock", memoryBlock != null ? memoryBlock : ""
+                    "userQuery", userQuery != null ? userQuery : ""
             );
 
             String json = objectMapper.writeValueAsString(body);
@@ -234,6 +231,9 @@ public class AiServiceClient {
         conn.setRequestMethod(method);
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestProperty("Accept", "text/event-stream");
+        if (props.getInternalToken() != null && !props.getInternalToken().isEmpty()) {
+            conn.setRequestProperty("X-Internal-Token", props.getInternalToken());
+        }
         conn.setConnectTimeout(props.getConnectTimeoutSec() * 1000);
         conn.setReadTimeout(props.getReadTimeoutSec() * 1000);
         if (!method.equals("GET") && !method.equals("DELETE")) {

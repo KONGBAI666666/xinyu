@@ -17,6 +17,10 @@ class EmbeddingService:
             timeout=httpx.Timeout(connect=10.0, read=60.0, write=10.0, pool=5.0),
         )
 
+    async def aclose(self) -> None:
+        """释放底层 HTTP 连接"""
+        await self._client.close()
+
     async def embed(self, text: str) -> list[float]:
         """单条文本 → 向量"""
         resp = await self._client.embeddings.create(

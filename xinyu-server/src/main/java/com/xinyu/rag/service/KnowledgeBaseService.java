@@ -94,9 +94,13 @@ public class KnowledgeBaseService {
     /**
      * 上传文档到知识库 (委托 Python 处理: 解析 → 分块 → 向量化 → 入 Qdrant)
      *
+     * <p>注意: 本方法刻意不加 @Transactional —— Python 处理可能耗时数分钟,
+     * 长事务会占住数据库连接; 且失败时抛出的 BizException 会连同
+     * PROCESSING/ERROR 文档记录一起回滚, 导致"失败原因"无法展示。
+     * 每条 SQL 独立提交, 文档状态在失败路径也能落库。
+     *
      * @return 创建的文档元数据
      */
-    @Transactional
     public KnowledgeDocumentVO uploadDocument(Long kbId, Long userId, MultipartFile file) {
         KnowledgeBase kb = getOwnedKb(kbId, userId);
         if (file.isEmpty()) {
