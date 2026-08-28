@@ -1,6 +1,7 @@
 package com.xinyu.rag.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xinyu.common.exception.BizException;
 import com.xinyu.common.result.ResultCode;
 import com.xinyu.llm.AiServiceClient;
@@ -138,19 +139,30 @@ public class KnowledgeBaseService {
             String errorMsg = (String) result.get("errorMsg");
 
             if ("READY".equals(status) && chunkCount > 0) {
+                // 竞态守卫: 向量化期间文档被并发删除时, 清理刚写入的向量防孤儿数据
+                if (docMapper.selectById(doc.getId()) == null) {
+                    aiServiceClient.deleteRagVectors(String.valueOf(kbId), String.valueOf(doc.getId()));
+                    throw new BizException(ResultCode.PARAM_ERROR, "文档已在处理期间被删除");
+                }
                 doc.setChunkCount(chunkCount);
                 doc.setStatus("READY");
                 docMapper.updateById(doc);
 
-                kb.setDocCount(kb.getDocCount() + 1);
-                kb.setChunkCount(kb.getChunkCount() + chunkCount);
-                // 首次上传: 锁定本次使用的 Embedding 模型/维度
-                if (kb.getEmbeddingModel() == null && result.get("embeddingModel") != null) {
-                    kb.setEmbeddingModel((String) result.get("embeddingModel"));
+                // 计数原子自增 (读-改-写会在并发上传时丢更新)
+                kbMapper.update(null, new LambdaUpdateWrapper<KnowledgeBase>()
+                        .eq(KnowledgeBase::getId, kbId)
+                        .setSql("doc_count = doc_count + 1")
+                        .setSql("chunk_count = chunk_count + " + chunkCount));
+                // 首次上传锁定向量化配置 (条件更新: 并发时先成功者为准)
+                Object embModel = result.get("embeddingModel");
+                if (embModel != null) {
                     Object dim = result.get("embeddingDim");
-                    kb.setEmbeddingDim(dim != null ? ((Number) dim).intValue() : null);
+                    kbMapper.update(null, new LambdaUpdateWrapper<KnowledgeBase>()
+                            .eq(KnowledgeBase::getId, kbId)
+                            .isNull(KnowledgeBase::getEmbeddingModel)
+                            .set(KnowledgeBase::getEmbeddingModel, String.valueOf(embModel))
+                            .set(KnowledgeBase::getEmbeddingDim, dim != null ? ((Number) dim).intValue() : null));
                 }
-                kbMapper.updateById(kb);
 
                 log.info("文档上传成功: docId={}, kbId={}, 块数={}", doc.getId(), kbId, chunkCount);
             } else {
@@ -182,10 +194,11 @@ public class KnowledgeBaseService {
         }
         // 1. 删 Qdrant 向量 (调用 Python)
         aiServiceClient.deleteRagVectors(String.valueOf(kbId), String.valueOf(docId));
-        // 2. 更新知识库计数
-        kb.setDocCount(Math.max(0, kb.getDocCount() - 1));
-        kb.setChunkCount(Math.max(0, kb.getChunkCount() - doc.getChunkCount()));
-        kbMapper.updateById(kb);
+        // 2. 原子更新知识库计数 (GREATEST 防负数, 避免读-改-写丢更新)
+        kbMapper.update(null, new LambdaUpdateWrapper<KnowledgeBase>()
+                .eq(KnowledgeBase::getId, kbId)
+                .setSql("doc_count = GREATEST(0, doc_count - 1)")
+                .setSql("chunk_count = GREATEST(0, chunk_count - " + doc.getChunkCount() + ")"));
         // 3. 删文档元数据
         docMapper.deleteById(docId);
         log.info("文档删除: docId={}, kbId={}", docId, kbId);

@@ -1,14 +1,13 @@
 """RAG 接口 — 检索、文档向量化、删除向量"""
 
 import base64
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter
 
 from app.models import (
     RagSearchRequest, RagSearchResponse,
     RagProcessRequest, RagProcessResponse,
 )
 from app.services.rag_service import get_rag_service
-from app.config import settings
 
 router = APIRouter(prefix="/ai/rag", tags=["rag"])
 
@@ -54,18 +53,11 @@ async def process_document(req: RagProcessRequest):
 
 
 @router.delete("/vectors")
-async def delete_vectors(
-    kbId: str,
-    docId: str = None,
-    x_internal_token: str = Header(default="", alias="X-Internal-Token"),
-):
+async def delete_vectors(kbId: str, docId: str = None):
     """删除向量数据 (按文档或整库), 通过 query 参数传递
 
-    破坏性操作: 配置了 AI_INTERNAL_TOKEN 时必须携带匹配的 X-Internal-Token,
-    防止内网任意调用方删除知识库向量。
+    破坏性操作的令牌校验由 main.py 的路由级依赖统一完成。
     """
-    if settings.internal_token and x_internal_token != settings.internal_token:
-        raise HTTPException(status_code=403, detail="invalid internal token")
     if docId:
         await get_rag_service().delete_doc(kbId, docId)
     else:

@@ -139,7 +139,8 @@ export function useSseChat() {
         // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的 USER 消息
         messageStore.failOrRollback()
         cleanup()
-        throw e
+        // 原生网络异常 (TypeError 等) 收敛为 BizError, 调用方统一按业务错误处理
+        throw e instanceof BizError ? e : new BizError(50000, '网络连接中断，请稍后重试')
       }
     }
     cleanup()
