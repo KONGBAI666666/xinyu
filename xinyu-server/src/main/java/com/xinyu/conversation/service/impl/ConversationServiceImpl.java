@@ -43,9 +43,11 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
     @Override
     public List<Conversation> listByUser(Long userId) {
+        // 上限 100 条: 侧边栏只展示最近会话, 防止会话量大时全表返回
         return lambdaQuery()
                 .eq(Conversation::getUserId, userId)
                 .orderByDesc(Conversation::getLastMessageAt)
+                .last("LIMIT 100")
                 .list();
     }
 

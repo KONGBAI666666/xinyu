@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +36,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class KnowledgeBaseService {
+
+    /** 允许入库的文档扩展名 (与 Python DocumentParser 支持的格式一致) */
+    private static final Set<String> ALLOWED_DOC_EXTENSIONS = Set.of("PDF", "MD", "MARKDOWN", "TXT", "TEXT");
 
     private final KnowledgeBaseMapper kbMapper;
     private final KnowledgeDocumentMapper docMapper;
@@ -117,6 +121,10 @@ public class KnowledgeBaseService {
         String ext = fileName != null && fileName.contains(".")
                 ? fileName.substring(fileName.lastIndexOf('.') + 1).toUpperCase()
                 : "UNKNOWN";
+        // 仅允许解析器支持的格式入库, 避免未知文件当乱码文本进库 (前端 accept 不可靠)
+        if (!ALLOWED_DOC_EXTENSIONS.contains(ext)) {
+            throw new BizException(ResultCode.PARAM_ERROR, "仅支持 PDF / Markdown / TXT 格式文件");
+        }
         doc.setFileType(ext);
         doc.setFileSize(file.getSize());
         doc.setChunkCount(0);

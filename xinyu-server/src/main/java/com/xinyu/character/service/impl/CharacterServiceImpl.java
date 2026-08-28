@@ -78,6 +78,10 @@ public class CharacterServiceImpl extends ServiceImpl<AiCharacterMapper, AiChara
     public CharacterVO create(Long userId, CharacterSaveRequest req) {
         AiCharacter character = new AiCharacter();
         BeanUtils.copyProperties(req, character);
+        // intro 列为 NOT NULL 无默认值, 未提供时兜底空串避免插入失败
+        if (!StringUtils.hasText(req.getIntro())) {
+            character.setIntro("");
+        }
         character.setCreatorId(userId);
         character.setCreatorType(CreatorType.USER.name());
         character.setStatus(StringUtils.hasText(req.getStatus())
