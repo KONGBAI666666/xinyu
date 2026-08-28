@@ -1,5 +1,7 @@
 """RAG 服务: Embedding + Qdrant 检索 + 注入格式化"""
 
+import logging
+
 from app.core.exceptions import AiError
 from app.models import ModelConfig, RagChunk
 from app.services.embedding_profiles import resolve_embedding_profile
@@ -9,6 +11,8 @@ from app.services.document_parser import DocumentParser
 from app.services.chunk_splitter import ChunkSplitter
 from app.config import settings
 from app.models import RagProcessResponse
+
+logger = logging.getLogger("xinyu-ai.rag")
 
 
 class RagService:
@@ -43,8 +47,9 @@ class RagService:
             filtered = [c for c in chunks if c.score >= score_threshold]
             rag_block = self.format_injection(filtered) if filtered else None
             return filtered, rag_block or ""
-        except Exception:
-            # RAG 失败降级为空, 不阻断聊天
+        except Exception as e:
+            # RAG 失败降级为空, 不阻断聊天, 但必须留痕否则知识库"静默失效"无从排查
+            logger.warning("RAG 检索失败已降级为空结果: kb_id=%s, error=%s", kb_id, e)
             return [], ""
 
     async def process_document(
@@ -95,6 +100,7 @@ class RagService:
                 embeddingModel=profile.model, embeddingDim=profile.dim,
             )
         except Exception as e:
+            logger.warning("文档向量化失败: kb_id=%s, doc_id=%s, error=%s", kb_id, doc_id, e)
             return RagProcessResponse(chunkCount=0, status="ERROR", errorMsg=str(e))
 
     async def delete_doc(self, kb_id: str, doc_id: str):

@@ -16,6 +16,11 @@ spring:
 server:
   # 8080 被本机其他项目占用, 固定使用 9000
   port: 9000
+  # 知识库文档上传上限 (需与 nginx client_max_body_size 一致)
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
 
 mybatis-plus:
   configuration:

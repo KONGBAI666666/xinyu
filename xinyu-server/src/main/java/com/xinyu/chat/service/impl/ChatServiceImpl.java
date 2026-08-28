@@ -175,7 +175,10 @@ public class ChatServiceImpl implements ChatService {
                 messageService.listRecent(conversationId, ContextAssembler.MAX_CONTEXT_MESSAGES));
 
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
-        emitter.onTimeout(() -> markStopped(assistantMsg.getId(), conversationId, null));
+        // 停止句柄先登记再派发异步任务: 停止请求早于连接建立到达时也能生效
+        AiServiceClient.StreamCancellation cancellation = new AiServiceClient.StreamCancellation();
+        // 超时也必须取消上游流: 前端已断开, 不取消则 Java 继续消费 LLM 流空烧 token
+        emitter.onTimeout(() -> cancellation.cancel());
 
         // RAG 参数: 会话绑定了知识库时, 由 Python 负责检索 + 注入
         String ragKbId = conversation.getKbId() != null ? String.valueOf(conversation.getKbId()) : null;
@@ -183,8 +186,6 @@ public class ChatServiceImpl implements ChatService {
         String ragEmbeddingModel = conversation.getKbId() != null
                 ? knowledgeBaseService.getEmbeddingModel(conversation.getKbId()) : null;
 
-        // 停止句柄先登记再派发异步任务: 停止请求早于连接建立到达时也能生效
-        AiServiceClient.StreamCancellation cancellation = new AiServiceClient.StreamCancellation();
         activeStreams.put(conversationId, cancellation);
 
         chatExecutor.execute(() -> streamAndPersist(emitter, conversationId, userId,
@@ -256,7 +257,7 @@ public class ChatServiceImpl implements ChatService {
                         @Override
                         public void onDone(int promptTokens, int completionTokens, String status) {
                             String content = generated.toString();
-                            messageService.lambdaUpdate()
+                            boolean updated = messageService.lambdaUpdate()
                                     .eq(Message::getId, assistantMsg.getId())
                                     .eq(Message::getStatus, MessageStatus.GENERATING)
                                     .set(Message::getContent, content)
@@ -264,7 +265,10 @@ public class ChatServiceImpl implements ChatService {
                                     .set(Message::getPromptTokens, promptTokens)
                                     .set(Message::getCompletionTokens, completionTokens)
                                     .update();
-                            conversationService.refreshLastMessage(conversationId, content, LocalDateTime.now());
+                            // 守卫: 消息已被超时/停止收尾置 STOPPED 时不覆盖, 预览与消息体保持一致
+                            if (updated) {
+                                conversationService.refreshLastMessage(conversationId, content, LocalDateTime.now());
+                            }
                             sendEvent(emitter, "done",
                                     new SseDoneVO(String.valueOf(assistantMsg.getId()),
                                             promptTokens, completionTokens,

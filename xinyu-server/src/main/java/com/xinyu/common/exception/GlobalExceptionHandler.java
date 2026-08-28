@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -56,6 +57,13 @@ public class GlobalExceptionHandler {
     public Result<Void> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         log.warn("参数类型错误: name={}, value={}", e.getName(), e.getValue());
         return Result.fail(ResultCode.PARAM_ERROR.getCode(), "参数 " + e.getName() + " 类型错误");
+    }
+
+    /** 上传文件超过大小限制 (multipart max-file-size) */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public Result<Void> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        log.warn("上传文件过大: {}", e.getMessage());
+        return Result.fail(ResultCode.PARAM_ERROR.getCode(), "文件大小超过 20MB 限制");
     }
 
     /** 访问不存在的路径（Spring Boot 3 静态资源兜底抛出） */

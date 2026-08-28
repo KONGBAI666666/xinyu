@@ -84,11 +84,11 @@ class QdrantService:
 
     def _delete_by_kb_sync(self, kb_id: str) -> None:
         name = self._collection_for(kb_id)
-        try:
-            self._client.delete_collection(name)
-        except Exception:
-            # 集合不存在等情况视为已删除
-            pass
+        # 集合不存在才视为已删除; 其余异常 (Qdrant 宕机/网络失败) 必须上抛,
+        # 否则调用方误判删除成功, 留下孤儿向量
+        if not self._client.collection_exists(name):
+            return
+        self._client.delete_collection(name)
 
     # ——— 对外异步接口 (线程池包装) ———
 

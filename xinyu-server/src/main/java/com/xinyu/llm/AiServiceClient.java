@@ -139,8 +139,8 @@ public class AiServiceClient {
 
             int code = conn.getResponseCode();
             if (code != 200) {
-                String err = readAll(conn);
-                callback.onError(51001, "AI 服务返回错误: " + code);
+                String err = readBody(conn);
+                callback.onError(51001, "AI 服务错误: " + extractAiError(err, code));
                 return;
             }
 
@@ -193,7 +193,11 @@ public class AiServiceClient {
             String json = objectMapper.writeValueAsString(body);
             HttpURLConnection conn = openConnection("/ai/memory/extract", "POST");
             writeBody(conn, json);
-            String resp = readAll(conn);
+            int code = conn.getResponseCode();
+            String resp = readBody(conn);
+            if (code != 200) {
+                throw new IOException("AI 记忆提取失败: " + extractAiError(resp, code));
+            }
             Map<String, Object> result = objectMapper.readValue(resp, Map.class);
             return (List<Map<String, Object>>) result.get("memories");
         } catch (Exception e) {
@@ -234,7 +238,12 @@ public class AiServiceClient {
             String json = objectMapper.writeValueAsString(body);
             HttpURLConnection conn = openConnection("/ai/rag/process", "POST");
             writeBody(conn, json);
-            String resp = readAll(conn);
+            int code = conn.getResponseCode();
+            String resp = readBody(conn);
+            if (code != 200) {
+                return Map.of("chunkCount", 0, "status", "ERROR",
+                        "errorMsg", "AI 服务错误: " + extractAiError(resp, code));
+            }
             return objectMapper.readValue(resp, Map.class);
         } catch (Exception e) {
             log.error("文档向量化失败: {}", e.getMessage());
@@ -320,9 +329,18 @@ public class AiServiceClient {
         }
     }
 
-    private String readAll(HttpURLConnection conn) throws Exception {
+    /**
+     * 读取响应体: 非 2xx 时读错误流 (getInputStream 对错误码直接抛异常, 会丢失真实错误信息)
+     */
+    private String readBody(HttpURLConnection conn) throws Exception {
+        int code = conn.getResponseCode();
+        java.io.InputStream stream = code >= 200 && code < 300
+                ? conn.getInputStream() : conn.getErrorStream();
+        if (stream == null) {
+            return "";
+        }
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(stream, StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -330,5 +348,27 @@ public class AiServiceClient {
             }
             return sb.toString();
         }
+    }
+
+    /**
+     * 从 Python 错误响应体提取业务信息: 优先 JSON {"code","message"} (AiError 统一格式),
+     * 非 JSON (如 422 校验错误) 时截断原文, 兜底返回 HTTP 状态码
+     */
+    private String extractAiError(String body, int httpCode) {
+        if (body == null || body.isBlank()) {
+            return "HTTP " + httpCode;
+        }
+        try {
+            Map<String, Object> parsed = objectMapper.readValue(body, Map.class);
+            Object msg = parsed.get("message");
+            if (msg != null) {
+                Object c = parsed.get("code");
+                return c != null ? "[" + c + "] " + msg : String.valueOf(msg);
+            }
+        } catch (Exception ignored) {
+            // 非 JSON 响应, 使用原文
+        }
+        String raw = body.strip();
+        return raw.length() > 200 ? raw.substring(0, 200) : raw;
     }
 }
