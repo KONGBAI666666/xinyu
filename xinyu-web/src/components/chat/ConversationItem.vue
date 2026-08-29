@@ -191,7 +191,7 @@ const timeText = computed(() => {
 
 .edit-btn:hover {
   color: var(--color-primary);
-  background: rgba(78, 154, 245, 0.12);
+  background: rgba(94, 234, 212, 0.12);
 }
 
 .del-btn:hover {

@@ -93,7 +93,7 @@ async function handleSend(content: string): Promise<void> {
   } catch (e) {
     showError(e)
   } finally {
-    // 终态后刷新列表冗余字段（标题自动重命名/摘要/排序由后端维护）
+    // 终态后刷新列表冗余字段（摘要/排序由后端维护, 标题不再自动改名）
     conversationStore.fetchList().catch(() => {})
     // 面板若打开则同步刷新, 让用户看到 token 数字实时跳动
     if (statsStore.panelOpen) {

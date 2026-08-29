@@ -1,9 +1,17 @@
 -- ============================================================
--- 心屿 XinYu · 数据库初始化脚本
--- 版本: v1.0 (对应 docs/design.md 第 2 节)
--- 说明: 10 张表一次建齐; M1 只使用 user/character/conversation/
---       message/ai_model, 其余表为后续里程碑预留
--- 执行: mysql -u root -p < scripts/schema.sql
+-- 心屿 XinYu · 数据库初始化脚本（唯一结构来源）
+-- 版本: v1.1 (对应 docs/design.md 第 2 节)
+-- 说明: 12 张表一次建齐; M1 使用 user/character/conversation/
+--       message/ai_model, 其余表 (tag/character_tag/character_favorite/
+--       memory/file/knowledge_base/knowledge_document) 随后续里程碑启用
+--
+-- 使用方式:
+--   本地:   mysql -u root -p < scripts/schema.sql
+--   Docker: docker-compose.yml 已将本文件挂载到 mysql 容器
+--           /docker-entrypoint-initdb.d/01-schema.sql 首启自动执行
+--   种子:   官方角色见 scripts/seed-core.sql; 开发数据见 seed-dev.sql
+--
+-- ⚠ 修改表结构只改本文件, 不要在 deploy/ 下另建副本
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS xinyu
@@ -213,6 +221,8 @@ CREATE TABLE IF NOT EXISTS `knowledge_base` (
   `doc_count`     INT          NOT NULL DEFAULT 0 COMMENT '冗余: 文档数',
   `chunk_count`   INT          NOT NULL DEFAULT 0 COMMENT '冗余: 切片数(=Qdrant点数)',
   `status`        VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE/PROCESSING/ERROR',
+  `embedding_model` VARCHAR(64) DEFAULT NULL COMMENT '首次上传锁定的Embedding模型',
+  `embedding_dim` INT          DEFAULT NULL COMMENT '首次上传锁定的向量维度',
   `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`       TINYINT      NOT NULL DEFAULT 0,

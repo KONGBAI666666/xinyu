@@ -60,7 +60,7 @@ async function confirmDelete(): Promise<void> {
 /** 角色选择浮层 */
 const pickerOpen = ref(false)
 
-/** 知识库列表 (仅 READY 可绑定) + 当前选择 */
+/** 知识库列表 (仅 ACTIVE 可绑定) + 当前选择 */
 const kbList = ref<KnowledgeBaseVO[]>([])
 const selectedKbId = ref<string | null>(null)
 const kbDropdownOpen = ref(false)
@@ -73,11 +73,11 @@ function selectedKbName(): string {
 onMounted(() => {
   // 预加载角色列表用于「+ 新聊天」选择
   charactersStore.load().catch(() => {})
-  // 预加载知识库列表 (仅 READY 状态可绑定到会话)
+  // 预加载知识库列表 (仅 ACTIVE 状态可绑定到会话; 与后端 KnowledgeBaseService 写入值一致)
   knowledgeApi
     .list()
     .then((list) => {
-      kbList.value = list.filter((kb) => kb.status === 'READY')
+      kbList.value = list.filter((kb) => kb.status === 'ACTIVE')
     })
     .catch(() => {})
 })
@@ -124,8 +124,6 @@ async function handleRename(id: string, title: string): Promise<void> {
     window.setTimeout(() => { renameError.value = '' }, 3000)
   }
 }
-
-defineExpose({ closePicker })
 </script>
 
 <template>

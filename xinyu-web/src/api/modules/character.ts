@@ -9,8 +9,8 @@ export type SquareSort = 'RECOMMEND' | 'HOT' | 'LATEST'
  *
  * 分两类:
  * - 广场类(square/squareDetail): 游客可访问, 仅 PUBLISHED
- * - 管理类(list/detail/CRUD): 需登录
- * - 收藏类(favorite/unfavorite/favorites): 需登录, 游客引导登录
+ * - 管理类(list/CRUD): 需登录
+ * - 收藏类(favorite/unfavorite): 需登录, 游客引导登录
  */
 export const charactersApi = {
   // ---------- 广场（游客可访问） ----------
@@ -34,11 +34,6 @@ export const charactersApi = {
   /** 列出当前用户可见的角色 */
   list(): Promise<CharacterVO[]> {
     return get('/characters')
-  },
-
-  /** 角色详情（管理视角: 自建任意状态 + 官方 PUBLISHED） */
-  detail(id: string): Promise<CharacterVO | null> {
-    return get(`/characters/${id}`)
   },
 
   /** 创建角色 */
@@ -71,11 +66,6 @@ export const charactersApi = {
   /** 取消收藏(幂等) */
   unfavorite(id: string): Promise<void> {
     return del(`/characters/${id}/favorite`)
-  },
-
-  /** 列出当前用户收藏的角色 */
-  favorites(): Promise<CharacterVO[]> {
-    return get('/characters/favorites')
   },
 }
 

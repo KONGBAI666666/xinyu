@@ -6,8 +6,8 @@ import type { ConversationVO } from '@/types/api'
 /**
  * 会话列表状态（契约三 3.1 conversation store）
  *
- * 职责: 只存状态; 切换会话后加载消息由 ChatView 编排（watch activeId）
- * applyPreview(SSE done 后刷新列表冗余字段) 随 M1-4.4 流式聊天补充
+ * 职责: 只存状态; 切换会话后加载消息由 ChatView 编排（watch activeId）;
+ * SSE 终态后的列表刷新（标题/摘要/排序由后端维护）由 ChatView 调 fetchList 完成
  */
 export const useConversationStore = defineStore('conversation', () => {
   const list = ref<ConversationVO[]>([])

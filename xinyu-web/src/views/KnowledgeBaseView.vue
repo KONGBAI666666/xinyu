@@ -306,7 +306,7 @@ function statusClass(status: string): string {
 }
 
 .primary-btn {
-  background: var(--accent);
+  background: var(--brand-gradient);
   color: #fff;
   border: none;
   padding: 8px 16px;
@@ -446,7 +446,10 @@ function statusClass(status: string): string {
 }
 .drawer {
   width: 400px;
-  background: var(--bg-elevated);
+  background: rgba(12, 16, 32, 0.92);
+  backdrop-filter: blur(var(--blur-glass));
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
   height: 100%;
   display: flex;
   flex-direction: column;

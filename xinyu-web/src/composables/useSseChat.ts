@@ -1,5 +1,6 @@
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { handleUnauthorized } from '@/api/request'
+import { conversationApi } from '@/api/modules/conversation'
 import { useMessageStore } from '@/stores/message'
 import { tokenStorage } from '@/utils/storage'
 import { BizError } from '@/utils/BizError'
@@ -17,7 +18,7 @@ const FLUSH_INTERVAL_MS = 50
  * 关键约定（评审锁死）:
  * - onerror 必须 throw: fetch-event-source 默认断线重连会再次 POST, 导致 USER 消息重复落库
  * - done/error 后服务端 complete, 这里主动 abort 防库默认的"连接关闭即重连"
- * - 停止生成 = abort(), 后端检测断连置 STOPPED 并保留已生成文本, 两端最终一致
+ * - 停止生成 = 调停止接口(后端断开 AI 调用) + abort(), 消息置 STOPPED 保留已生成文本
  */
 export function useSseChat() {
   const messageStore = useMessageStore()
@@ -25,6 +26,8 @@ export function useSseChat() {
   let controller: AbortController | null = null
   let flushTimer: number | null = null
   let deltaBuffer = ''
+  /** 当前流所属会话: 停止时通知后端取消上游 AI 调用 */
+  let activeConversationId: string | null = null
   /** 已收到终态事件（done/error）, 用于区分「主动/收尾 abort」与「异常中断」 */
   let finished = false
 
@@ -50,6 +53,7 @@ export function useSseChat() {
     }
     flushDelta()
     controller = null
+    activeConversationId = null
   }
 
   /**
@@ -61,6 +65,7 @@ export function useSseChat() {
 
     messageStore.appendUserMessage(conversationId, content)
     finished = false
+    activeConversationId = conversationId
     controller = new AbortController()
     const signal = controller.signal
 
@@ -131,18 +136,24 @@ export function useSseChat() {
       // 主动 abort（停止/收尾）时 fetch 会以 AbortError 结束, 属正常路径
       if (!finished && !signal.aborted) {
         flushDelta()
-        messageStore.failAssistant()
+        // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的 USER 消息
+        messageStore.failOrRollback()
         cleanup()
-        throw e
+        // 原生网络异常 (TypeError 等) 收敛为 BizError, 调用方统一按业务错误处理
+        throw e instanceof BizError ? e : new BizError(50000, '网络连接中断，请稍后重试')
       }
     }
     cleanup()
   }
 
-  /** 停止生成: 断连 → 本地置 STOPPED（后端检测断连后同样置 STOPPED） */
+  /** 停止生成: 通知后端断开 AI 调用 → 本地断连 → 置 STOPPED */
   function stop(): void {
     if (!messageStore.streaming || finished) return
     finished = true
+    // 后端取消失败不阻塞本地停止; 后端断连检测仍会兜底置 STOPPED
+    if (activeConversationId) {
+      conversationApi.stopGeneration(activeConversationId).catch(() => {})
+    }
     controller?.abort()
     cleanup()
     messageStore.stopAssistant()

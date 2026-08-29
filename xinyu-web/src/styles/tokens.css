@@ -27,6 +27,13 @@ html.dark {
   --color-danger: #f87171;
   --color-success: #4ade80;
 
+  /* ---------- 边框 / 承载面 (M3 知识库等管理页使用) ---------- */
+  --border: rgba(255, 255, 255, 0.08);       /* 通用细边框 */
+  --bg-card: rgba(255, 255, 255, 0.04);      /* 卡片 / 列表项底 */
+  --bg-input: rgba(255, 255, 255, 0.06);     /* 输入框底 */
+  --accent: var(--brand-to);                  /* 强调色: 屿青 */
+  --color-primary: var(--brand-to);           /* 主交互色 (强调别名) */
+
   /* ---------- 圆角 ---------- */
   --radius-card: 16px;
   --radius-bubble: 18px;

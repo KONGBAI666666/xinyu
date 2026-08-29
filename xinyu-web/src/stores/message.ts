@@ -11,28 +11,30 @@ const PAGE_SIZE = 20
  *
  * SSE 状态唯一落点: 连接本身由 useSseChat 管理, 事件回调只调这里的 actions;
  * 流式中的 ASSISTANT 消息就是 items 末尾的 GENERATING 项, 不单独存副本。
- * loadEarlier（向上翻页）随消息滚动加载一并接入
  */
 export const useMessageStore = defineStore('message', () => {
   /** 当前会话消息, 升序（旧→新） */
   const items = ref<MessageVO[]>([])
-  const hasMore = ref(false)
   const loadingHistory = ref(false)
   /** 是否有进行中的生成（发送按钮 ⇄ 停止按钮） */
   const streaming = ref(false)
 
+  /** 历史加载请求序号: 快速切换会话时丢弃先发后至的过期响应 */
+  let loadSeq = 0
+
   /** 加载最新一页历史 */
   async function load(conversationId: string): Promise<void> {
+    const seq = ++loadSeq
     loadingHistory.value = true
     try {
       const page = await conversationApi.fetchMessages(conversationId, { size: PAGE_SIZE })
+      if (seq !== loadSeq) return // 期间又切换了会话, 丢弃过期响应
       // 刷新时残留的 GENERATING（连接已不在）按 STOPPED 展示, 不恢复连接（契约二 2.3）
       items.value = page.map((m) =>
         m.status === 'GENERATING' ? { ...m, status: 'STOPPED' } : m,
       )
-      hasMore.value = page.length >= PAGE_SIZE
     } finally {
-      loadingHistory.value = false
+      if (seq === loadSeq) loadingHistory.value = false
     }
   }
 
@@ -102,6 +104,23 @@ export const useMessageStore = defineStore('message', () => {
     streaming.value = false
   }
 
+  /**
+   * 连接失败收尾: 已有 GENERATING 占位则置 FAILED;
+   * meta 未到达（服务端未落库）则回滚乐观插入的本地 USER 消息, 避免刷新后消失的"孤儿"气泡
+   */
+  function failOrRollback(): void {
+    const generating = findGenerating()
+    if (generating) {
+      generating.status = 'FAILED'
+    } else {
+      const last = items.value[items.value.length - 1]
+      if (last?.messageType === 'USER' && last.id.startsWith('local-')) {
+        items.value.pop()
+      }
+    }
+    streaming.value = false
+  }
+
   /** 本地 abort: → STOPPED（后端检测断连后同样置 STOPPED, 两端最终一致） */
   function stopAssistant(): void {
     const generating = findGenerating()
@@ -113,8 +132,8 @@ export const useMessageStore = defineStore('message', () => {
 
   /** 切换会话前清空, 避免旧会话消息闪现 */
   function clear(): void {
+    loadSeq++ // 使在途的历史加载响应作废
     items.value = []
-    hasMore.value = false
     streaming.value = false
   }
 
@@ -126,7 +145,6 @@ export const useMessageStore = defineStore('message', () => {
 
   return {
     items,
-    hasMore,
     loadingHistory,
     streaming,
     load,
@@ -135,6 +153,7 @@ export const useMessageStore = defineStore('message', () => {
     appendDelta,
     finishAssistant,
     failAssistant,
+    failOrRollback,
     stopAssistant,
     clear,
   }

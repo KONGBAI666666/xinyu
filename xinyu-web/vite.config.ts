@@ -13,11 +13,11 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5180,
+    port: 5280,
     proxy: {
       // 开发环境代理: 前端 /api 请求转发到后端, 避免跨域
       '/api': {
-        target: 'http://localhost:9000',
+        target: 'http://localhost:9200',
         changeOrigin: true,
       },
     },
