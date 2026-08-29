@@ -15,13 +15,9 @@ docs-private/
 .vscode/
 *.iml
 
-# ---------- 后端 xinyu-server ----------
-xinyu-server/target/
-xinyu-server/.mvn/wrapper/maven-wrapper.jar
-
-# 含数据库密码的本地配置，绝不提交 (API Key 只走环境变量, 不入任何文件)
-xinyu-server/src/main/resources/application-dev.yml
-xinyu-server/src/main/resources/application-prod.yml
+# ---------- 后端 xinyu-backend ----------
+.venv*/
+.venv/
 
 # ---------- 前端 xinyu-web ----------
 xinyu-web/node_modules/
@@ -35,3 +31,8 @@ qdrant/
 # ---------- Python ----------
 __pycache__/
 *.pyc
+
+# ---------- 本地工具 / 临时文件 ----------
+.workbuddy/
+.dbcheck.py
+_dbcheck_result.txt

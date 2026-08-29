@@ -1,10 +1,17 @@
 -- ============================================================
--- 心屿 XinYu · 数据库初始化脚本
--- 版本: v1.0 (对应 docs/design.md 第 2 节)
+-- 心屿 XinYu · 数据库初始化脚本（唯一结构来源）
+-- 版本: v1.1 (对应 docs/design.md 第 2 节)
 -- 说明: 12 张表一次建齐; M1 使用 user/character/conversation/
 --       message/ai_model, 其余表 (tag/character_tag/character_favorite/
 --       memory/file/knowledge_base/knowledge_document) 随后续里程碑启用
--- 执行: mysql -u root -p < scripts/schema.sql
+--
+-- 使用方式:
+--   本地:   mysql -u root -p < scripts/schema.sql
+--   Docker: docker-compose.yml 已将本文件挂载到 mysql 容器
+--           /docker-entrypoint-initdb.d/01-schema.sql 首启自动执行
+--   种子:   官方角色见 scripts/seed-core.sql; 开发数据见 seed-dev.sql
+--
+-- ⚠ 修改表结构只改本文件, 不要在 deploy/ 下另建副本
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS xinyu
