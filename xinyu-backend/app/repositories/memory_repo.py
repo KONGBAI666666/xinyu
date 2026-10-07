@@ -1,11 +1,12 @@
 """长期记忆数据访问"""
 
-from sqlalchemy import text, update
-
-from sqlalchemy import select
+from sqlalchemy import select, text, update
 
 from app.core.security import now_local
 from app.models import Memory
+
+# 记忆列表防无界上限 (完整分页方案后续再做)
+MAX_LIST_SIZE = 500
 
 
 async def get_by_id(db, memory_id: int) -> Memory | None:
@@ -31,6 +32,7 @@ async def list_by_user(db, user_id: int, character_id: int | None) -> list[Memor
             text("FIELD(importance, 'HIGH', 'MEDIUM', 'LOW')"),
             Memory.created_at.desc(),
         )
+        .limit(MAX_LIST_SIZE)
     )
     return list(result.scalars())
 

@@ -98,16 +98,21 @@ async def create(db: AsyncSession, req: KnowledgeBaseCreateDTO, user_id: int) ->
 
 
 async def delete(db: AsyncSession, kb_id: int, user_id: int) -> None:
-    """删除知识库 (Qdrant 向量 + 所有文档元数据 + 知识库)"""
+    """删除知识库: 先删 MySQL 元数据 (权威), 提交后再删 Qdrant 向量
+
+    双写补偿约定: MySQL 为准。向量删除失败只告警不回滚 —— 元数据已不可见,
+    遗留向量不影响检索, 待人工对账清理。旧顺序 (先向量后库) 在 MySQL 提交
+    失败时会造成"计数>0 但检索永远为空"的更差状态。
+    """
     await _get_owned_kb(db, kb_id, user_id)
-    # 1. 删 Qdrant 向量
-    await get_rag_service().delete_kb(str(kb_id))
-    # 2. 删文档元数据 (物理删除, 与原 Java 行为一致)
     await knowledge_repo.hard_delete_docs_by_kb(db, kb_id)
-    # 3. 删知识库
     await knowledge_repo.soft_delete_kb(db, kb_id)
     await db.commit()
     logger.info("知识库删除: id=%s, userId=%s", kb_id, user_id)
+    try:
+        await get_rag_service().delete_kb(str(kb_id))
+    except Exception:
+        logger.error("知识库向量清理失败 (遗留向量待对账): kbId=%s", kb_id, exc_info=True)
 
 
 async def upload_document(
@@ -248,19 +253,21 @@ async def _process_into_db(
 
 
 async def delete_document(db: AsyncSession, kb_id: int, doc_id: int, user_id: int) -> None:
-    """删除文档 (Qdrant 向量 + 元数据 + 知识库计数递减)"""
+    """删除文档: 先删 MySQL 元数据 (权威), 提交后再删 Qdrant 向量 (失败只告警, 见 delete)"""
     await _get_owned_kb(db, kb_id, user_id)
     doc = await knowledge_repo.get_doc_by_id(db, doc_id)
     if doc is None or doc.kb_id != kb_id:
         raise BizException(ResultCode.NOT_FOUND, "文档不存在")
-    # 1. 删 Qdrant 向量
-    await get_rag_service().delete_doc(str(kb_id), str(doc_id))
-    # 2. 原子更新知识库计数 (GREATEST 防负数)
+    # 1. 原子更新知识库计数 (GREATEST 防负数) + 删文档元数据
     await knowledge_repo.update_kb_counts_on_delete(db, kb_id, doc.chunk_count or 0)
-    # 3. 删文档元数据
     await knowledge_repo.hard_delete_doc(db, doc_id)
     await db.commit()
     logger.info("文档删除: docId=%s, kbId=%s", doc_id, kb_id)
+    # 2. 删 Qdrant 向量 (失败留孤儿向量, 不影响任何可见功能)
+    try:
+        await get_rag_service().delete_doc(str(kb_id), str(doc_id))
+    except Exception:
+        logger.error("文档向量清理失败 (遗留向量待对账): docId=%s, kbId=%s", doc_id, kb_id, exc_info=True)
 
 
 async def get_embedding_model(db: AsyncSession, kb_id: int) -> str | None:

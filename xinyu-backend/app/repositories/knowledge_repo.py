@@ -5,6 +5,10 @@ from sqlalchemy import delete, select, text, update
 from app.core.security import now_local
 from app.models import KnowledgeBase, KnowledgeDocument
 
+# 列表查询防无界上限 (完整分页方案后续再做)
+MAX_KB_SIZE = 200
+MAX_DOC_SIZE = 500
+
 
 # ---------- 知识库 ----------
 
@@ -32,6 +36,7 @@ async def list_kbs(db, user_id: int) -> list[KnowledgeBase]:
         select(KnowledgeBase)
         .where(KnowledgeBase.user_id == user_id, KnowledgeBase.deleted == 0)
         .order_by(KnowledgeBase.created_at.desc())
+        .limit(MAX_KB_SIZE)
     )
     return list(result.scalars())
 
@@ -104,6 +109,7 @@ async def list_docs(db, kb_id: int) -> list[KnowledgeDocument]:
         select(KnowledgeDocument)
         .where(KnowledgeDocument.kb_id == kb_id, KnowledgeDocument.deleted == 0)
         .order_by(KnowledgeDocument.created_at.desc())
+        .limit(MAX_DOC_SIZE)
     )
     return list(result.scalars())
 

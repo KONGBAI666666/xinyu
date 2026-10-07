@@ -5,6 +5,9 @@ from sqlalchemy import delete, func, or_, select, text, update
 from app.core.security import now_local
 from app.models import AiCharacter, CharacterFavorite
 
+# 列表查询防无界上限 (完整分页方案后续再做, 先杜绝全表拉取)
+MAX_LIST_SIZE = 200
+
 
 async def get_by_id(db, character_id: int) -> AiCharacter | None:
     result = await db.execute(select(AiCharacter).where(AiCharacter.id == character_id, AiCharacter.deleted == 0))
@@ -53,6 +56,7 @@ async def list_visible(db, user_id: int | None) -> list[AiCharacter]:
         select(AiCharacter)
         .where(*conditions)
         .order_by(AiCharacter.creator_type.asc(), AiCharacter.created_at.desc())
+        .limit(MAX_LIST_SIZE)
     )
     return list(result.scalars())
 

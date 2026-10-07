@@ -8,7 +8,15 @@ from app.schemas.common import DateTimeStr
 class ConversationCreateDTO(BaseModel):
     characterId: str
     kbId: str | None = None
+    # 列宽 String(50), 超长会 DataError 落 500
     title: str | None = None
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, v: str | None) -> str | None:
+        if v is not None and len(v.strip()) > 50:
+            raise ValueError("会话标题最长50个字符")
+        return v
 
 
 class ConversationVO(BaseModel):

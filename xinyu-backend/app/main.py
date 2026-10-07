@@ -42,13 +42,15 @@ async def lifespan(app: FastAPI):
     await _promote_admin()
     # QdrantClient 惰性创建 (首次使用时建立长连接), 无需启动钩子
     yield
-    # 关闭时释放 Qdrant 长连接
+    # 关闭时释放 Qdrant 长连接与数据库连接池
     from app.ai.rag.rag_service import get_rag_service
+    from app.core.database import engine
 
     try:
         get_rag_service().close()
     except Exception:
         pass
+    await engine.dispose()
 
 
 async def _promote_admin() -> None:
@@ -77,7 +79,15 @@ async def _promote_admin() -> None:
         log.exception("管理员提升失败 (数据库不可达?), 该用户暂无管理权限")
 
 
-app = FastAPI(title="Xinyu Backend", version="1.0.0", lifespan=lifespan, docs_url=None, redoc_url=None)
+# Swagger/OpenAPI 仅 dev 暴露 (prod 关闭, 避免接口结构泄露)
+app = FastAPI(
+    title="Xinyu Backend",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs" if settings.dev_mode else None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if settings.dev_mode else None,
+)
 
 app.include_router(auth.router)
 app.include_router(users.router)
