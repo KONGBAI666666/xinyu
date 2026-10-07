@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # 允许模型 baseUrl 指向内网/环回地址 (本机 Ollama 等自建服务联调用), prod 默认拒绝
     llm_allow_private_baseurl: bool = False
 
+    # ---------- 管理员引导 ----------
+    # 启动时把该用户名提升为 ADMIN (幂等); 留空不提升。免手工改库开启管理后台
+    admin_username: str = ""
+
     # ============ 派生属性 ============
 
     @property

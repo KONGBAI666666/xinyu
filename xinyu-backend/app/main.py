@@ -26,6 +26,7 @@ from app.api import (
     stats,
     users,
 )
+from app.core.config import settings
 from app.core.exceptions import BizException, ResultCode
 from app.schemas.common import Result
 
@@ -37,6 +38,8 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 启动引导: 按用户名提升管理员 (幂等), 免手工改库开启管理后台
+    await _promote_admin()
     # QdrantClient 惰性创建 (首次使用时建立长连接), 无需启动钩子
     yield
     # 关闭时释放 Qdrant 长连接
@@ -46,6 +49,32 @@ async def lifespan(app: FastAPI):
         get_rag_service().close()
     except Exception:
         pass
+
+
+async def _promote_admin() -> None:
+    """XINYU_ADMIN_USERNAME 指定的用户启动时提升为 ADMIN (幂等)
+
+    数据库未就绪时只告警不阻断启动 (compose 已通过 depends_on 健康检查兜底)。
+    """
+    username = settings.admin_username.strip()
+    if not username:
+        return
+    from app.core.database import SessionFactory
+    from app.repositories import user_repo
+
+    log = logging.getLogger("xinyu.startup")
+    try:
+        async with SessionFactory() as session:
+            user = await user_repo.get_by_username(session, username)
+            if user is None:
+                log.warning("XINYU_ADMIN_USERNAME=%s 不存在, 跳过提升", username)
+                return
+            if user.role != "ADMIN":
+                user.role = "ADMIN"
+                await session.commit()
+                log.info("已提升管理员: %s", username)
+    except Exception:
+        log.exception("管理员提升失败 (数据库不可达?), 该用户暂无管理权限")
 
 
 app = FastAPI(title="Xinyu Backend", version="1.0.0", lifespan=lifespan, docs_url=None, redoc_url=None)

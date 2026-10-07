@@ -79,6 +79,8 @@ services:
       # Embedding 模型可选覆盖: 留空 = 按默认模型的服务商自动映射 (模型名+维度)
       XINYU_EMBEDDING_MODEL: ${XINYU_EMBEDDING_MODEL:-}
       XINYU_EMBEDDING_DIM: ${XINYU_EMBEDDING_DIM:-}
+      # 管理员引导 (可选): 启动时把该用户名提升为 ADMIN, 留空不提升
+      XINYU_ADMIN_USERNAME: ${XINYU_ADMIN_USERNAME:-}
       TZ: Asia/Shanghai
     depends_on:
       mysql:
