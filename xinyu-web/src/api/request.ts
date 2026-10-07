@@ -28,21 +28,37 @@ instance.interceptors.request.use((config) => {
   return config
 })
 
+/**
+ * 把 AxiosResponse 拆成业务数据。
+ *
+ * axios 的类型要求响应拦截器仍返回 AxiosResponse, 所以拦截器里对 response.data
+ * 做原地替换（保留 response 外壳以满足类型系统）, 再由下面各方法做一次性收窄。
+ * 这一步把「无法静态校验的信封拆解」收敛到唯一位置, 避免类型断言散落各处。
+ */
+function unwrap<T>(promise: Promise<{ data: unknown }>): Promise<T> {
+  return promise.then((res) => res.data as T)
+}
+
 instance.interceptors.response.use(
   (response) => {
     const res = response.data as ApiResult<unknown>
     if (res.code === 0) {
-      // 拆掉 Result 包装, 调用方直接拿业务数据
-      return res.data as never
+      // 原地拆掉 Result 包装, 业务数据放回 response.data
+      response.data = res.data
+      return response
     }
     if (res.code === 40100) {
       handleUnauthorized()
     }
     throw new BizError(res.code, res.message)
   },
-  () => {
-    // 网络层错误（超时/断网/5xx）: 统一收敛为 50000
-    throw new BizError(50000, '网络开小差了，请稍后重试')
+  (error) => {
+    // 网络层错误（超时/断网/5xx）: 统一收敛为 50000。
+    // 原始错误保留到控制台与 BizError.cause, 便于排障时不丢上下文
+    if (import.meta.env.DEV) {
+      console.error('[xinyu] 网络请求失败:', error)
+    }
+    throw new BizError(50000, '网络开小差了，请稍后重试', error)
   },
 )
 
@@ -56,19 +72,24 @@ export function handleUnauthorized(): void {
   }
 }
 
-/** 类型化请求方法: 返回值即为 Result.data */
+/**
+ * 类型化请求方法: 返回值即为 Result.data
+ *
+ * 类型参数 T 需与后端契约一致（契约定义见 types/api.ts, 与后端 schemas 人工对齐）。
+ * 拦截器已保证 code === 0 才会走到这里, 因此 res.data 就是 T。
+ */
 export function get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-  return instance.get(url, config) as Promise<T>
+  return unwrap<T>(instance.get(url, config))
 }
 
 export function post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-  return instance.post(url, data, config) as Promise<T>
+  return unwrap<T>(instance.post(url, data, config))
 }
 
 export function put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-  return instance.put(url, data, config) as Promise<T>
+  return unwrap<T>(instance.put(url, data, config))
 }
 
 export function del<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-  return instance.delete(url, config) as Promise<T>
+  return unwrap<T>(instance.delete(url, config))
 }

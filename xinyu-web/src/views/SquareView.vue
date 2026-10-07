@@ -4,12 +4,13 @@
  *
  * 布局:
  * - 顶栏: 品牌 + 搜索框 + 登录/进入聊天入口
- * - 排序 tab: 推荐 / 热门 / 最新
+ * - 排序 tab: 推荐 / 热门 / 最新 / 我的收藏(仅登录)
  * - 卡片网格: 头像 + 名称 + intro + 对话/收藏数 + 收藏按钮 + 进入详情
  *
  * 游客可访问, 点收藏/开聊引导登录（带回跳）。
+ * "我的收藏" tab 调收藏列表接口, 关键词为本地过滤（后端该接口不支持搜索）。
  */
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { charactersApi, type SquareSort } from '@/api/modules/character'
 import { useAuthStore } from '@/stores/auth'
@@ -24,9 +25,20 @@ const loading = ref(false)
 const errorText = ref('')
 
 const keyword = ref('')
-const sort = ref<SquareSort>('RECOMMEND')
+const sort = ref<SquareSort | 'FAVORITES'>('RECOMMEND')
 
-/** 搜索防抖: 输入停顿 300ms 后触发 */
+/** 排序 tab: 游客只见三种, 登录后追加"我的收藏" */
+const sortTabs = computed<{ value: SquareSort | 'FAVORITES'; label: string }[]>(() => {
+  const tabs: { value: SquareSort | 'FAVORITES'; label: string }[] = [
+    { value: 'RECOMMEND', label: '推荐' },
+    { value: 'HOT', label: '热门' },
+    { value: 'LATEST', label: '最新' },
+  ]
+  if (authStore.isLoggedIn) tabs.push({ value: 'FAVORITES', label: '我的收藏' })
+  return tabs
+})
+
+/** 搜索防抖: 输入停顿 300ms 后触发（收藏 tab 用本地过滤, 不重新请求） */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 onMounted(() => {
@@ -34,6 +46,7 @@ onMounted(() => {
 })
 
 watch(keyword, () => {
+  if (sort.value === 'FAVORITES') return
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(load, 300)
 })
@@ -44,13 +57,27 @@ async function load(): Promise<void> {
   loading.value = true
   errorText.value = ''
   try {
-    list.value = await charactersApi.square(keyword.value.trim() || null, sort.value)
+    if (sort.value === 'FAVORITES') {
+      list.value = await charactersApi.favorites()
+    } else {
+      list.value = await charactersApi.square(keyword.value.trim() || null, sort.value)
+    }
   } catch (e) {
     errorText.value = e instanceof BizError ? e.message : '加载失败'
   } finally {
     loading.value = false
   }
 }
+
+/** 实际渲染的列表: 收藏 tab 下按关键词本地过滤 */
+const displayList = computed<CharacterVO[]>(() => {
+  if (sort.value !== 'FAVORITES') return list.value
+  const kw = keyword.value.trim().toLowerCase()
+  if (!kw) return list.value
+  return list.value.filter(
+    (c) => c.name.toLowerCase().includes(kw) || (c.intro ?? '').toLowerCase().includes(kw)
+  )
+})
 
 async function toggleFavorite(c: CharacterVO): Promise<void> {
   // 游客引导登录
@@ -63,6 +90,10 @@ async function toggleFavorite(c: CharacterVO): Promise<void> {
       await charactersApi.unfavorite(c.id)
       c.favorited = false
       c.favoriteCount = Math.max(0, c.favoriteCount - 1)
+      // 收藏 tab 下取消收藏 → 从列表移除
+      if (sort.value === 'FAVORITES') {
+        list.value = list.value.filter((x) => x.id !== c.id)
+      }
     } else {
       await charactersApi.favorite(c.id)
       c.favorited = true
@@ -85,12 +116,6 @@ function startChat(c: CharacterVO): void {
 function redirectToLogin(): void {
   router.push({ path: '/login', query: { redirect: '/square' } })
 }
-
-const sortTabs: { value: SquareSort; label: string }[] = [
-  { value: 'RECOMMEND', label: '推荐' },
-  { value: 'HOT', label: '热门' },
-  { value: 'LATEST', label: '最新' },
-]
 </script>
 
 <template>
@@ -142,22 +167,24 @@ const sortTabs: { value: SquareSort; label: string }[] = [
       <div v-if="loading" class="state-hint">加载中…</div>
 
       <!-- 空状态 -->
-      <div v-else-if="list.length === 0" class="empty-state">
+      <div v-else-if="displayList.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
             <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
             <path d="M16 24H32M24 16V32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
         </div>
-        <p class="empty-text">{{ keyword ? '没有找到相关角色' : '广场还没有角色' }}</p>
-        <p v-if="keyword" class="empty-hint">换个关键词试试</p>
+        <p v-if="sort === 'FAVORITES'" class="empty-text">还没有收藏的角色</p>
+        <p v-else class="empty-text">{{ keyword ? '没有找到相关角色' : '广场还没有角色' }}</p>
+        <p v-if="sort === 'FAVORITES'" class="empty-hint">逛逛广场, 收藏喜欢的角色吧</p>
+        <p v-else-if="keyword" class="empty-hint">换个关键词试试</p>
         <p v-else class="empty-hint">创建一个角色发布到广场吧</p>
       </div>
 
       <!-- 卡片网格 -->
       <div v-else class="card-grid">
         <div
-          v-for="c in list"
+          v-for="c in displayList"
           :key="c.id"
           class="char-card"
           @click="router.push(`/square/${c.id}`)"

@@ -6,6 +6,9 @@
  */
 import { computed, ref } from 'vue'
 
+/** 与后端 ChatRequestDTO content 上限一致; maxlength 之外再做显式校验兜底粘贴绕过 */
+const MAX_LENGTH = 2000
+
 const props = defineProps<{
   /** 未选中会话时禁用 */
   disabled: boolean
@@ -19,8 +22,9 @@ const emit = defineEmits<{
 }>()
 
 const draft = ref('')
+const overLimit = computed(() => draft.value.length > MAX_LENGTH)
 const canSend = computed(
-  () => !props.disabled && !props.streaming && draft.value.trim().length > 0,
+  () => !props.disabled && !props.streaming && draft.value.trim().length > 0 && !overLimit.value,
 )
 
 function handleSend(): void {
@@ -75,6 +79,9 @@ function handleKeydown(event: KeyboardEvent): void {
         发送
       </button>
     </div>
+    <p v-if="overLimit" class="mx-auto mt-1 max-w-3xl text-xs" style="color: var(--color-danger)">
+      输入过长: {{ draft.length }} / {{ MAX_LENGTH }} 字
+    </p>
   </div>
 </template>
 

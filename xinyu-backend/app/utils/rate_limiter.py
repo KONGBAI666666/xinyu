@@ -4,6 +4,10 @@
 - 登录: 同用户名 15 分钟内失败 5 次即锁定; 同 IP 15 分钟最多尝试 30 次
 - 注册: 同 IP 每小时最多 50 次 (无论成败均消耗配额)
 登录成功清除该用户名的失败记录。实例重启后窗口清零, 属可接受的权衡。
+
+内存回收策略 (重要): 键数超软上限时只淘汰「窗口内已无有效事件」的键,
+绝不整体清空 —— 整体清空会把正在生效的登录锁定一并重置,
+攻击者只要刷满 5 万个不同用户名即可绕过全部限流。
 """
 
 import time
@@ -21,12 +25,61 @@ REGISTER_IP_WINDOW_MS = 60 * 60 * 1000
 # 键数软上限: 防止攻击者用海量用户名撑爆内存
 MAX_TRACKED_KEYS = 50_000
 
+# 各类键的窗口时长 (回收时用于判断事件是否已全部过期)
+_KEY_WINDOWS_MS: dict[str, float] = {
+    "login-fail": LOGIN_FAILURE_WINDOW_MS,
+    "login-ip": LOGIN_IP_WINDOW_MS,
+    "register-ip": REGISTER_IP_WINDOW_MS,
+}
+
 _events: dict[str, deque[float]] = {}
+
+
+def _window_ms_for(key: str) -> float:
+    """取键对应的窗口时长; 未知前缀按最长窗口保守处理"""
+    return _KEY_WINDOWS_MS.get(key.split(":", 1)[0], REGISTER_IP_WINDOW_MS)
+
+
+def _is_protected(key: str) -> bool:
+    """是否为「必须保留」的键: 已锁定的登录失败记录
+
+    这类键一旦被回收, 攻击者就能用海量无关 key 把锁定顶掉 —— 是可被构造的
+    限流绕过。宁可牺牲一点内存也不清它, 等它自然过期。
+    """
+    if not key.startswith("login-fail:"):
+        return False
+    dq = _events.get(key)
+    return dq is not None and len(dq) >= LOGIN_MAX_FAILURES
+
+
+def _evict_expired() -> None:
+    """回收内存: 移除「所有事件均已过期」的键, 保留仍在窗口内的记录
+
+    已锁定的登录失败记录额外受保护 (见 _is_protected), 避免被批量 key 顶掉。
+    """
+    now = time.time() * 1000
+    for key in [
+        k for k, dq in _events.items()
+        if (not dq or dq[-1] < now - _window_ms_for(k)) and not _is_protected(k)
+    ]:
+        _events.pop(key, None)
+
+    # 极端情况: 未过期的键仍超上限 → 优先淘汰未被保护的、最久未活动的键
+    if len(_events) > MAX_TRACKED_KEYS:
+        candidates = [
+            (k, dq[-1] if dq else 0.0)
+            for k, dq in _events.items()
+            if not _is_protected(k)
+        ]
+        candidates.sort(key=lambda kv: kv[1])
+        overflow = len(_events) - MAX_TRACKED_KEYS
+        for key, _ in candidates[:overflow]:
+            _events.pop(key, None)
 
 
 def _deque_for(key: str) -> deque[float]:
     if len(_events) > MAX_TRACKED_KEYS:
-        _events.clear()
+        _evict_expired()
     return _events.setdefault(key, deque())
 
 

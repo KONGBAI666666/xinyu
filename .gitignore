@@ -36,3 +36,4 @@ __pycache__/
 .workbuddy/
 .dbcheck.py
 _dbcheck_result.txt
+.start-logs/

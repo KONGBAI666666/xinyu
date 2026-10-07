@@ -1,8 +1,8 @@
-import { get, post } from '@/api/request'
-import type { AuthResponse, LoginDTO, RegisterDTO, UserVO } from '@/types/api'
+import { get, post, put } from '@/api/request'
+import type { AuthResponse, LoginDTO, RegisterDTO, UpdatePasswordDTO, UserVO } from '@/types/api'
 
 /**
- * 认证接口封装（契约一 1.3）
+ * 认证/账户接口封装（契约一 1.3）
  * 页面/store 只依赖本模块, 不直接触碰 axios
  */
 export const authApi = {
@@ -19,5 +19,10 @@ export const authApi = {
   /** 当前用户信息（刷新页面后校准缓存, 兼校验 token 是否有效） */
   fetchMe(): Promise<UserVO> {
     return get('/users/me')
+  },
+
+  /** 修改密码（原密码错误返回 42200 "原密码错误"; 成功后旧 token 仍有效, 无需重新登录） */
+  updatePassword(dto: UpdatePasswordDTO): Promise<void> {
+    return put('/users/me/password', dto)
   },
 }

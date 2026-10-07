@@ -53,16 +53,15 @@ async def _character_name(db: AsyncSession, character_id: int) -> str:
 
 
 async def list_by_user(db: AsyncSession, user_id: int, character_id: int | None) -> list[MemoryVO]:
-    """列出用户的全部记忆, 可按角色筛选 (角色名批量补齐, 避免每条 JOIN)"""
+    """列出用户的全部记忆, 可按角色筛选 (角色名一次 IN 查询补齐, 避免 N 次串行查库)"""
     memories = await memory_repo.list_by_user(db, user_id, character_id)
     if not memories:
         return []
-    # 批量查角色名, 避免每条 JOIN
-    names: dict[int, str] = {}
-    for m in memories:
-        if m.character_id not in names:
-            names[m.character_id] = await _character_name(db, m.character_id)
-    return [_to_vo(m, names[m.character_id]) for m in memories]
+    # 一次性批量查角色名: 逐个 await 查询是 N 次 round-trip, 不是真正的批量
+    ids = {m.character_id for m in memories}
+    characters = await character_repo.get_by_ids(db, list(ids))
+    names: dict[int, str] = {c.id: c.name for c in characters}
+    return [_to_vo(m, names.get(m.character_id, "已删除角色")) for m in memories]
 
 
 async def update(db: AsyncSession, memory_id: int, user_id: int, req: MemoryUpdateDTO) -> MemoryVO:

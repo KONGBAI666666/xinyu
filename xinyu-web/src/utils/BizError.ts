@@ -4,10 +4,13 @@
  */
 export class BizError extends Error {
   readonly code: number
+  /** 原始异常（网络层错误时保留 axios error, 供排障用; 业务错误为 undefined） */
+  readonly cause?: unknown
 
-  constructor(code: number, message: string) {
+  constructor(code: number, message: string, cause?: unknown) {
     super(message)
     this.name = 'BizError'
     this.code = code
+    this.cause = cause
   }
 }

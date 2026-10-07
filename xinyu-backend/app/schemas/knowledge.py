@@ -18,6 +18,13 @@ class KnowledgeBaseCreateDTO(BaseModel):
             raise ValueError("知识库名称最长50个字符")
         return v
 
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, v: str | None) -> str | None:
+        if v and len(v) > 200:
+            raise ValueError("知识库描述最长200个字符")
+        return v
+
 
 class KnowledgeDocumentVO(BaseModel):
     id: str

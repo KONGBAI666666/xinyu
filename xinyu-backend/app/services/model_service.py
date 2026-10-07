@@ -81,6 +81,16 @@ async def update(db: AsyncSession, model_id: int, user_id: int, req: AiModelSave
     if want_default and model.is_default != 1:
         await model_repo.clear_default(db, user_id)
         model.is_default = 1
+    elif not want_default and model.is_default == 1:
+        # 取消的是唯一默认模型: 自动把最近创建的其他模型置为默认, 否则拒绝
+        others = [m for m in await model_repo.list_by_user(db, user_id) if m.id != model.id]
+        if not others:
+            raise BizException(ResultCode.PARAM_ERROR, "不能取消唯一默认模型, 请先添加其他模型")
+        model.is_default = 0
+        await model_repo.update_model(db, model)
+        await model_repo.set_default(db, others[0].id)
+        await db.commit()
+        return _to_vo(model)
     elif not want_default:
         model.is_default = 0
     await model_repo.update_model(db, model)

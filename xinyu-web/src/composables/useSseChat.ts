@@ -116,11 +116,11 @@ export function useSseChat() {
               break
             }
             case 'error': {
-              // LLM 异常（51001~51004）: 气泡置 FAILED, 连接由服务端收尾
-              JSON.parse(event.data) as SseErrorEvent
+              // LLM 异常（51001~51004）: 气泡置 FAILED 并展示真实原因, 连接由服务端收尾
+              const err = JSON.parse(event.data) as SseErrorEvent
               finished = true
               flushDelta()
-              messageStore.failAssistant()
+              messageStore.failAssistant(err.message)
               controller?.abort()
               break
             }
@@ -136,11 +136,12 @@ export function useSseChat() {
       // 主动 abort（停止/收尾）时 fetch 会以 AbortError 结束, 属正常路径
       if (!finished && !signal.aborted) {
         flushDelta()
-        // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的 USER 消息
-        messageStore.failOrRollback()
-        cleanup()
         // 原生网络异常 (TypeError 等) 收敛为 BizError, 调用方统一按业务错误处理
-        throw e instanceof BizError ? e : new BizError(50000, '网络连接中断，请稍后重试')
+        const bizError = e instanceof BizError ? e : new BizError(50000, '网络连接中断，请稍后重试')
+        // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的 USER 消息
+        messageStore.failOrRollback(bizError.message)
+        cleanup()
+        throw bizError
       }
     }
     cleanup()

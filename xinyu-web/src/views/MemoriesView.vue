@@ -66,6 +66,11 @@ async function submit(): Promise<void> {
     errorText.value = '记忆内容不能为空'
     return
   }
+  // 长度校验: 与后端 MemoryUpdateDTO 一致, maxlength 之外再兜底
+  if (form.value.content.length > 500) {
+    errorText.value = '记忆内容最长500个字符'
+    return
+  }
   submitting.value = true
   try {
     const updated = await memoriesApi.update(editing.value.id, form.value)
@@ -235,7 +240,7 @@ const keyLabel: Record<string, string> = {
           <div class="drawer-body">
             <div class="form-group">
               <label class="form-label">记忆内容</label>
-              <textarea v-model="form.content" class="form-textarea" rows="4" placeholder="简短陈述, 如: 用户喜欢 Java 编程" />
+              <textarea v-model="form.content" class="form-textarea" rows="4" maxlength="500" placeholder="简短陈述, 如: 用户喜欢 Java 编程" />
             </div>
 
             <div class="form-group">

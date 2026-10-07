@@ -229,7 +229,8 @@ async function handleRename(id: string, title: string): Promise<void> {
     </div>
 
     <nav class="mt-3 flex-1 overflow-y-auto px-3 pb-4">
-      <p v-if="conversationStore.loading" class="hint text-center text-xs">加载中…</p>
+      <!-- 仅首次加载(列表为空)显示加载中; SSE 完成后的后台刷新保留列表原地更新, 不闪烁 -->
+      <p v-if="conversationStore.loading && conversationStore.list.length === 0" class="hint text-center text-xs">加载中…</p>
       <p v-else-if="conversationStore.list.length === 0" class="hint text-center text-xs">
         还没有会话，点上方开始聊天
       </p>

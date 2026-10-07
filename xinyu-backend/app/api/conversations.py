@@ -6,7 +6,7 @@ messages.py 负责聊天链路（消息历史 / SSE / 停止生成）。
 """
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user_id, parse_id
@@ -20,6 +20,15 @@ router = APIRouter(prefix="/api/conversations", tags=["conversations"])
 
 class RenameBody(BaseModel):
     title: str
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("会话标题不能为空")
+        if len(v) > 50:
+            raise ValueError("会话标题最长50个字符")
+        return v
 
 
 @router.get("")

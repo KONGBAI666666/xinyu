@@ -37,6 +37,12 @@ export interface LoginDTO {
   password: string
 }
 
+/** PUT /api/users/me/password 请求体 */
+export interface UpdatePasswordDTO {
+  oldPassword: string
+  newPassword: string
+}
+
 export interface ConversationVO {
   id: string
   characterId: string
@@ -77,6 +83,8 @@ export interface MessageVO {
   /** 实际使用模型（仅 ASSISTANT） */
   modelCode: string | null
   createdAt: string
+  /** SSE error 事件带回的失败原因（仅前端本地态, 后端不存储） */
+  errorMessage?: string | null
 }
 
 // ---------- SSE 事件载荷（契约二 2.2, 与后端 Sse*VO 逐字段一致） ----------

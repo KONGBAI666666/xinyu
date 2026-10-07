@@ -101,6 +101,13 @@ async function onFileSelected(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   if (!input.files || input.files.length === 0 || !detailKb.value) return
   const file = input.files[0]
+  // 与后端 5MB 限制一致, 前端先拦, 避免白等上传往返
+  const MAX_SIZE = 5 * 1024 * 1024
+  if (file.size > MAX_SIZE) {
+    uploadError.value = `文件大小超过 5MB 限制 (当前 ${(file.size / 1024 / 1024).toFixed(1)} MB)`
+    input.value = ''
+    return
+  }
   uploading.value = true
   uploadError.value = ''
   try {
@@ -238,7 +245,7 @@ function statusClass(status: string): string {
           <div class="upload-section">
             <label class="upload-btn" :class="{ uploading }">
               <input type="file" accept=".pdf,.md,.markdown,.txt" @change="onFileSelected" :disabled="uploading" />
-              {{ uploading ? '处理中 (解析→分块→向量化)...' : '+ 上传文档 (PDF / Markdown / TXT)' }}
+              {{ uploading ? '处理中 (解析→分块→向量化)...' : '+ 上传文档 (PDF / Markdown / TXT, ≤5MB)' }}
             </label>
             <p v-if="uploadError" class="upload-error">{{ uploadError }}</p>
           </div>

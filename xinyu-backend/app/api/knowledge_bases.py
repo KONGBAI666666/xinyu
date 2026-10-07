@@ -12,8 +12,8 @@ from app.services import knowledge_service
 
 router = APIRouter(prefix="/api/knowledge-bases", tags=["knowledge"])
 
-# 与 Java 侧 multipart max-file-size 一致
-MAX_UPLOAD_SIZE = 20 * 1024 * 1024
+# 上传走同步处理链路 (解析→分块→向量化), 大文件易导致请求超时, 限制 5MB
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024
 
 
 @router.get("")
@@ -65,7 +65,7 @@ async def upload_document(
     """上传文档到知识库 (同步处理: 解析 → 分块 → 向量化 → 入库)"""
     content = await file.read()
     if len(content) > MAX_UPLOAD_SIZE:
-        raise BizException(ResultCode.PARAM_ERROR, "文件大小超过 20MB 限制")
+        raise BizException(ResultCode.PARAM_ERROR, "文件大小超过 5MB 限制")
     return Result.ok(
         await knowledge_service.upload_document(
             db, parse_id(kb_id, "kbId"), user_id, file.filename or "unknown", len(content), content

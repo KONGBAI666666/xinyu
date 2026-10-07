@@ -37,7 +37,7 @@ const renderedContent = computed(() =>
       </template>
 
       <p v-if="message.status === 'FAILED'" class="status-note failed">
-        生成失败，请稍后重试
+        {{ message.errorMessage || '生成失败，请稍后重试' }}
       </p>
       <p v-else-if="message.status === 'STOPPED'" class="status-note stopped">已停止生成</p>
     </div>

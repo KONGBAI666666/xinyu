@@ -38,6 +38,8 @@ MAX_CONTEXT_MESSAGES = 20
 SSE_TIMEOUT_SECONDS = 180
 # 记忆提取时最多回看的消息条数（控制 prompt 长度 + 成本）
 RECENT_WINDOW = 10
+# RAG 注入上限: 防止检索块过长撑爆模型上下文窗口
+MAX_RAG_BLOCK_CHARS = 2000
 
 # 进行中的生成: conversationId → 取消标志 (每会话同时至多一个流)
 _active_streams: dict[int, asyncio.Event] = {}
@@ -121,7 +123,11 @@ async def chat(db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRe
     conversation = await conversation_service.require_owned(db, conversation_id, user_id)
     character = await character_repo.get_by_id(db, conversation.character_id)
     if character is None:
-        raise BizException(ResultCode.NOT_FOUND, "角色不存在")
+        raise BizException(ResultCode.PARAM_ERROR, "该会话的角色已被删除, 请新建会话")
+
+    # 同一会话同时至多一个生成流: 在落库前拒绝, 避免并发请求覆盖取消标志/产生孤儿消息
+    if conversation_id in _active_streams:
+        raise BizException(ResultCode.PARAM_ERROR, "当前会话正在生成中, 请等待完成或先停止生成")
 
     # 解析模型配置 (解密 API Key)
     model_config = await _resolve_model_config(db, conversation, user_id)
@@ -302,8 +308,10 @@ async def _event_stream(
                 model_config=model_config,
                 embedding_model=rag_embedding_model,
             )
-            # RAG 结果只追加一次到 system 消息末尾
+            # RAG 结果只追加一次到 system 消息末尾 (超长截断, 保护上下文窗口)
             if rag_block and messages and messages[0].role == "system":
+                if len(rag_block) > MAX_RAG_BLOCK_CHARS:
+                    rag_block = rag_block[:MAX_RAG_BLOCK_CHARS] + "\n[知识库参考内容过长, 已截断]"
                 first = messages[0]
                 messages[0] = first.model_copy(update={"content": first.content + "\n\n" + rag_block})
 
@@ -420,6 +428,7 @@ async def _extract_and_save(
     try:
         result = await MemoryExtractor.extract(model_config, dialog_text)
         if not result.memories:
+            logger.info("记忆提取无可保存条目: userId=%s, characterId=%s", user_id, character_id)
             return
         async with SessionFactory() as session:
             await memory_service.save_extracted(user_id, character_id, conversation_id, result.memories)

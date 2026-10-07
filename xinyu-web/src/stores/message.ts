@@ -4,7 +4,7 @@ import { conversationApi } from '@/api/modules/conversation'
 import type { MessageVO, SseDoneEvent } from '@/types/api'
 
 /** 历史消息每页条数（后端缺省 20, 上限 100） */
-const PAGE_SIZE = 20
+export const PAGE_SIZE = 20
 
 /**
  * 当前会话消息状态（契约三 3.1 message store）
@@ -16,6 +16,10 @@ export const useMessageStore = defineStore('message', () => {
   /** 当前会话消息, 升序（旧→新） */
   const items = ref<MessageVO[]>([])
   const loadingHistory = ref(false)
+  /** 向上加载更早历史中（顶部指示用, 不打断当前视图） */
+  const loadingMore = ref(false)
+  /** 是否还有更早的消息可加载（游标分页） */
+  const hasMore = ref(false)
   /** 是否有进行中的生成（发送按钮 ⇄ 停止按钮） */
   const streaming = ref(false)
 
@@ -33,8 +37,30 @@ export const useMessageStore = defineStore('message', () => {
       items.value = page.map((m) =>
         m.status === 'GENERATING' ? { ...m, status: 'STOPPED' } : m,
       )
+      hasMore.value = page.length >= PAGE_SIZE
     } finally {
       if (seq === loadSeq) loadingHistory.value = false
+    }
+  }
+
+  /** 向上加载上一页历史并前置插入（滚动到顶部时调用） */
+  async function loadMore(conversationId: string): Promise<void> {
+    if (loadingMore.value || loadingHistory.value || !hasMore.value) return
+    const first = items.value[0]
+    // 乐观插入的本地消息无真实 id, 不能作为游标
+    if (!first || first.id.startsWith('local-')) return
+    const seq = loadSeq
+    loadingMore.value = true
+    try {
+      const page = await conversationApi.fetchMessages(conversationId, {
+        before: first.id,
+        size: PAGE_SIZE,
+      })
+      if (seq !== loadSeq) return // 期间切换了会话, 丢弃过期响应
+      items.value = [...page, ...items.value]
+      hasMore.value = page.length >= PAGE_SIZE
+    } finally {
+      if (seq === loadSeq) loadingMore.value = false
     }
   }
 
@@ -95,11 +121,12 @@ export const useMessageStore = defineStore('message', () => {
     streaming.value = false
   }
 
-  /** error: → FAILED（后端同步置 FAILED, 已生成文本保留） */
-  function failAssistant(): void {
+  /** error: → FAILED（后端同步置 FAILED, 已生成文本保留）; 记录 LLM 失败原因供气泡展示 */
+  function failAssistant(errorMessage?: string): void {
     const generating = findGenerating()
     if (generating) {
       generating.status = 'FAILED'
+      generating.errorMessage = errorMessage ?? null
     }
     streaming.value = false
   }
@@ -108,10 +135,11 @@ export const useMessageStore = defineStore('message', () => {
    * 连接失败收尾: 已有 GENERATING 占位则置 FAILED;
    * meta 未到达（服务端未落库）则回滚乐观插入的本地 USER 消息, 避免刷新后消失的"孤儿"气泡
    */
-  function failOrRollback(): void {
+  function failOrRollback(errorMessage?: string): void {
     const generating = findGenerating()
     if (generating) {
       generating.status = 'FAILED'
+      generating.errorMessage = errorMessage ?? null
     } else {
       const last = items.value[items.value.length - 1]
       if (last?.messageType === 'USER' && last.id.startsWith('local-')) {
@@ -134,6 +162,7 @@ export const useMessageStore = defineStore('message', () => {
   function clear(): void {
     loadSeq++ // 使在途的历史加载响应作废
     items.value = []
+    hasMore.value = false
     streaming.value = false
   }
 
@@ -146,8 +175,11 @@ export const useMessageStore = defineStore('message', () => {
   return {
     items,
     loadingHistory,
+    loadingMore,
+    hasMore,
     streaming,
     load,
+    loadMore,
     appendUserMessage,
     confirmMeta,
     appendDelta,

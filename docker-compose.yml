@@ -17,7 +17,8 @@ services:
     image: mysql:8.0
     container_name: xinyu-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      # :? 语法: 变量缺失或为空时 compose 直接报错退出, 避免 MySQL 以空 root 密码启动
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:?请先复制 .env.example 为 .env 并设置 MYSQL_PASSWORD}
       MYSQL_DATABASE: xinyu
       TZ: Asia/Shanghai
     command:
@@ -66,9 +67,10 @@ services:
       XINYU_DB_HOST: mysql
       XINYU_DB_PORT: "3306"
       XINYU_DB_USER: root
-      XINYU_DB_PASSWORD: ${MYSQL_PASSWORD}
+      XINYU_DB_PASSWORD: ${MYSQL_PASSWORD:?请先复制 .env.example 为 .env 并设置 MYSQL_PASSWORD}
       XINYU_DB_NAME: xinyu
-      XINYU_JWT_SECRET: ${XINYU_JWT_SECRET}
+      # :? 语法: 缺失/为空时立即报错, 避免用到不安全的默认密钥
+      XINYU_JWT_SECRET: ${XINYU_JWT_SECRET:?请先在 .env 中设置 XINYU_JWT_SECRET (≥32 字符)}
       # 用户 API Key 加密密钥 (可选): 留空则回退 XINYU_JWT_SECRET; 存量库勿随意变更
       XINYU_CRYPTO_SECRET: ${XINYU_CRYPTO_SECRET:-}
       # Python SDK 走 Qdrant REST 端口 6333

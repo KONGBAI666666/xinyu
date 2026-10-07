@@ -11,6 +11,11 @@ export function setupRouterGuards(router: Router): void {
   router.beforeEach((to) => {
     const auth = useAuthStore()
 
+    // token 已过期: 清掉本地凭证, 按未登录处理（不等首个请求 401 才跳转）
+    if (auth.isLoggedIn && !auth.isTokenValid()) {
+      auth.logout()
+    }
+
     if (to.meta.requiresAuth && !auth.isLoggedIn) {
       return { path: '/login', query: { redirect: to.fullPath } }
     }

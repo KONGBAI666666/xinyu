@@ -58,6 +58,11 @@ export const charactersApi = {
 
   // ---------- 收藏（需登录） ----------
 
+  /** 收藏列表: 按收藏时间倒序, 仅 PUBLISHED */
+  favorites(): Promise<CharacterVO[]> {
+    return get('/characters/favorites')
+  },
+
   /** 收藏角色(幂等) */
   favorite(id: string): Promise<void> {
     return post(`/characters/${id}/favorite`)

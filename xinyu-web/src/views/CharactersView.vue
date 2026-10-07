@@ -98,6 +98,23 @@ async function submit(): Promise<void> {
     errorText.value = '开场白不能为空'
     return
   }
+  // 长度校验: 与后端 CharacterSaveDTO 一致, maxlength 之外再兜底（防粘贴绕过）
+  if (form.value.name.length > 32) {
+    errorText.value = '角色名最长32个字符'
+    return
+  }
+  if ((form.value.intro ?? '').length > 200) {
+    errorText.value = '介绍最长200个字符'
+    return
+  }
+  if (form.value.systemPrompt.length > 10000) {
+    errorText.value = '人设 Prompt 最长10000字'
+    return
+  }
+  if (form.value.greeting.length > 500) {
+    errorText.value = '开场白最长500个字符'
+    return
+  }
   submitting.value = true
   try {
     if (creating.value) {
@@ -292,7 +309,7 @@ const statusLabel: Record<string, string> = {
 
               <div class="form-group">
                 <label class="form-label">角色名 *</label>
-                <input v-model="form.name" class="form-input" placeholder="如: 屿屿" />
+                <input v-model="form.name" class="form-input" maxlength="32" placeholder="如: 屿屿" />
               </div>
 
               <div class="form-group">
@@ -302,12 +319,12 @@ const statusLabel: Record<string, string> = {
 
               <div class="form-group">
                 <label class="form-label">一句话介绍</label>
-                <input v-model="form.intro" class="form-input" placeholder="广场卡片展示, 30 字以内" />
+                <input v-model="form.intro" class="form-input" maxlength="200" placeholder="广场卡片展示, 30 字以内" />
               </div>
 
               <div class="form-group">
                 <label class="form-label">开场白 *</label>
-                <textarea v-model="form.greeting" class="form-textarea" rows="2" placeholder="新会话首条 AI 消息, 如: 你好呀, 我是…" />
+                <textarea v-model="form.greeting" class="form-textarea" rows="2" maxlength="500" placeholder="新会话首条 AI 消息, 如: 你好呀, 我是…" />
               </div>
             </div>
 
@@ -321,6 +338,7 @@ const statusLabel: Record<string, string> = {
                 v-model="form.systemPrompt"
                 class="form-textarea prompt-area"
                 rows="10"
+                maxlength="10000"
                 placeholder="定义角色的人设、性格、说话风格、边界。&#10;例: 你是屿屿, 一座温暖的小岛。性格温柔耐心, 像老朋友。说话简洁口语化, 多倾听多共情。"
               />
               <div class="prompt-tips">

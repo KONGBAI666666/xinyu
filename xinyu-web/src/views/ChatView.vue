@@ -54,6 +54,8 @@ watch(
   () => conversationStore.activeId,
   (id) => {
     stop()
+    // 被中断的会话其消息由后端异步置 STOPPED, 刷新列表保证侧边栏摘要同步
+    conversationStore.fetchList().catch(() => {})
     messageStore.clear()
     if (id) {
       messageStore.load(id).catch(showError)

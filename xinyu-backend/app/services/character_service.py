@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BizException, ResultCode
 from app.models import AiCharacter, CharacterFavorite
-from app.repositories import character_repo
+from app.repositories import character_repo, conversation_repo
 from app.schemas.character import CharacterSaveDTO, CharacterVO
 
 logger = logging.getLogger("xinyu.character")
@@ -118,13 +118,16 @@ async def update(db: AsyncSession, character_id: int, user_id: int, req: Charact
 
 
 async def delete(db: AsyncSession, character_id: int, user_id: int) -> None:
-    """删除角色(仅创建者可删除, 官方不可删)"""
+    """删除角色(仅创建者可删除, 官方不可删); 级联软删该角色下的会话"""
     character = await _require_owned(db, character_id, user_id)
     if character.creator_type == "OFFICIAL":
         raise BizException(ResultCode.PARAM_ERROR, "官方角色不可删除")
     await character_repo.soft_delete(db, character_id)
+    removed_convs = await conversation_repo.soft_delete_by_character(db, character_id, user_id)
     await db.commit()
-    logger.info("用户删除角色: userId=%s, characterId=%s", user_id, character_id)
+    logger.info(
+        "用户删除角色: userId=%s, characterId=%s, 级联清理会话数=%s", user_id, character_id, removed_convs
+    )
 
 
 async def switch_status(db: AsyncSession, character_id: int, user_id: int, status: str) -> CharacterVO:

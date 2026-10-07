@@ -25,6 +25,8 @@ async def update_password(db: AsyncSession, user_id: int, dto: UpdatePasswordDTO
     if user is None:
         raise BizException(ResultCode.NOT_FOUND, "用户不存在")
     if not verify_password(dto.oldPassword, user.password):
-        raise BizException(ResultCode.UNAUTHORIZED, "原密码错误")
+        # 用 42200 而非 40100: 原密码错误属提交数据错误,
+        # 40100 会被前端全局拦截器当作登录过期清凭证强制登出
+        raise BizException(ResultCode.PARAM_ERROR, "原密码错误")
     await user_repo.update_password(db, user_id, hash_password(dto.newPassword))
     await db.commit()

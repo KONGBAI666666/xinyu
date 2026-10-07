@@ -39,7 +39,7 @@ class MemoryExtractor:
 
     @staticmethod
     def _parse_response(content: str) -> list[ExtractedMemory]:
-        """解析 LLM 返回的 JSON 数组"""
+        """解析 LLM 返回的 JSON 数组 (容忍代码块包裹与前后多余文字)"""
         import json
 
         # 去除可能的 markdown 代码块包裹
@@ -48,24 +48,36 @@ class MemoryExtractor:
             lines = text.split("\n")
             lines = [l for l in lines if not l.startswith("```")]
             text = "\n".join(lines).strip()
-        try:
-            data = json.loads(text)
-            if not isinstance(data, list):
-                return []
-            result = []
-            for item in data:
-                if not isinstance(item, dict):
-                    continue
-                item_content = (item.get("content") or "").strip()
-                if not item_content:
-                    continue
-                result.append(
-                    ExtractedMemory(
-                        memoryKey=item.get("memory_key"),
-                        content=item_content,
-                        importance=item.get("importance", "MEDIUM"),
-                    )
-                )
-            return result
-        except (json.JSONDecodeError, TypeError):
+
+        data = MemoryExtractor._try_load_array(text)
+        if data is None:
+            # 兜底: 模型可能在 JSON 前后输出多余文字, 截取首个 [ ... ] 片段再试
+            start, end = text.find("["), text.rfind("]")
+            if 0 <= start < end:
+                data = MemoryExtractor._try_load_array(text[start : end + 1])
+        if not isinstance(data, list):
             return []
+        result = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            item_content = (item.get("content") or "").strip()
+            if not item_content:
+                continue
+            result.append(
+                ExtractedMemory(
+                    memoryKey=item.get("memory_key") or item.get("memoryKey"),
+                    content=item_content,
+                    importance=item.get("importance", "MEDIUM"),
+                )
+            )
+        return result
+
+    @staticmethod
+    def _try_load_array(text: str):
+        import json
+
+        try:
+            return json.loads(text)
+        except (json.JSONDecodeError, TypeError):
+            return None

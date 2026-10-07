@@ -7,6 +7,7 @@
 """
 
 from functools import lru_cache
+from urllib.parse import quote_plus
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     # dev: 无默认模型时降级 mock; prod: 抛错提示先配置模型
     env: str = "dev"  # dev / prod
     host: str = "0.0.0.0"
-    port: int = 9200
+    port: int = 9000
 
     # ---------- MySQL ----------
     db_host: str = "localhost"
@@ -75,7 +76,7 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         return (
-            f"mysql+aiomysql://{self.db_user}:{self.db_password}"
+            f"mysql+aiomysql://{self.db_user}:{quote_plus(self.db_password)}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4"
         )
 
@@ -85,9 +86,17 @@ class Settings(BaseSettings):
         return self.crypto_secret or self.jwt_secret
 
 
+_DEV_JWT_SECRET = "xinyu-dev-jwt-secret-change-me-please!!"
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    s = Settings()
+    if not s.dev_mode and s.jwt_secret == _DEV_JWT_SECRET:
+        raise RuntimeError(
+            "prod 环境禁止使用默认 JWT 密钥, 请设置 XINYU_JWT_SECRET (≥32 字符)"
+        )
+    return s
 
 
 settings = get_settings()

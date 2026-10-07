@@ -1,14 +1,16 @@
 <script setup lang="ts">
 /**
- * 聊天区顶栏: 模型切换器 + 当前会话标题 + 统计入口 + 用户昵称 + 退出登录
+ * 聊天区顶栏: 模型切换器 + 当前会话标题 + 统计入口 + 用户昵称 + 修改密码 + 退出登录
  */
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useStatsStore } from '@/stores/stats'
 import { useModelsStore } from '@/stores/models'
 import { useConversationStore } from '@/stores/conversation'
 import { modelsApi } from '@/api/modules/models'
+import { authApi } from '@/api/modules/auth'
+import { BizError } from '@/utils/BizError'
 import type { AiModelVO } from '@/types/api'
 
 const router = useRouter()
@@ -76,6 +78,57 @@ function toggleDropdown(): void {
 
 function closeDropdown(): void {
   modelDropdownOpen.value = false
+}
+
+// ---------- 修改密码弹窗 ----------
+
+const pwModalOpen = ref(false)
+const pwSubmitting = ref(false)
+const pwError = ref('')
+/** 成功提示（2 秒自动消失） */
+const pwTip = ref('')
+const pwForm = reactive({ oldPassword: '', newPassword: '', confirm: '' })
+
+function openPwModal(): void {
+  pwForm.oldPassword = ''
+  pwForm.newPassword = ''
+  pwForm.confirm = ''
+  pwError.value = ''
+  pwModalOpen.value = true
+}
+
+function closePwModal(): void {
+  pwModalOpen.value = false
+}
+
+/** 前端校验与后端 UpdatePasswordDTO 对齐: 新密码 6-20 位 + 两次一致 */
+function validatePwForm(): string {
+  if (!pwForm.oldPassword) return '请输入原密码'
+  if (pwForm.newPassword.length < 6 || pwForm.newPassword.length > 20) {
+    return '新密码长度需为 6-20 位'
+  }
+  if (pwForm.newPassword !== pwForm.confirm) return '两次输入的新密码不一致'
+  return ''
+}
+
+async function submitPassword(): Promise<void> {
+  pwError.value = validatePwForm()
+  if (pwError.value) return
+  pwSubmitting.value = true
+  try {
+    await authApi.updatePassword({
+      oldPassword: pwForm.oldPassword,
+      newPassword: pwForm.newPassword,
+    })
+    pwModalOpen.value = false
+    pwTip.value = '密码已修改'
+    setTimeout(() => (pwTip.value = ''), 2000)
+  } catch (e) {
+    // 42200 "原密码错误" 等业务错误在弹窗内提示, 不触发全局登出
+    pwError.value = e instanceof BizError ? e.message : '修改失败，请稍后重试'
+  } finally {
+    pwSubmitting.value = false
+  }
 }
 </script>
 
@@ -193,7 +246,69 @@ function closeDropdown(): void {
         </svg>
       </button>
       <span class="nickname text-sm">{{ authStore.user?.nickname }}</span>
+      <button type="button" class="pw-btn text-xs" @click="openPwModal">修改密码</button>
       <button type="button" class="logout-btn text-xs" @click="$emit('logout')">退出登录</button>
+    </div>
+
+    <!-- 修改密码成功提示 -->
+    <Transition name="dropdown">
+      <div v-if="pwTip" class="pw-toast">{{ pwTip }}</div>
+    </Transition>
+
+    <!-- 修改密码弹窗 -->
+    <div v-if="pwModalOpen" class="modal-mask" @click.self="closePwModal">
+      <div class="pw-modal">
+        <h3 class="pw-modal-title">修改密码</h3>
+        <div class="pw-field">
+          <label class="pw-label" for="pw-old">原密码</label>
+          <input
+            id="pw-old"
+            v-model="pwForm.oldPassword"
+            class="pw-input"
+            type="password"
+            autocomplete="current-password"
+            placeholder="请输入当前密码"
+          />
+        </div>
+        <div class="pw-field">
+          <label class="pw-label" for="pw-new">新密码</label>
+          <input
+            id="pw-new"
+            v-model="pwForm.newPassword"
+            class="pw-input"
+            type="password"
+            maxlength="20"
+            autocomplete="new-password"
+            placeholder="6-20 位"
+          />
+        </div>
+        <div class="pw-field">
+          <label class="pw-label" for="pw-confirm">确认新密码</label>
+          <input
+            id="pw-confirm"
+            v-model="pwForm.confirm"
+            class="pw-input"
+            type="password"
+            maxlength="20"
+            autocomplete="new-password"
+            placeholder="再次输入新密码"
+          />
+        </div>
+        <p v-if="pwError" class="pw-error">{{ pwError }}</p>
+        <div class="pw-actions">
+          <button type="button" class="pw-cancel" :disabled="pwSubmitting" @click="closePwModal">
+            取消
+          </button>
+          <button
+            type="button"
+            class="pw-submit"
+            :disabled="pwSubmitting"
+            @click="submitPassword"
+          >
+            {{ pwSubmitting ? '提交中…' : '确认修改' }}
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 </template>
@@ -401,6 +516,121 @@ function closeDropdown(): void {
   background: var(--bg-hover);
   color: var(--text-secondary);
 }
+
+/* ---------- 修改密码 ---------- */
+.pw-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.pw-btn:hover {
+  background: var(--bg-hover);
+  color: var(--brand-to);
+}
+
+.pw-toast {
+  position: fixed;
+  top: 68px;
+  right: 24px;
+  z-index: 60;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(94, 234, 212, 0.12);
+  border: 1px solid rgba(94, 234, 212, 0.3);
+  color: var(--brand-to);
+  font-size: 12px;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.pw-modal {
+  width: 320px;
+  padding: 20px;
+  border-radius: 14px;
+  background: rgba(20, 24, 40, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.pw-modal-title {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pw-field {
+  margin-bottom: 12px;
+}
+.pw-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.pw-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--duration-base) var(--ease-base);
+}
+.pw-input:focus { border-color: rgba(94, 234, 212, 0.4); }
+.pw-input::placeholder { color: var(--text-muted); }
+
+.pw-error {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #fca5a5;
+}
+
+.pw-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+.pw-cancel,
+.pw-submit {
+  padding: 7px 16px;
+  border-radius: var(--radius-btn);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.pw-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--text-secondary);
+}
+.pw-cancel:hover { background: var(--bg-hover); }
+.pw-submit {
+  border: none;
+  background: var(--brand-gradient);
+  color: #fff;
+  font-weight: 500;
+}
+.pw-submit:hover:not(:disabled) { filter: brightness(1.1); }
+.pw-cancel:disabled,
+.pw-submit:disabled { opacity: 0.55; cursor: not-allowed; }
 
 /* ---------- 动画 ---------- */
 .dropdown-enter-active, .dropdown-leave-active {
