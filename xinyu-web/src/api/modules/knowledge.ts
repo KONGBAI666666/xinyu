@@ -32,15 +32,14 @@ export const knowledgeApi = {
     return del(`/knowledge-bases/${kbId}`)
   },
 
-  /** 上传文档到知识库 (multipart/form-data, 同步处理) */
+  /** 上传文档到知识库 (multipart/form-data): 后端仅落 PROCESSING 元数据即返回, 向量化异步执行 */
   uploadDocument(kbId: string, file: File): Promise<KnowledgeDocumentVO> {
     const formData = new FormData()
     formData.append('file', file)
-    // 上传处理耗时较长 (解析+分块+向量化), 单独放宽超时到 5 分钟
-    return instance.post(`/knowledge-bases/${kbId}/documents`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 300_000,
-    }) as Promise<KnowledgeDocumentVO>
+    // 受理即返回, 不再需要为向量化放宽超时
+    return instance
+      .post(`/knowledge-bases/${kbId}/documents`, formData, { timeout: 30_000 })
+      .then((r) => r.data as KnowledgeDocumentVO)
   },
 
   /** 删除文档 (元数据 + Qdrant 向量) */

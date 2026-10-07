@@ -111,8 +111,10 @@ async function onFileSelected(event: Event): Promise<void> {
   uploading.value = true
   uploadError.value = ''
   try {
+    // 后端已异步化: 上传接口落 PROCESSING 元数据即返回, 向量化在后台执行
     await knowledgeApi.uploadDocument(detailKb.value.id, file)
     await loadDetail(detailKb.value.id)
+    await pollDetailUntilSettled(detailKb.value.id)
     // 同步刷新列表计数
     await loadList()
   } catch (e) {
@@ -122,6 +124,26 @@ async function onFileSelected(event: Event): Promise<void> {
     // 清空 input, 允许重复选同一文件
     input.value = ''
   }
+}
+
+/**
+ * 轮询文档状态: 存在 PROCESSING 文档时每 2s 拉一次详情, 直到全部到终态;
+ * 上限 3 分钟, 超时提示用户稍后自行查看 (轮询期间网络抖动则静默停止, 保留当前状态)
+ */
+async function pollDetailUntilSettled(kbId: string): Promise<void> {
+  const MAX_POLLS = 90
+  for (let i = 0; i < MAX_POLLS; i++) {
+    let kb: KnowledgeBaseVO
+    try {
+      kb = await knowledgeApi.detail(kbId)
+    } catch {
+      return
+    }
+    if (detailKb.value?.id === kbId) detailKb.value = kb
+    if (!kb.documents?.some((d) => d.status === 'PROCESSING')) return
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+  }
+  uploadError.value = '文档仍在后台处理中, 可稍后刷新查看状态'
 }
 
 async function deleteKb(kbId: string): Promise<void> {
