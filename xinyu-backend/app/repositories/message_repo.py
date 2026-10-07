@@ -60,16 +60,19 @@ async def finalize_assistant_message(
     status: str,
     prompt_tokens: int | None = None,
     completion_tokens: int | None = None,
+    citations_json: str | None = None,
 ) -> bool:
     """终态落库: 仅当消息仍为 GENERATING 时更新 (守卫, 保证停止/超时不被覆盖)
 
-    返回 True=更新成功; False=消息已被停止/超时收尾, 调用方不应再刷新会话预览
+    返回 True=更新成功; False=消息已被停止/超时收尾置 STOPPED, 调用方不应再刷新会话预览
     """
     values: dict = {"content": content, "status": status, "updated_at": now_local()}
     if prompt_tokens is not None:
         values["prompt_tokens"] = prompt_tokens
     if completion_tokens is not None:
         values["completion_tokens"] = completion_tokens
+    if citations_json is not None:
+        values["citations"] = citations_json
     result = await db.execute(
         update(Message)
         .where(Message.id == message_id, Message.status == "GENERATING", Message.deleted == 0)

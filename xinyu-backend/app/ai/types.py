@@ -33,3 +33,6 @@ class ChatMessage(BaseModel):
 class RagChunk(BaseModel):
     text: str
     score: float
+    # 引用溯源用 (Qdrant payload 带回)
+    doc_id: str = ""
+    chunk_index: int = 0

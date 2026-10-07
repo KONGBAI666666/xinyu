@@ -11,6 +11,7 @@ from app.models.message import Message
 from app.models.memory import Memory
 from app.models.ai_model import AiModel
 from app.models.knowledge import KnowledgeBase, KnowledgeDocument
+from app.models.lorebook import LorebookEntry
 
 __all__ = [
     "User",
@@ -22,4 +23,5 @@ __all__ = [
     "AiModel",
     "KnowledgeBase",
     "KnowledgeDocument",
+    "LorebookEntry",
 ]

@@ -12,9 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user_id, get_optional_user_id, parse_id
 from app.core.database import get_db
-from app.schemas.character import CharacterSaveDTO, CharacterVO
+from app.schemas.character import CharacterCardDTO, CharacterCardVO, CharacterSaveDTO, CharacterVO
 from app.schemas.common import Result
-from app.services import character_service
+from app.schemas.lorebook import LorebookEntryVO, LorebookSaveDTO
+from app.services import character_service, lorebook_service
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
 
@@ -138,3 +139,86 @@ async def unfavorite(
     """取消收藏(幂等)"""
     await character_service.unfavorite(db, user_id, parse_id(character_id, "characterId"))
     return Result.ok()
+
+
+# ---------- 世界书 (仅角色创建者可管理) ----------
+
+
+@router.get("/{character_id}/lorebook")
+async def list_lorebook(
+    character_id: str,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[list[LorebookEntryVO]]:
+    """角色的世界书条目列表 (含停用)"""
+    return Result.ok(
+        await lorebook_service.list_entries(db, parse_id(character_id, "characterId"), user_id)
+    )
+
+
+@router.post("/{character_id}/lorebook")
+async def create_lorebook(
+    character_id: str,
+    dto: LorebookSaveDTO,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[LorebookEntryVO]:
+    """新增世界书条目"""
+    return Result.ok(
+        await lorebook_service.create(db, parse_id(character_id, "characterId"), user_id, dto)
+    )
+
+
+@router.put("/{character_id}/lorebook/{entry_id}")
+async def update_lorebook(
+    character_id: str,
+    entry_id: str,
+    dto: LorebookSaveDTO,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[LorebookEntryVO]:
+    """编辑世界书条目"""
+    return Result.ok(
+        await lorebook_service.update(
+            db, parse_id(character_id, "characterId"), parse_id(entry_id, "entryId"), user_id, dto
+        )
+    )
+
+
+@router.delete("/{character_id}/lorebook/{entry_id}")
+async def delete_lorebook(
+    character_id: str,
+    entry_id: str,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result:
+    """删除世界书条目"""
+    await lorebook_service.delete(
+        db, parse_id(character_id, "characterId"), parse_id(entry_id, "entryId"), user_id
+    )
+    return Result.ok()
+
+
+# ---------- 角色卡导入导出 ----------
+
+
+@router.get("/{character_id}/export")
+async def export_character(
+    character_id: str,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[CharacterCardVO]:
+    """导出角色卡 (仅创建者): 人设 + 参数 + 世界书"""
+    return Result.ok(
+        await character_service.export_card(db, parse_id(character_id, "characterId"), user_id)
+    )
+
+
+@router.post("/import")
+async def import_character(
+    card: CharacterCardDTO,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[CharacterVO]:
+    """导入角色卡: 一律创建为 DRAFT, 世界书条目随卡带入"""
+    return Result.ok(await character_service.import_card(db, user_id, card))

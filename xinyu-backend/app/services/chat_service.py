@@ -19,16 +19,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.llm.client import LlmClient, MockLlmClient
 from app.ai.memory.extractor import MemoryExtractor
 from app.ai.rag.rag_service import get_rag_service
-from app.ai.types import ChatMessage, ModelConfig
+from app.ai.types import ChatMessage, ModelConfig, RagChunk
 from app.core.config import settings
 from app.core.database import SessionFactory
 from app.core.exceptions import BizException, ResultCode
 from app.core.security import now_local
 from app.models import AiCharacter, Conversation, Message
-from app.repositories import character_repo, conversation_repo, knowledge_repo, message_repo, model_repo
+from app.repositories import character_repo, conversation_repo, knowledge_repo, lorebook_repo, message_repo, model_repo
 from app.schemas.conversation import ChatRequestDTO, ConversationCreateDTO, ConversationVO
-from app.schemas.message import MessageVO
-from app.services import conversation_service, memory_service, model_service
+from app.schemas.message import MessageVO, RagCitationVO
+from app.services import conversation_service, lorebook_service, memory_service, model_service
 
 logger = logging.getLogger("xinyu.chat")
 
@@ -65,8 +65,19 @@ def _message_to_vo(m: Message) -> MessageVO:
         parentMessageId=str(m.parent_message_id) if m.parent_message_id is not None else None,
         regenerateCount=m.regenerate_count,
         feedback=m.feedback,
+        citations=_parse_citations(m.citations),
         createdAt=m.created_at,
     )
+
+
+def _parse_citations(raw: str | None) -> list[RagCitationVO] | None:
+    """库里存的 JSON 数组 → VO; 脏数据降级为 None (不炸历史接口)"""
+    if not raw:
+        return None
+    try:
+        return [RagCitationVO.model_validate(item) for item in json.loads(raw)]
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return None
 
 
 def _sse_event(event: str, data) -> str:
@@ -197,10 +208,11 @@ async def chat(db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRe
         )
         await message_repo.insert(db, assistant_msg)
 
-        # 3. 组装上下文 (system prompt + 记忆 + 历史; RAG 块在流式阶段检索后注入)
+        # 3. 组装上下文 (system prompt + 记忆 + 世界书 + 历史; RAG 块在流式阶段检索后注入)
         memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
+        lorebook_block = await _build_lorebook_block(db, conversation.character_id, dto.content)
         history = await message_repo.list_history(db, conversation_id, None, MAX_CONTEXT_MESSAGES)
-        context = _assemble_context(character, memory_block, history)
+        context = _assemble_context(character, memory_block, history, lorebook_block)
 
         # 前置落库全部提交, 流式阶段改用独立会话写库
         await db.commit()
@@ -289,10 +301,11 @@ async def regenerate(db: AsyncSession, user_id: int, conversation_id: int) -> St
         await message_repo.insert(db, assistant_msg)
 
         memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
+        lorebook_block = await _build_lorebook_block(db, conversation.character_id, parent.content or "")
         history = await message_repo.list_context_window(
             db, conversation_id, parent.sequence_no, MAX_CONTEXT_MESSAGES
         )
-        context = _assemble_context(character, memory_block, history)
+        context = _assemble_context(character, memory_block, history, lorebook_block)
         await db.commit()
 
         # 停止标志已登记 (见入口)
@@ -349,6 +362,30 @@ async def _rag_params(db: AsyncSession, conversation: Conversation) -> tuple[str
     return str(conversation.kb_id), rag_embedding_model
 
 
+async def _build_citations(chunks: list[RagChunk]) -> list[RagCitationVO]:
+    """RAG 命中片段 → 引用卡片 (补文件名); 元数据查询失败降级为仅片段"""
+    doc_ids = sorted({int(c.doc_id) for c in chunks if c.doc_id.isdigit()})
+    names: dict[int, str] = {}
+    if doc_ids:
+        try:
+            async with SessionFactory() as session:
+                docs = await knowledge_repo.get_docs_by_ids(session, doc_ids)
+                names = {d.id: d.file_name for d in docs}
+        except Exception:
+            logger.warning("引用文件名查询失败, 降级为无文件名", exc_info=True)
+    return [
+        RagCitationVO(
+            docId=c.doc_id,
+            fileName=names.get(int(c.doc_id), ""),
+            chunkIndex=c.chunk_index,
+            snippet=c.text[:200],
+            score=round(c.score, 4),
+        )
+        for c in chunks
+        if c.doc_id
+    ]
+
+
 # ==================== 内部编排 ====================
 
 
@@ -365,11 +402,28 @@ async def _resolve_model_config(db: AsyncSession, conversation: Conversation, us
     raise BizException(ResultCode.PARAM_ERROR, "尚未配置 AI 模型, 请先在「模型管理」添加一个模型")
 
 
-def _assemble_context(character: AiCharacter, memory_block: str, history: list[Message]) -> list[ChatMessage]:
-    """上下文组装: 角色 System Prompt + [记忆块] + 最近 N 条历史"""
+async def _build_lorebook_block(db: AsyncSession, character_id: int, query_text: str) -> str:
+    """世界书注入块: 加载角色条目 → 关键词命中匹配; 失败降级为空 (不阻断聊天)"""
+    try:
+        entries = await lorebook_repo.list_by_character(db, character_id)
+        return lorebook_service.build_block(entries, query_text)
+    except Exception:
+        logger.warning("世界书注入失败已降级: characterId=%s", character_id, exc_info=True)
+        return ""
+
+
+def _assemble_context(
+    character: AiCharacter,
+    memory_block: str,
+    history: list[Message],
+    lorebook_block: str = "",
+) -> list[ChatMessage]:
+    """上下文组装: 角色 System Prompt + [记忆块] + [世界书块] + 最近 N 条历史"""
     system_prompt = character.system_prompt
     if memory_block:
         system_prompt = system_prompt + memory_block
+    if lorebook_block:
+        system_prompt = system_prompt + lorebook_block
     messages = [ChatMessage.system(system_prompt)]
 
     # 同一 parent 的多条 ASSISTANT 是重新生成的不同版本, 上下文只取最新一条
@@ -404,12 +458,13 @@ async def _finalize(
     status: str,
     prompt_tokens: int | None = None,
     completion_tokens: int | None = None,
+    citations_json: str | None = None,
     refresh_preview: bool = True,
 ) -> None:
     """终态落库 (流式阶段使用独立会话); GENERATING 守卫保证停止/超时不被覆盖"""
     async with SessionFactory() as session:
         updated = await message_repo.finalize_assistant_message(
-            session, assistant_msg_id, content, status, prompt_tokens, completion_tokens
+            session, assistant_msg_id, content, status, prompt_tokens, completion_tokens, citations_json
         )
         # 守卫: 消息已被超时/停止收尾置 STOPPED 时不覆盖, 预览与消息体保持一致
         if updated and refresh_preview and content:
@@ -436,6 +491,7 @@ async def _event_stream(
     generated: list[str] = []
     finished = False
     client = None
+    citations_json: str | None = None
     try:
         # 1. meta: 双消息 ID 回执
         yield _sse_event("meta", {"userMessageId": str(user_msg_id), "assistantMessageId": str(assistant_msg_id)})
@@ -443,7 +499,7 @@ async def _event_stream(
         # 2. RAG 检索 (会话绑定了知识库时); search 内部失败降级为空, 不阻断聊天
         messages = list(context)
         if rag_kb_id and user_query:
-            _, rag_block = await get_rag_service().search(
+            chunks, rag_block = await get_rag_service().search(
                 kb_id=rag_kb_id,
                 query=user_query,
                 model_config=model_config,
@@ -455,6 +511,14 @@ async def _event_stream(
                     rag_block = rag_block[:MAX_RAG_BLOCK_CHARS] + "\n[知识库参考内容过长, 已截断]"
                 first = messages[0]
                 messages[0] = first.model_copy(update={"content": first.content + "\n\n" + rag_block})
+            # 引用溯源: 命中片段 → 引用卡片, citations 事件在 delta 之前推给前端
+            if chunks:
+                citations = await _build_citations(chunks)
+                if citations:
+                    yield _sse_event("citations", {"citations": [c.model_dump() for c in citations]})
+                    citations_json = json.dumps(
+                        [c.model_dump() for c in citations], ensure_ascii=False
+                    )
 
         # 3. 选择 LLM 客户端 (mock 配置 = dev 无模型时的降级路径)
         if settings.mock_mode or model_config.modelCode == "mock":
@@ -482,6 +546,7 @@ async def _event_stream(
                             "COMPLETED",
                             payload["promptTokens"],
                             payload["completionTokens"],
+                            citations_json=citations_json,
                         )
                         yield _sse_event(
                             "done",
@@ -501,7 +566,7 @@ async def _event_stream(
                             "AI 生成失败: assistantMessageId=%s, code=%s, msg=%s",
                             assistant_msg_id, payload.get("code"), payload.get("message"),
                         )
-                        await _finalize(assistant_msg_id, conversation_id, "".join(generated), "FAILED")
+                        await _finalize(assistant_msg_id, conversation_id, "".join(generated), "FAILED", citations_json=citations_json)
                         yield _sse_event("error", payload)
                         finished = True
                         return
@@ -511,12 +576,12 @@ async def _event_stream(
         # 取消/超时收尾: 消息仍为 GENERATING 时置 STOPPED (若流恰好自然结束, 守卫保证幂等)
         if not finished:
             logger.info("生成已停止: assistantMessageId=%s", assistant_msg_id)
-            await _finalize(assistant_msg_id, conversation_id, "".join(generated), "STOPPED")
+            await _finalize(assistant_msg_id, conversation_id, "".join(generated), "STOPPED", citations_json=citations_json)
     except asyncio.CancelledError:
         # 客户端断连 (AbortController/停止生成): 消息置 STOPPED 保留已生成文本
         logger.info("SSE 客户端断连, 消息置 STOPPED: assistantMessageId=%s", assistant_msg_id)
         try:
-            await _finalize(assistant_msg_id, conversation_id, "".join(generated), "STOPPED")
+            await _finalize(assistant_msg_id, conversation_id, "".join(generated), "STOPPED", citations_json=citations_json)
         except Exception:
             logger.exception("断连收尾失败: assistantMessageId=%s", assistant_msg_id)
         raise

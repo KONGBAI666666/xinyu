@@ -26,6 +26,8 @@ class MessageVO(BaseModel):
     regenerateCount: int = 0
     # LIKE / DISLIKE / NONE (仅 ASSISTANT 有意义)
     feedback: str = "NONE"
+    # RAG 引用溯源 (仅绑知识库会话的 ASSISTANT 消息)
+    citations: list["RagCitationVO"] | None = None
     createdAt: DateTimeStr
 
     @field_validator("feedback", mode="before")
@@ -39,6 +41,25 @@ class FeedbackDTO(BaseModel):
     """消息反馈请求体"""
 
     feedback: Literal["LIKE", "DISLIKE", "NONE"]
+
+
+class RagCitationVO(BaseModel):
+    """RAG 引用卡片 (溯源到知识库文档片段)"""
+
+    docId: str
+    fileName: str = ""
+    chunkIndex: int = 0
+    snippet: str
+    score: float
+
+
+# ---------- SSE 事件载荷 (与前端 useSseChat 逐字段一致) ----------
+
+
+class SseCitationsEvent(BaseModel):
+    """event:citations — RAG 命中片段回执 (meta 之后、delta 之前)"""
+
+    citations: list[RagCitationVO]
 
 
 # ---------- SSE 事件载荷 (与前端 useSseChat 逐字段一致) ----------

@@ -98,6 +98,16 @@ async def get_doc_by_id(db, doc_id: int) -> KnowledgeDocument | None:
     return result.scalar_one_or_none()
 
 
+async def get_docs_by_ids(db, doc_ids: list[int]) -> list[KnowledgeDocument]:
+    """批量取文档 (引用溯源补文件名)"""
+    if not doc_ids:
+        return []
+    result = await db.execute(
+        select(KnowledgeDocument).where(KnowledgeDocument.id.in_(doc_ids), KnowledgeDocument.deleted == 0)
+    )
+    return list(result.scalars())
+
+
 async def insert_doc(db, doc: KnowledgeDocument) -> KnowledgeDocument:
     db.add(doc)
     await db.flush()

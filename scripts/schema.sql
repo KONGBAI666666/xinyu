@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `model_code`        VARCHAR(50) DEFAULT NULL COMMENT '实际使用模型(溯源)',
   `feedback`          VARCHAR(20) NOT NULL DEFAULT 'NONE' COMMENT 'NONE/LIKE/DISLIKE',
   `regenerate_count`  INT         NOT NULL DEFAULT 0 COMMENT '重新生成次数',
+  `citations`         MEDIUMTEXT  COMMENT 'RAG引用溯源JSON(仅绑知识库的会话)',
   `created_at`        DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`        DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`           TINYINT     NOT NULL DEFAULT 0,
@@ -250,6 +251,24 @@ CREATE TABLE IF NOT EXISTS `knowledge_document` (
   KEY `idx_kb` (`kb_id`),
   KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB COMMENT='知识库文档表(M3 RAG, 向量存Qdrant, 此表存元数据)';
+
+-- ------------------------------------------------------------
+-- 12. 世界书条目表 (角色绑定的关键词触发设定, M4)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lorebook_entry` (
+  `id`           BIGINT       NOT NULL,
+  `character_id` BIGINT       NOT NULL COMMENT '所属角色',
+  `user_id`      BIGINT       NOT NULL COMMENT '冗余: 创建者(权限校验免join)',
+  `keywords`     VARCHAR(500) NOT NULL COMMENT '触发关键词, 逗号分隔, 命中任一即注入',
+  `content`      TEXT         NOT NULL COMMENT '注入的设定文本',
+  `priority`     INT          NOT NULL DEFAULT 0 COMMENT '注入优先级, 大者先注入',
+  `enabled`      TINYINT      NOT NULL DEFAULT 1 COMMENT '1=启用',
+  `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted`      TINYINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_character` (`character_id`, `enabled`)
+) ENGINE=InnoDB COMMENT='世界书条目表';
 
 -- ============================================================
 -- 初始数据

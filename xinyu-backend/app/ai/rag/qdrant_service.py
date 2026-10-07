@@ -56,7 +56,15 @@ class QdrantService:
             limit=top_k,
             with_payload=True,
         ).points
-        return [RagChunk(text=r.payload.get("text", ""), score=r.score) for r in results]
+        return [
+            RagChunk(
+                text=r.payload.get("text", ""),
+                score=r.score,
+                doc_id=str(r.payload.get("doc_id", "")),
+                chunk_index=int(r.payload.get("chunk_index", 0)),
+            )
+            for r in results
+        ]
 
     def _delete_by_doc_sync(self, kb_id: str, doc_id: str) -> None:
         name = self._collection_for(kb_id)

@@ -13,9 +13,9 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BizException, ResultCode
-from app.models import AiCharacter, CharacterFavorite
-from app.repositories import character_repo, conversation_repo, message_repo, model_repo
-from app.schemas.character import CharacterSaveDTO, CharacterVO
+from app.models import AiCharacter, CharacterFavorite, LorebookEntry
+from app.repositories import character_repo, conversation_repo, lorebook_repo, message_repo, model_repo
+from app.schemas.character import CharacterCardDTO, CharacterCardVO, CharacterSaveDTO, CharacterVO
 
 logger = logging.getLogger("xinyu.character")
 
@@ -242,3 +242,65 @@ async def list_favorites(db: AsyncSession, user_id: int) -> list[CharacterVO]:
         for f in favs
         if f.character_id in published
     ]
+
+
+# ==================== 角色卡导入导出 ====================
+
+
+async def export_card(db: AsyncSession, character_id: int, user_id: int) -> CharacterCardVO:
+    """导出角色卡 (仅创建者): 人设 + 参数 + 世界书, JSON 格式"""
+    character = await _require_owned(db, character_id, user_id)
+    entries = await lorebook_repo.list_by_character(db, character_id)
+    return CharacterCardVO(
+        name=character.name,
+        avatarUrl=character.avatar_url,
+        intro=character.intro,
+        systemPrompt=character.system_prompt,
+        greeting=character.greeting,
+        temperature=float(character.temperature),
+        maxTokens=character.max_tokens,
+        lorebook=[
+            {
+                "keywords": e.keywords,
+                "content": e.content,
+                "priority": e.priority,
+                "enabled": bool(e.enabled),
+            }
+            for e in entries
+        ],
+    )
+
+
+async def import_card(db: AsyncSession, user_id: int, card: CharacterCardDTO) -> CharacterVO:
+    """导入角色卡: 一律创建为 DRAFT (仅导入者可见), 世界书条目随卡带入"""
+    character = AiCharacter(
+        name=card.name,
+        avatar_url=card.avatarUrl,
+        intro=card.intro or "",
+        system_prompt=card.systemPrompt,
+        greeting=card.greeting,
+        temperature=card.temperature,
+        max_tokens=card.maxTokens,
+        creator_id=user_id,
+        creator_type="USER",
+        status="DRAFT",
+        chat_count=0,
+        favorite_count=0,
+    )
+    await character_repo.insert(db, character)
+    for item in card.lorebook:
+        await lorebook_repo.insert(
+            db,
+            LorebookEntry(
+                character_id=character.id,
+                user_id=user_id,
+                keywords=item.keywords,
+                content=item.content,
+                priority=item.priority,
+                enabled=1 if item.enabled else 0,
+            ),
+        )
+    await db.commit()
+    logger.info("角色卡导入: userId=%s, characterId=%s, 世界书条目=%s", user_id, character.id, len(card.lorebook))
+    favorited = await character_repo.favorited_ids(db, user_id)
+    return _to_vo(character, user_id, favorited)
