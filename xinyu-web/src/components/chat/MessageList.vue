@@ -87,14 +87,19 @@ function onFeedback(item: RenderItem, value: 'LIKE' | 'DISLIKE'): void {
   emit('feedback', item.message.id, next)
 }
 
-// 消息数变化（加载/发送）或流式文本增长时滚到底部
+// 消息数变化（加载/发送）时滚到底部; 流式文本增长仅在用户本就在底部时跟随,
+// 上滑回看历史时不被拽回 (想回底部手动下滑即可)
 watch(
   () => {
     const last = messageStore.items[messageStore.items.length - 1]
-    return [messageStore.items.length, last?.content.length ?? 0]
+    return { count: messageStore.items.length, len: last?.content.length ?? 0 }
   },
-  async () => {
+  async (next, prev) => {
     if (suppressAutoScroll.value) return
+    // 仅流式追加 (条数不变) 且用户已离开底部: 不自动滚动
+    const el = scrollRef.value
+    const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    if (next.count === prev?.count && !nearBottom) return
     await nextTick()
     scrollRef.value?.scrollTo({ top: scrollRef.value.scrollHeight })
   },
@@ -113,6 +118,8 @@ async function handleScroll(): Promise<void> {
     await messageStore.loadMore(conversationId)
     await nextTick()
     el.scrollTop = el.scrollHeight - prevHeight + prevTop
+  } catch {
+    // 加载失败静默保留当前视图, 再滚到顶部可重试
   } finally {
     suppressAutoScroll.value = false
   }

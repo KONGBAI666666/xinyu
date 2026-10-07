@@ -24,10 +24,14 @@ export const useStatsStore = defineStore('stats', () => {
     }
   }
 
-  /** 打开面板并拉取最新数据 */
+  /** 打开面板并拉取最新数据 (失败保持面板打开展示旧数据, 不产生 unhandled rejection) */
   async function openPanel(): Promise<void> {
     panelOpen.value = true
-    await load()
+    try {
+      await load()
+    } catch (e) {
+      console.error('[xinyu] 用量统计加载失败:', e)
+    }
   }
 
   function closePanel(): void {

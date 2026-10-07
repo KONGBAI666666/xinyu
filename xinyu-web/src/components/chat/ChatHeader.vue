@@ -73,7 +73,9 @@ async function switchModel(model: AiModelVO | null): Promise<void> {
       conversationStore.active.modelId = targetId
     }
   } catch (e) {
-    // 失败静默, 下次进入会从后端同步
+    // 失败给明确提示 (原先静默, 用户误以为切换成功, 下次进入才从后端同步回旧值)
+    pwTip.value = e instanceof BizError ? e.message : '模型切换失败, 请稍后重试'
+    setTimeout(() => (pwTip.value = ''), 2000)
   }
   modelDropdownOpen.value = false
 }

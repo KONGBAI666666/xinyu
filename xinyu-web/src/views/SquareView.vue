@@ -10,7 +10,7 @@
  * 游客可访问, 点收藏/开聊引导登录（带回跳）。
  * "我的收藏" tab 调收藏列表接口, 关键词为本地过滤（后端该接口不支持搜索）。
  */
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { charactersApi, type SquareSort } from '@/api/modules/character'
 import { useAuthStore } from '@/stores/auth'
@@ -52,6 +52,11 @@ watch(keyword, () => {
 })
 
 watch(sort, () => load())
+
+onUnmounted(() => {
+  // 卸载后不再触发在途的防抖请求
+  if (debounceTimer) clearTimeout(debounceTimer)
+})
 
 async function load(): Promise<void> {
   loading.value = true

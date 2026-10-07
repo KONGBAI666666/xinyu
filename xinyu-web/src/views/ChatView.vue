@@ -35,8 +35,8 @@ const creating = ref(false)
 const errorText = ref('')
 
 onMounted(() => {
-  // 校准用户信息（token 失效由拦截器兜底跳登录）
-  authStore.fetchMe()
+  // 校准用户信息（token 失效由拦截器兜底跳登录; 网络抖动静默, 下次进入再校准）
+  authStore.fetchMe().catch(() => {})
   conversationStore.fetchList().catch(showError)
   // 外部跳转带 ?new=characterId 时自动创建会话（角色管理页「开聊」按钮）
   const newCharId = route.query.new
