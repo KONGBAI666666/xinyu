@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     # 允许模型 baseUrl 指向内网/环回地址 (本机 Ollama 等自建服务联调用), prod 默认拒绝
     llm_allow_private_baseurl: bool = False
 
+    # ---------- 可信代理 ----------
+    # 逗号分隔的对端 IP 列表; 仅这些来源发来的 X-Real-IP 才被采信 (client_ip 消费点)。
+    # 默认仅本机回环 (nginx 与后端同机时); nginx 独立容器部署时需设为容器网段, 如 172.18.0.0/16
+    trusted_proxies: str = "127.0.0.1,::1"
+
     # ---------- 管理员引导 ----------
     # 启动时把该用户名提升为 ADMIN (幂等); 留空不提升。免手工改库开启管理后台
     admin_username: str = ""
@@ -80,6 +85,10 @@ class Settings(BaseSettings):
     @property
     def dev_mode(self) -> bool:
         return self.env.lower() == "dev"
+
+    @property
+    def trusted_proxy_set(self) -> frozenset[str]:
+        return frozenset(p.strip() for p in self.trusted_proxies.split(",") if p.strip())
 
     @property
     def database_url(self) -> str:

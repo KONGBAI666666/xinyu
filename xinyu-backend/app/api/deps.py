@@ -8,6 +8,7 @@
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.exceptions import BizException, ResultCode
 from app.core.security import get_user_id_from_claims, parse_token
@@ -57,16 +58,20 @@ async def require_admin(user_id: int = Depends(get_current_user_id), db: AsyncSe
 
 
 def client_ip(request: Request) -> str:
-    """客户端真实 IP: 只信 nginx 覆写的 X-Real-IP (取自 $remote_addr, 客户端伪造会被覆盖)
+    """客户端真实 IP: 仅可信代理 (对端 IP ∈ settings.trusted_proxies) 发来的 X-Real-IP 才采信
 
-    不取 X-Forwarded-For 首段 —— nginx 的 $proxy_add_x_forwarded_for 会把客户端
-    自带的伪造 XFF 排在最前, 取首段等于信任攻击者输入, IP 限流可被轮换伪造头绕过。
-    后端不经 nginx 直连时 (本地开发) 回落 client.host。
+    - 不取 X-Forwarded-For 首段: $proxy_add_x_forwarded_for 会把客户端伪造的 XFF
+      排在最前, 取首段等于信任攻击者输入, IP 限流可被轮换伪造头绕过;
+    - X-Real-IP 也只在请求确实来自可信代理时采信 —— 否则绕过 nginx 直连 uvicorn
+      的客户端可以自带伪造头冒充任意 IP (TCP 对端才是它改不了的事实);
+    - 非可信来源一律回落 TCP 对端地址。nginx 独立容器部署时把对端网段加进
+      XINYU_TRUSTED_PROXIES。
     """
-    real_ip = request.headers.get("X-Real-IP", "")
-    if real_ip.strip():
-        return real_ip.strip()
-    return request.client.host if request.client else "unknown"
+    peer = request.client.host if request.client else ""
+    real_ip = request.headers.get("X-Real-IP", "").strip()
+    if real_ip and peer and peer in settings.trusted_proxy_set:
+        return real_ip
+    return peer or "unknown"
 
 
 def parse_id(value: str | None, name: str = "id") -> int | None:
