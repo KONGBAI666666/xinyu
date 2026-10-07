@@ -3,7 +3,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, DateTime, Integer, Numeric, String, Text, UniqueConstraint, func
+from sqlalchemy import BigInteger, DateTime, Index, Integer, Numeric, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.security import now_local
@@ -12,6 +12,10 @@ from app.models.base import Base, id_primary_key
 
 class AiCharacter(Base):
     __tablename__ = "character"
+    __table_args__ = (
+        Index("idx_square", "status", "creator_type"),
+        Index("idx_creator", "creator_id"),
+    )
 
     id: Mapped[int] = id_primary_key()
     name: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -36,9 +40,12 @@ class AiCharacter(Base):
 
 class CharacterFavorite(Base):
     __tablename__ = "character_favorite"
-    __table_args__ = (UniqueConstraint("user_id", "character_id", name="uk_user_char"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "character_id", name="uk_user_char"),
+        Index("idx_user", "user_id"),
+    )
 
     id: Mapped[int] = id_primary_key()
-    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     character_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())

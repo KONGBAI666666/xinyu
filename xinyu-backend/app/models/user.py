@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy import DateTime, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.security import now_local
@@ -11,6 +11,7 @@ from app.models.base import Base, id_primary_key
 
 class User(Base):
     __tablename__ = "user"
+    __table_args__ = (UniqueConstraint("username", name="uk_username"),)
 
     id: Mapped[int] = id_primary_key()
     username: Mapped[str] = mapped_column(String(32), nullable=False)

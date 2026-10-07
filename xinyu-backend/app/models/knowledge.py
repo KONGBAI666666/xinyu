@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, String, func
+from sqlalchemy import BigInteger, DateTime, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.security import now_local
@@ -11,9 +11,10 @@ from app.models.base import Base, id_primary_key
 
 class KnowledgeBase(Base):
     __tablename__ = "knowledge_base"
+    # 与 schema.sql 对齐: 该表无二级索引 (数据量 = 每用户知识库数, 无需索引)
 
     id: Mapped[int] = id_primary_key()
-    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     description: Mapped[str | None] = mapped_column(String(200))
     doc_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
@@ -30,10 +31,14 @@ class KnowledgeBase(Base):
 
 class KnowledgeDocument(Base):
     __tablename__ = "knowledge_document"
+    __table_args__ = (
+        Index("idx_kb", "kb_id"),
+        Index("idx_user", "user_id"),
+    )
 
     id: Mapped[int] = id_primary_key()
-    kb_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
-    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    kb_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
     file_type: Mapped[str] = mapped_column(String(20), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)

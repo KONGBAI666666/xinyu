@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, String, func
+from sqlalchemy import BigInteger, DateTime, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.security import now_local
@@ -11,9 +11,10 @@ from app.models.base import Base, id_primary_key
 
 class AiModel(Base):
     __tablename__ = "ai_model"
+    __table_args__ = (Index("idx_user", "user_id", "is_default"),)
 
     id: Mapped[int] = id_primary_key()
-    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     provider: Mapped[str] = mapped_column(String(20), nullable=False)
     model_code: Mapped[str] = mapped_column(String(50), nullable=False)
     display_name: Mapped[str] = mapped_column(String(50), nullable=False)

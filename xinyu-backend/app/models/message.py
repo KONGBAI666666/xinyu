@@ -15,6 +15,7 @@ class Message(Base):
         UniqueConstraint("user_id", "client_message_id", name="uk_client_msg"),
         Index("idx_conv", "conversation_id", "id"),
         Index("idx_user_created", "user_id", "created_at"),
+        Index("idx_feedback", "feedback"),
     )
 
     id: Mapped[int] = id_primary_key()

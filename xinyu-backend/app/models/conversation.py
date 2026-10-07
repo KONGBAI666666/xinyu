@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, String, func
+from sqlalchemy import BigInteger, DateTime, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.security import now_local
@@ -11,6 +11,7 @@ from app.models.base import Base, id_primary_key
 
 class Conversation(Base):
     __tablename__ = "conversation"
+    __table_args__ = (Index("idx_user_last", "user_id", "last_message_at"),)
 
     id: Mapped[int] = id_primary_key()
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
