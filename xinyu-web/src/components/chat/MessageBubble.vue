@@ -7,7 +7,7 @@
  * M1-6: ASSISTANT 经 markdown 安全渲染管线(marked+DOMPurify+hljs); USER 保持纯文本
  * M4+: ASSISTANT 气泡下挂操作行 — 重新生成版本切换 / 点赞点踩
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { MessageVO } from '@/types/api'
 import { renderMarkdown } from '@/utils/markdown'
 
@@ -28,6 +28,8 @@ const emit = defineEmits<{
 
 const isUser = computed(() => props.message.messageType === 'USER')
 const generating = computed(() => props.message.status === 'GENERATING')
+/** 引用列表展开态 (默认收起) */
+const citationsOpen = ref(false)
 /** 终态才允许反馈/重发 (生成中/失败中不可点) */
 const actionable = computed(
   () => !isUser.value && (props.message.status === 'COMPLETED' || props.message.status === 'STOPPED'),
@@ -57,6 +59,23 @@ const renderedContent = computed(() =>
           {{ message.errorMessage || '生成失败，请稍后重试' }}
         </p>
         <p v-else-if="message.status === 'STOPPED'" class="status-note stopped">已停止生成</p>
+      </div>
+
+      <!-- RAG 引用溯源: 可折叠的命中片段列表 -->
+      <div v-if="!isUser && message.citations?.length" class="citations">
+        <button type="button" class="cite-toggle" @click="citationsOpen = !citationsOpen">
+          引用来源 · {{ message.citations.length }}
+          <span class="cite-caret">{{ citationsOpen ? '▾' : '▸' }}</span>
+        </button>
+        <ul v-if="citationsOpen" class="cite-list">
+          <li v-for="(cite, i) in message.citations" :key="i" class="cite-item">
+            <p class="cite-head">
+              <span class="cite-name">{{ cite.fileName || '知识库片段' }} · 第{{ cite.chunkIndex + 1 }}块</span>
+              <span class="cite-score">{{ Math.round(cite.score * 100) }}%</span>
+            </p>
+            <p class="cite-snippet">{{ cite.snippet }}</p>
+          </li>
+        </ul>
       </div>
 
       <!-- ASSISTANT 操作行: 版本切换 / 反馈 / 重新生成 -->
@@ -145,8 +164,73 @@ const renderedContent = computed(() =>
   border-bottom-left-radius: var(--radius-bubble-tail);
 }
 
-/* ---------- 操作行 ---------- */
-.msg-actions {
+/* ---------- RAG 引用溯源 ---------- */
+.citations {
+  margin-top: 4px;
+  width: 100%;
+}
+
+.cite-toggle {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.cite-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.cite-caret {
+  font-size: 10px;
+}
+
+.cite-list {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  list-style: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.cite-item + .cite-item {
+  margin-top: 8px;
+}
+.cite-head {
+  margin: 0 0 2px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cite-name {
+  font-size: 12px;
+  color: var(--brand-to);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cite-score {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.cite-snippet {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- 操作行 ---------- */.msg-actions {
   display: flex;
   align-items: center;
   gap: 2px;

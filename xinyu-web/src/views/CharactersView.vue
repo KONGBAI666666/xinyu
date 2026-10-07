@@ -20,7 +20,15 @@ import { useCharactersStore } from '@/stores/character'
 import { charactersApi } from '@/api/modules/character'
 import { modelsApi } from '@/api/modules/models'
 import { BizError } from '@/utils/BizError'
-import type { AiModelVO, CharacterSaveDTO, CharacterStatus, CharacterVO } from '@/types/api'
+import type {
+  AiModelVO,
+  CharacterCardVO,
+  CharacterSaveDTO,
+  CharacterStatus,
+  CharacterVO,
+  LorebookEntryVO,
+  LorebookSaveDTO,
+} from '@/types/api'
 
 const router = useRouter()
 const store = useCharactersStore()
@@ -176,6 +184,158 @@ function startChat(c: CharacterVO): void {
   router.push({ path: '/chat', query: { new: c.id } })
 }
 
+// ---------- 世界书编辑抽屉 ----------
+
+const lorebookCharacter = ref<CharacterVO | null>(null)
+const lorebookDrawerOpen = ref(false)
+const lorebookList = ref<LorebookEntryVO[]>([])
+const lorebookLoading = ref(false)
+const lorebookSaving = ref(false)
+/** 有值 = 编辑该条目, null = 新增 */
+const lorebookEditingId = ref<string | null>(null)
+const lorebookForm = ref<LorebookSaveDTO>(emptyLorebookForm())
+
+function emptyLorebookForm(): LorebookSaveDTO {
+  return { keywords: '', content: '', priority: 0, enabled: true }
+}
+
+async function openLorebook(c: CharacterVO): Promise<void> {
+  lorebookCharacter.value = c
+  lorebookDrawerOpen.value = true
+  await loadLorebook()
+}
+
+async function loadLorebook(): Promise<void> {
+  if (!lorebookCharacter.value) return
+  lorebookLoading.value = true
+  try {
+    lorebookList.value = await charactersApi.lorebookList(lorebookCharacter.value.id)
+  } catch (e) {
+    errorText.value = e instanceof BizError ? e.message : '加载世界书失败'
+  } finally {
+    lorebookLoading.value = false
+  }
+}
+
+function editLorebookEntry(e: LorebookEntryVO): void {
+  lorebookEditingId.value = e.id
+  lorebookForm.value = {
+    keywords: e.keywords,
+    content: e.content,
+    priority: e.priority,
+    enabled: e.enabled === 1,
+  }
+}
+
+function resetLorebookForm(): void {
+  lorebookEditingId.value = null
+  lorebookForm.value = emptyLorebookForm()
+}
+
+async function saveLorebookEntry(): Promise<void> {
+  const c = lorebookCharacter.value
+  if (!c) return
+  const form = lorebookForm.value
+  if (!form.keywords.trim()) {
+    errorText.value = '触发关键词不能为空'
+    return
+  }
+  if (!form.content.trim()) {
+    errorText.value = '设定内容不能为空'
+    return
+  }
+  lorebookSaving.value = true
+  try {
+    const payload: LorebookSaveDTO = {
+      keywords: form.keywords,
+      content: form.content,
+      priority: Number(form.priority) || 0,
+      enabled: form.enabled,
+    }
+    if (lorebookEditingId.value) {
+      await charactersApi.lorebookUpdate(c.id, lorebookEditingId.value, payload)
+    } else {
+      await charactersApi.lorebookCreate(c.id, payload)
+    }
+    resetLorebookForm()
+    await loadLorebook()
+  } catch (e) {
+    errorText.value = e instanceof BizError ? e.message : '保存失败'
+  } finally {
+    lorebookSaving.value = false
+  }
+}
+
+async function removeLorebookEntry(e: LorebookEntryVO): Promise<void> {
+  if (!lorebookCharacter.value) return
+  if (!confirm(`删除关键词「${e.keywords}」的条目?`)) return
+  try {
+    await charactersApi.lorebookRemove(lorebookCharacter.value.id, e.id)
+    await loadLorebook()
+  } catch (err) {
+    errorText.value = err instanceof BizError ? err.message : '删除失败'
+  }
+}
+
+// ---------- 角色卡导出 / 导入 ----------
+
+async function exportCard(c: CharacterVO): Promise<void> {
+  try {
+    const card = await charactersApi.exportCard(c.id)
+    // Blob 下载: 文件名带角色名, 内容为后端导出格式原样
+    const blob = new Blob([JSON.stringify(card, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${c.name}.card.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    errorText.value = e instanceof BizError ? e.message : '导出失败'
+  }
+}
+
+const importInput = ref<HTMLInputElement | null>(null)
+
+function pickImportFile(): void {
+  importInput.value?.click()
+}
+
+async function onImportFile(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  let card: CharacterCardVO
+  try {
+    card = JSON.parse(await file.text()) as CharacterCardVO
+  } catch {
+    errorText.value = '文件不是合法的 JSON 角色卡'
+    return
+  }
+  if (!card || typeof card.name !== 'string' || typeof card.systemPrompt !== 'string') {
+    errorText.value = '角色卡格式不正确 (缺少 name/systemPrompt)'
+    return
+  }
+  try {
+    const created = await charactersApi.importCard(card)
+    store.list.push(created)
+    errorText.value = ''
+    // 轻提示复用顶部 toast 通道
+    showToast(`已导入角色「${created.name}」(草稿)`)
+  } catch (e) {
+    errorText.value = e instanceof BizError ? e.message : '导入失败'
+  }
+}
+
+/** 轻提示 (2 秒自动消失) */
+const tipText = ref('')
+
+function showToast(msg: string): void {
+  tipText.value = msg
+  setTimeout(() => (tipText.value = ''), 2000)
+}
+
 const statusLabel: Record<string, string> = {
   DRAFT: '草稿', PENDING: '审核中', PUBLISHED: '已发布', OFFLINE: '已下架',
 }
@@ -191,6 +351,19 @@ const statusLabel: Record<string, string> = {
         </svg>
       </button>
       <h1 class="page-title">角色管理</h1>
+      <input
+        ref="importInput"
+        type="file"
+        accept=".json,application/json"
+        class="import-input"
+        @change="onImportFile"
+      />
+      <button class="new-btn ghost" type="button" @click="pickImportFile">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 9V2M7 2L4 5M7 2L10 5M2 9V11C2 11.6 2.4 12 3 12H11C11.6 12 12 11.6 12 11V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>导入角色</span>
+      </button>
       <button class="new-btn" type="button" @click="openCreate">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -284,6 +457,8 @@ const statusLabel: Record<string, string> = {
                   title="下架回草稿"
                   @click="switchStatus(c, 'DRAFT')"
                 >下架</button>
+                <button class="action-btn" type="button" title="关键词触发设定" @click="openLorebook(c)">世界书</button>
+                <button class="action-btn" type="button" title="下载角色卡 JSON" @click="exportCard(c)">导出</button>
                 <button class="action-btn" type="button" @click="openEdit(c)">编辑</button>
                 <button class="action-btn danger" type="button" @click="deletingId = c.id">删除</button>
               </div>
@@ -441,6 +616,84 @@ const statusLabel: Record<string, string> = {
         </div>
       </Transition>
     </Teleport>
+
+    <!-- 世界书编辑抽屉 -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="lorebookDrawerOpen" class="mask" @click="lorebookDrawerOpen = false" />
+      </Transition>
+      <Transition name="slide">
+        <aside v-if="lorebookDrawerOpen" class="drawer">
+          <header class="drawer-header">
+            <h2 class="drawer-title">世界书 · {{ lorebookCharacter?.name ?? '' }}</h2>
+            <button class="close-btn" type="button" @click="lorebookDrawerOpen = false">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </header>
+          <p class="drawer-subtitle">
+            聊天时用户消息命中关键词, 对应设定自动注入 AI 的上下文。
+          </p>
+
+          <div class="drawer-body">
+            <!-- 条目表单 (新增/编辑共用) -->
+            <div class="lore-form">
+              <div class="form-group">
+                <label class="form-label">
+                  触发关键词
+                  <span class="form-hint">逗号分隔, 命中任一即注入</span>
+                </label>
+                <input v-model="lorebookForm.keywords" class="form-input" maxlength="500" placeholder="如: 魔法, 法术, mana" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  设定内容
+                  <span class="form-hint">{{ lorebookForm.content.length }}/2000</span>
+                </label>
+                <textarea v-model="lorebookForm.content" class="form-textarea" rows="4" maxlength="2000" placeholder="命中后注入 AI 上下文的设定文本" />
+              </div>
+              <div class="lore-form-row">
+                <label class="form-label">
+                  优先级
+                  <input v-model.number="lorebookForm.priority" type="number" min="0" max="100" class="form-input priority-input" />
+                </label>
+                <label class="lore-enabled">
+                  <input v-model="lorebookForm.enabled" type="checkbox" class="checkbox" />
+                  <span>启用</span>
+                </label>
+                <button class="primary-btn" type="button" :disabled="lorebookSaving" @click="saveLorebookEntry">
+                  {{ lorebookSaving ? '保存中…' : lorebookEditingId ? '保存修改' : '添加条目' }}
+                </button>
+                <button v-if="lorebookEditingId" class="cancel-btn" type="button" @click="resetLorebookForm">取消编辑</button>
+              </div>
+            </div>
+
+            <!-- 条目列表 -->
+            <div v-if="lorebookLoading" class="state-hint">加载中…</div>
+            <p v-else-if="lorebookList.length === 0" class="state-hint">还没有条目, 用上面的表单添加第一条</p>
+            <div v-else class="lore-list">
+              <div v-for="entry in lorebookList" :key="entry.id" class="lore-item" :class="{ disabled: entry.enabled !== 1 }">
+                <div class="lore-info">
+                  <p class="lore-keywords">{{ entry.keywords }}</p>
+                  <p class="lore-content">{{ entry.content }}</p>
+                  <p class="lore-meta">优先级 {{ entry.priority }}<template v-if="entry.enabled !== 1"> · 已停用</template></p>
+                </div>
+                <div class="lore-actions">
+                  <button class="action-btn" type="button" @click="editLorebookEntry(entry)">编辑</button>
+                  <button class="action-btn danger" type="button" @click="removeLorebookEntry(entry)">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </Transition>
+    </Teleport>
+
+    <!-- 轻提示 -->
+    <Transition name="fade">
+      <div v-if="tipText" class="toast">{{ tipText }}</div>
+    </Transition>
   </div>
 </template>
 
@@ -878,4 +1131,127 @@ const statusLabel: Record<string, string> = {
 .slide-enter-from, .slide-leave-to { transform: translateX(100%); }
 .pop-enter-active, .pop-leave-active { transition: all var(--duration-base) var(--ease-base); }
 .pop-enter-from, .pop-leave-to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+
+/* ---------- 导入 / 世界书 ---------- */
+.import-input {
+  display: none;
+}
+
+.new-btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+.new-btn.ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.drawer-subtitle {
+  margin: -6px 0 0;
+  padding: 0 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.lore-form {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lore-form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.lore-form-row .form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.priority-input {
+  width: 80px;
+}
+.lore-enabled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-bottom: 8px;
+  cursor: pointer;
+}
+.primary-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+.primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cancel-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lore-list {
+  padding: 12px 20px 20px;
+}
+.lore-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.lore-item.disabled {
+  opacity: 0.55;
+}
+.lore-info {
+  min-width: 0;
+  flex: 1;
+}
+.lore-keywords {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-to);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lore-content {
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lore-meta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.lore-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
 </style>

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { conversationApi } from '@/api/modules/conversation'
-import type { MessageVO, SseDoneEvent } from '@/types/api'
+import type { MessageVO, RagCitation, SseDoneEvent } from '@/types/api'
 
 /** 历史消息每页条数（后端缺省 20, 上限 100） */
 export const PAGE_SIZE = 20
@@ -142,6 +142,14 @@ export const useMessageStore = defineStore('message', () => {
     }
   }
 
+  /** RAG 引用: citations 事件到达后挂到对应 ASSISTANT 消息 (meta 已换真实 id) */
+  function setCitations(messageId: string, citations: RagCitation[]): void {
+    const target = items.value.find((m) => m.id === messageId)
+    if (target) {
+      target.citations = citations
+    }
+  }
+
   /** delta: 追加增量文本（useSseChat 已做 50ms 节流, 这里直接写入） */
   function appendDelta(text: string): void {
     const generating = findGenerating()
@@ -225,6 +233,7 @@ export const useMessageStore = defineStore('message', () => {
     beginRegenerate,
     confirmRegenerateMeta,
     setFeedback,
+    setCitations,
     appendDelta,
     finishAssistant,
     failAssistant,

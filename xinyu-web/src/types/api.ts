@@ -95,6 +95,17 @@ export interface MessageVO {
   regenerateCount?: number
   /** 点赞/点踩 (仅 ASSISTANT) */
   feedback?: 'NONE' | 'LIKE' | 'DISLIKE'
+  /** RAG 引用溯源 (仅绑知识库会话的 ASSISTANT 消息) */
+  citations?: RagCitation[] | null
+}
+
+/** RAG 引用卡片 */
+export interface RagCitation {
+  docId: string
+  fileName: string
+  chunkIndex: number
+  snippet: string
+  score: number
 }
 
 /** PUT /conversations/{id}/messages/{messageId}/feedback 请求体 */
@@ -127,6 +138,11 @@ export interface SseDoneEvent {
 export interface SseErrorEvent {
   code: number
   message: string
+}
+
+/** event:citations — RAG 命中片段回执 (meta 之后、delta 之前) */
+export interface SseCitationsEvent {
+  citations: RagCitation[]
 }
 
 // ---------- 用量统计（M2 Token 统计） ----------
@@ -254,6 +270,48 @@ export interface CharacterSaveDTO {
   status?: CharacterStatus
   /** 角色级默认模型 (本人启用中的模型), null=不绑定 */
   modelId?: string | null
+}
+
+// ==================== 世界书 (角色绑定设定) ====================
+
+export interface LorebookEntryVO {
+  id: string
+  characterId: string
+  /** 触发关键词, 逗号分隔 */
+  keywords: string
+  content: string
+  priority: number
+  /** 1=启用 */
+  enabled: number
+  createdAt: string
+}
+
+export interface LorebookSaveDTO {
+  keywords: string
+  content: string
+  priority: number
+  enabled: boolean
+}
+
+// ==================== 角色卡导入导出 ====================
+
+export interface CardLorebookEntry {
+  keywords: string
+  content: string
+  priority: number
+  enabled: boolean
+}
+
+export interface CharacterCardVO {
+  version: number
+  name: string
+  avatarUrl: string | null
+  intro: string | null
+  systemPrompt: string
+  greeting: string
+  temperature: number
+  maxTokens: number
+  lorebook: CardLorebookEntry[]
 }
 
 // ==================== 管理后台 (role=ADMIN) ====================

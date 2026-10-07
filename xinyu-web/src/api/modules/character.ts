@@ -1,5 +1,11 @@
 import { get, post, put, del } from '@/api/request'
-import type { CharacterSaveDTO, CharacterVO } from '@/types/api'
+import type {
+  CharacterCardVO,
+  CharacterSaveDTO,
+  CharacterVO,
+  LorebookEntryVO,
+  LorebookSaveDTO,
+} from '@/types/api'
 
 /** 广场排序方式 */
 export type SquareSort = 'RECOMMEND' | 'HOT' | 'LATEST'
@@ -71,6 +77,40 @@ export const charactersApi = {
   /** 取消收藏(幂等) */
   unfavorite(id: string): Promise<void> {
     return del(`/characters/${id}/favorite`)
+  },
+
+  // ---------- 世界书 (仅角色创建者) ----------
+
+  /** 世界书条目列表 (含停用) */
+  lorebookList(characterId: string): Promise<LorebookEntryVO[]> {
+    return get(`/characters/${characterId}/lorebook`)
+  },
+
+  /** 新增世界书条目 */
+  lorebookCreate(characterId: string, data: LorebookSaveDTO): Promise<LorebookEntryVO> {
+    return post(`/characters/${characterId}/lorebook`, data)
+  },
+
+  /** 编辑世界书条目 */
+  lorebookUpdate(characterId: string, entryId: string, data: LorebookSaveDTO): Promise<LorebookEntryVO> {
+    return put(`/characters/${characterId}/lorebook/${entryId}`, data)
+  },
+
+  /** 删除世界书条目 */
+  lorebookRemove(characterId: string, entryId: string): Promise<void> {
+    return del(`/characters/${characterId}/lorebook/${entryId}`)
+  },
+
+  // ---------- 角色卡导入导出 ----------
+
+  /** 导出角色卡 (人设 + 参数 + 世界书), 仅创建者 */
+  exportCard(id: string): Promise<CharacterCardVO> {
+    return get(`/characters/${id}/export`)
+  },
+
+  /** 导入角色卡: 一律创建为 DRAFT */
+  importCard(card: CharacterCardVO): Promise<CharacterVO> {
+    return post('/characters/import', card)
   },
 }
 
