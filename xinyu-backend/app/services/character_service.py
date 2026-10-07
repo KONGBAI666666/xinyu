@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BizException, ResultCode
 from app.models import AiCharacter, CharacterFavorite
-from app.repositories import character_repo, conversation_repo, model_repo
+from app.repositories import character_repo, conversation_repo, message_repo, model_repo
 from app.schemas.character import CharacterSaveDTO, CharacterVO
 
 logger = logging.getLogger("xinyu.character")
@@ -142,9 +142,12 @@ async def delete(db: AsyncSession, character_id: int, user_id: int) -> None:
         raise BizException(ResultCode.PARAM_ERROR, "官方角色不可删除")
     await character_repo.soft_delete(db, character_id)
     removed_convs = await conversation_repo.soft_delete_by_character(db, character_id, user_id)
+    # 级联软删角色会话下的消息: 与"删会话"路径口径一致 (用量统计只算未删除消息)
+    removed_msgs = await message_repo.soft_delete_by_character(db, character_id, user_id)
     await db.commit()
     logger.info(
-        "用户删除角色: userId=%s, characterId=%s, 级联清理会话数=%s", user_id, character_id, removed_convs
+        "用户删除角色: userId=%s, characterId=%s, 级联清理会话数=%s, 消息数=%s",
+        user_id, character_id, removed_convs, removed_msgs,
     )
 
 

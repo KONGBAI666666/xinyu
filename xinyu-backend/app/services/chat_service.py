@@ -155,60 +155,64 @@ async def chat(db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRe
     if character is None:
         raise BizException(ResultCode.PARAM_ERROR, "该会话的角色已被删除, 请新建会话")
 
-    # 同一会话同时至多一个生成流: 在落库前拒绝, 避免并发请求覆盖取消标志/产生孤儿消息
-    if conversation_id in _active_streams:
-        raise BizException(ResultCode.PARAM_ERROR, "当前会话正在生成中, 请等待完成或先停止生成")
-
-    # 解析模型配置 (解密 API Key)
-    model_config = await _resolve_model_config(db, conversation, user_id)
-
-    # 1. USER 消息落库 (client_message_id 唯一约束 → 重复请求幂等拒绝)
-    seq = await message_repo.next_sequence_no(db, conversation_id)
-    user_msg = Message(
-        conversation_id=conversation_id,
-        user_id=user_id,
-        sequence_no=seq,
-        client_message_id=dto.clientMessageId,
-        message_type="USER",
-        content=dto.content,
-        status="COMPLETED",
-    )
-    try:
-        await message_repo.insert(db, user_msg)
-    except IntegrityError:
-        await db.rollback()
-        raise BizException(ResultCode.PARAM_ERROR, "重复的消息请求") from None
-
-    # 标题保持为创建时的命名 (默认角色名), 用户可通过重命名接口自定义
-    await conversation_repo.refresh_last_message(db, conversation_id, dto.content, now_local())
-
-    # 2. ASSISTANT 占位 (GENERATING)
-    assistant_msg = Message(
-        conversation_id=conversation_id,
-        user_id=user_id,
-        sequence_no=seq + 1,
-        parent_message_id=user_msg.id,
-        message_type="ASSISTANT",
-        content="",
-        status="GENERATING",
-        model_code=model_config.modelCode,
-    )
-    await message_repo.insert(db, assistant_msg)
-
-    # 3. 组装上下文 (system prompt + 记忆 + 历史; RAG 块在流式阶段检索后注入)
-    memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
-    history = await message_repo.list_history(db, conversation_id, None, MAX_CONTEXT_MESSAGES)
-    context = _assemble_context(character, memory_block, history)
-
-    # 前置落库全部提交, 流式阶段改用独立会话写库
-    await db.commit()
-
-    # 停止标志先登记再返回响应: 停止请求早于流启动到达时也能生效
+    # 同一会话同时至多一个生成流: 检查+登记一步完成 (setdefault 之间无 await,
+    # 消除检查→登记之间的 TOCTOU 窗口); 登记后任何前置失败都必须释放
     cancel = asyncio.Event()
-    _active_streams[conversation_id] = cancel
+    if _active_streams.setdefault(conversation_id, cancel) is not cancel:
+        raise BizException(ResultCode.PARAM_ERROR, "当前会话正在生成中, 请等待完成或先停止生成")
+    try:
+        # 解析模型配置 (解密 API Key)
+        model_config = await _resolve_model_config(db, conversation, user_id)
 
-    # RAG 参数: 会话绑定了知识库时检索; 必须使用入库时锁定的 Embedding 模型
-    rag_kb_id, rag_embedding_model = await _rag_params(db, conversation)
+        # 1. USER 消息落库 (client_message_id 唯一约束 → 重复请求幂等拒绝)
+        seq = await message_repo.next_sequence_no(db, conversation_id)
+        user_msg = Message(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            sequence_no=seq,
+            client_message_id=dto.clientMessageId,
+            message_type="USER",
+            content=dto.content,
+            status="COMPLETED",
+        )
+        try:
+            await message_repo.insert(db, user_msg)
+        except IntegrityError:
+            await db.rollback()
+            raise BizException(ResultCode.PARAM_ERROR, "重复的消息请求") from None
+
+        # 标题保持为创建时的命名 (默认角色名), 用户可通过重命名接口自定义
+        await conversation_repo.refresh_last_message(db, conversation_id, dto.content, now_local())
+
+        # 2. ASSISTANT 占位 (GENERATING)
+        assistant_msg = Message(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            sequence_no=seq + 1,
+            parent_message_id=user_msg.id,
+            message_type="ASSISTANT",
+            content="",
+            status="GENERATING",
+            model_code=model_config.modelCode,
+        )
+        await message_repo.insert(db, assistant_msg)
+
+        # 3. 组装上下文 (system prompt + 记忆 + 历史; RAG 块在流式阶段检索后注入)
+        memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
+        history = await message_repo.list_history(db, conversation_id, None, MAX_CONTEXT_MESSAGES)
+        context = _assemble_context(character, memory_block, history)
+
+        # 前置落库全部提交, 流式阶段改用独立会话写库
+        await db.commit()
+
+        # 停止标志已登记 (见入口), 停止请求早于流启动到达时也能生效
+        # RAG 参数: 会话绑定了知识库时检索; 必须使用入库时锁定的 Embedding 模型
+        rag_kb_id, rag_embedding_model = await _rag_params(db, conversation)
+    except BaseException:
+        # 前置阶段失败: 释放占位, 允许后续请求重试 (错误原因由原异常照常上抛)
+        if _active_streams.get(conversation_id) is cancel:
+            _active_streams.pop(conversation_id, None)
+        raise
 
     return StreamingResponse(
         _event_stream(
@@ -258,42 +262,45 @@ async def regenerate(db: AsyncSession, user_id: int, conversation_id: int) -> St
     if character is None:
         raise BizException(ResultCode.PARAM_ERROR, "该会话的角色已被删除, 请新建会话")
 
-    # 同会话同时至多一个生成流 (与 chat 一致)
-    if conversation_id in _active_streams:
-        raise BizException(ResultCode.PARAM_ERROR, "当前会话正在生成中, 请等待完成或先停止生成")
-
-    parent = await message_repo.last_user_message(db, conversation_id)
-    if parent is None:
-        raise BizException(ResultCode.NOT_FOUND, "会话内没有可重新生成的消息")
-
-    model_config = await _resolve_model_config(db, conversation, user_id)
-
-    version_count = await message_repo.count_assistant_versions(db, parent.id)
-    seq = await message_repo.next_sequence_no(db, conversation_id)
-    assistant_msg = Message(
-        conversation_id=conversation_id,
-        user_id=user_id,
-        sequence_no=seq,
-        parent_message_id=parent.id,
-        message_type="ASSISTANT",
-        content="",
-        status="GENERATING",
-        model_code=model_config.modelCode,
-        regenerate_count=version_count,
-    )
-    await message_repo.insert(db, assistant_msg)
-
-    memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
-    history = await message_repo.list_context_window(
-        db, conversation_id, parent.sequence_no, MAX_CONTEXT_MESSAGES
-    )
-    context = _assemble_context(character, memory_block, history)
-    await db.commit()
-
+    # 同会话同时至多一个生成流: 检查+登记原子完成 (同 chat, 消除 TOCTOU 窗口)
     cancel = asyncio.Event()
-    _active_streams[conversation_id] = cancel
+    if _active_streams.setdefault(conversation_id, cancel) is not cancel:
+        raise BizException(ResultCode.PARAM_ERROR, "当前会话正在生成中, 请等待完成或先停止生成")
+    try:
+        parent = await message_repo.last_user_message(db, conversation_id)
+        if parent is None:
+            raise BizException(ResultCode.NOT_FOUND, "会话内没有可重新生成的消息")
 
-    rag_kb_id, rag_embedding_model = await _rag_params(db, conversation)
+        model_config = await _resolve_model_config(db, conversation, user_id)
+
+        version_count = await message_repo.count_assistant_versions(db, parent.id)
+        seq = await message_repo.next_sequence_no(db, conversation_id)
+        assistant_msg = Message(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            sequence_no=seq,
+            parent_message_id=parent.id,
+            message_type="ASSISTANT",
+            content="",
+            status="GENERATING",
+            model_code=model_config.modelCode,
+            regenerate_count=version_count,
+        )
+        await message_repo.insert(db, assistant_msg)
+
+        memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
+        history = await message_repo.list_context_window(
+            db, conversation_id, parent.sequence_no, MAX_CONTEXT_MESSAGES
+        )
+        context = _assemble_context(character, memory_block, history)
+        await db.commit()
+
+        # 停止标志已登记 (见入口)
+        rag_kb_id, rag_embedding_model = await _rag_params(db, conversation)
+    except BaseException:
+        if _active_streams.get(conversation_id) is cancel:
+            _active_streams.pop(conversation_id, None)
+        raise
 
     return StreamingResponse(
         _event_stream(

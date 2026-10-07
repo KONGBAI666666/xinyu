@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, desc, func, select, update
 
 from app.core.security import now_local
-from app.models import Message
+from app.models import Conversation, Message
 
 
 @dataclass
@@ -85,6 +85,29 @@ async def delete_by_conversation(db, conversation_id: int) -> None:
         .where(Message.conversation_id == conversation_id, Message.deleted == 0)
         .values(deleted=1, updated_at=now_local())
     )
+
+
+async def soft_delete_by_character(db, character_id: int, user_id: int) -> int:
+    """级联软删某角色会话下的全部消息 (角色删除时调用)
+
+    与 conversation_repo.soft_delete_by_character 配对, 保证删角色与删会话
+    的消息口径一致 (用量统计 summarize_usage 只统计未删除消息)。
+    """
+    result = await db.execute(
+        update(Message)
+        .where(
+            Message.deleted == 0,
+            Message.conversation_id.in_(
+                select(Conversation.id).where(
+                    Conversation.character_id == character_id,
+                    Conversation.user_id == user_id,
+                    Conversation.deleted == 0,
+                )
+            ),
+        )
+        .values(deleted=1, updated_at=now_local())
+    )
+    return result.rowcount or 0
 
 
 async def last_user_message(db, conversation_id: int) -> Message | None:
