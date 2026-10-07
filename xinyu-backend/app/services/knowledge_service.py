@@ -183,11 +183,12 @@ async def upload_document(
         raise
     except Exception as e:
         doc.status = "ERROR"
-        doc.error_msg = (str(e) or "未知错误")[:500]
+        # 固定文案: 异常原文可能携带内网服务响应, 详情在下方日志里
+        doc.error_msg = "文档处理失败, 请稍后重试或联系管理员"
         await knowledge_repo.update_doc(db, doc)
         await db.commit()
         logger.exception("文档上传失败: docId=%s, kbId=%s", doc.id, kb_id)
-        raise BizException(ResultCode.SYSTEM_ERROR, f"文档处理失败: {e}") from e
+        raise BizException(ResultCode.SYSTEM_ERROR, "文档处理失败, 请稍后重试或联系管理员") from e
 
 
 async def delete_document(db: AsyncSession, kb_id: int, doc_id: int, user_id: int) -> None:

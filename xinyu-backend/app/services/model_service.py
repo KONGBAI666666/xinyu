@@ -15,6 +15,7 @@ from app.core.security import aes_decrypt, aes_encrypt
 from app.models import AiModel
 from app.repositories import model_repo
 from app.schemas.model import AiModelSaveDTO, AiModelVO
+from app.utils.url_guard import assert_public_baseurl
 
 
 def _to_vo(model: AiModel) -> AiModelVO:
@@ -46,13 +47,14 @@ async def list_by_user(db: AsyncSession, user_id: int) -> list[AiModelVO]:
 
 async def create(db: AsyncSession, user_id: int, req: AiModelSaveDTO) -> AiModelVO:
     """添加模型"""
+    base_url = await assert_public_baseurl(req.baseUrl)
     is_default = 1 if req.isDefault else 0
     model = AiModel(
         user_id=user_id,
         provider=req.provider,
         model_code=req.modelCode,
         display_name=req.displayName,
-        base_url=req.baseUrl,
+        base_url=base_url,
         api_key_encrypted=aes_encrypt(req.apiKey),
         is_default=is_default,
         enabled=1,
@@ -71,7 +73,7 @@ async def update(db: AsyncSession, model_id: int, user_id: int, req: AiModelSave
     model.provider = req.provider
     model.model_code = req.modelCode
     model.display_name = req.displayName
-    model.base_url = req.baseUrl
+    model.base_url = await assert_public_baseurl(req.baseUrl)
 
     # apiKey 非空才覆盖, 空保留原值
     if req.apiKey and req.apiKey.strip():
@@ -132,10 +134,17 @@ def _create_config(model: AiModel) -> ModelConfig:
     )
 
 
+async def _validated_config(model: AiModel) -> ModelConfig:
+    """构造配置并校验出站地址 (存量数据在解析时兜底校验, 防止内网 SSRF)"""
+    config = _create_config(model)
+    await assert_public_baseurl(config.baseUrl)
+    return config
+
+
 async def resolve_config(db: AsyncSession, model_id: int, user_id: int) -> ModelConfig:
     """按 modelId 解析模型配置 (解密 API Key)"""
     model = await _require_owned(db, model_id, user_id)
-    return _create_config(model)
+    return await _validated_config(model)
 
 
 async def resolve_default_config(db: AsyncSession, user_id: int) -> ModelConfig | None:
@@ -143,4 +152,4 @@ async def resolve_default_config(db: AsyncSession, user_id: int) -> ModelConfig 
     model = await model_repo.get_default(db, user_id)
     if model is None:
         return None
-    return _create_config(model)
+    return await _validated_config(model)

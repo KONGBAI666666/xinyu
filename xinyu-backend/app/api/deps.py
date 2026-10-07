@@ -45,10 +45,15 @@ async def get_optional_user_id(request: Request) -> int | None:
 
 
 def client_ip(request: Request) -> str:
-    """客户端真实 IP: 经 nginx 代理时取 X-Forwarded-For 首段"""
-    xff = request.headers.get("X-Forwarded-For", "")
-    if xff.strip():
-        return xff.split(",")[0].strip()
+    """客户端真实 IP: 只信 nginx 覆写的 X-Real-IP (取自 $remote_addr, 客户端伪造会被覆盖)
+
+    不取 X-Forwarded-For 首段 —— nginx 的 $proxy_add_x_forwarded_for 会把客户端
+    自带的伪造 XFF 排在最前, 取首段等于信任攻击者输入, IP 限流可被轮换伪造头绕过。
+    后端不经 nginx 直连时 (本地开发) 回落 client.host。
+    """
+    real_ip = request.headers.get("X-Real-IP", "")
+    if real_ip.strip():
+        return real_ip.strip()
     return request.client.host if request.client else "unknown"
 
 

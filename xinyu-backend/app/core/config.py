@@ -67,6 +67,10 @@ class Settings(BaseSettings):
     # ---------- Mock 模式 (无 LLM 调用, 返回假数据) ----------
     mock_mode: bool = False
 
+    # ---------- 出站防护 ----------
+    # 允许模型 baseUrl 指向内网/环回地址 (本机 Ollama 等自建服务联调用), prod 默认拒绝
+    llm_allow_private_baseurl: bool = False
+
     # ============ 派生属性 ============
 
     @property

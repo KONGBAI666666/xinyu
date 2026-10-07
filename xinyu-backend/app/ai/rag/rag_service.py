@@ -119,8 +119,11 @@ class RagService:
                 embedding_dim=profile.dim,
             )
         except Exception as e:
-            logger.warning("文档向量化失败: kb_id=%s, doc_id=%s, error=%s", kb_id, doc_id, e)
-            return RagProcessResult(chunk_count=0, status="ERROR", error_msg=str(e))
+            logger.warning("文档向量化失败: kb_id=%s, doc_id=%s, error=%r", kb_id, doc_id, e)
+            # 固定文案: 异常原文可能携带 baseUrl 指向的内网服务响应, 只留日志不外显
+            return RagProcessResult(
+                chunk_count=0, status="ERROR", error_msg="文档向量化失败, 请检查模型配置或稍后重试"
+            )
 
     async def delete_doc(self, kb_id: str, doc_id: str) -> None:
         await self._qdrant.delete_by_doc(kb_id, doc_id)

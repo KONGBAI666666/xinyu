@@ -106,7 +106,9 @@ async function handleSend(content: string): Promise<void> {
 
 function handleLogout(): void {
   authStore.logout()
-  router.push('/login')
+  // 整页跳转清空全部内存态: Pinia 业务 store 不随路由销毁, SPA 内跳转会残留
+  // 上一账号的会话/消息, 同浏览器换账号登录后会直接看到
+  window.location.href = '/login'
 }
 
 function showError(e: unknown): void {

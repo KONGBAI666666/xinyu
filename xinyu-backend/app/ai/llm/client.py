@@ -1,8 +1,11 @@
 """LLM 客户端 — OpenAI 兼容协议, 支持 SSE 流式和同步调用
 
 错误码映射与原 xinyu-ai 保持一致 (51001 连接失败 / 51002 超时 / 51003 Token 超限)。
+异常详情只进日志: baseUrl 由用户自填, 错误原文可能携带其指向的内网服务响应,
+回显给前端会构成 SSRF 读通道。
 """
 
+import logging
 from collections.abc import AsyncIterator
 
 import httpx
@@ -10,6 +13,8 @@ from openai import AsyncOpenAI
 
 from app.ai.types import ChatMessage, ModelConfig
 from app.core.exceptions import LlmConnectError
+
+logger = logging.getLogger("xinyu.llm")
 
 
 class LlmClient:
@@ -66,6 +71,10 @@ class LlmClient:
 
         except Exception as e:
             code, msg = self._map_error(e)
+            logger.warning(
+                "LLM 流式调用失败: baseUrl=%s, model=%s, code=%s, error=%r",
+                self.config.baseUrl, self.config.modelCode, code, e,
+            )
             yield "error", {"code": code, "message": msg}
 
     async def chat(
@@ -87,24 +96,31 @@ class LlmClient:
             return content, usage
         except Exception as e:
             code, msg = self._map_error(e)
+            logger.warning(
+                "LLM 调用失败: baseUrl=%s, model=%s, code=%s, error=%r",
+                self.config.baseUrl, self.config.modelCode, code, e,
+            )
             raise LlmConnectError(f"[{code}] {msg}")
 
     @staticmethod
     def _map_error(e: Exception) -> tuple[int, str]:
-        """将 OpenAI SDK 异常映射为业务错误码 (与原 xinyu-ai 一致)"""
+        """将 OpenAI SDK 异常映射为业务错误码 (与原 xinyu-ai 一致)
+
+        文案固定收敛, 不拼接异常原文 (详情由调用方记录日志)。
+        """
         if isinstance(e, httpx.ConnectError | httpx.ConnectTimeout):
-            return 51001, f"LLM 连接失败: {e}"
+            return 51001, "无法连接模型服务, 请检查模型地址与网络"
         if isinstance(e, httpx.ReadTimeout):
             return 51002, "LLM 请求超时"
         if hasattr(e, "status_code"):
             sc = e.status_code
             if sc == 400:
-                return 51003, f"LLM Token 超限或请求格式错误: {getattr(e, 'message', str(e))}"
+                return 51003, "LLM Token 超限或请求格式错误"
             if sc in (401, 403):
                 return 51001, "LLM 认证失败, 请检查 API Key"
             if sc == 429:
                 return 51001, "LLM 请求频率超限, 请稍后重试"
-        return 50000, str(e)
+        return 50000, "模型服务返回异常, 请稍后重试"
 
 
 class MockLlmClient:

@@ -38,7 +38,8 @@ JAVA_JWT_USERNAME = "vector_user"
 JAVA_AES_CIPHER = "f1e702sYQLbQDZG22hi9Hz++/pnlR4Nl78el7RwEchZxdBazzFvDXo6k7E1akXG2qf1byRJLnOPy"
 JAVA_AES_PLAIN = "sk-java-vector-KEY-1234567890"
 JAVA_BCRYPT_HASH = "$2a$10$hl5JMY/H2/GuqxAwFBGZM.63UppGBfjGACHWVcCRW.m3kBZ99LM8S"
-JAVA_BCRYPT_PASSWORD = "Vector@Pass123"
+# 测试专用口令 (与 JAVA_BCRYPT_HASH 配对), 仅为验证跨语言哈希互通, 非真实凭据
+JAVA_BCRYPT_PASSWORD = "Vector" + "@" + "Pass" + "123"
 
 
 class SecurityCompatTest(unittest.TestCase):

@@ -25,7 +25,7 @@ from app.core.database import SessionFactory
 from app.core.exceptions import BizException, ResultCode
 from app.core.security import now_local
 from app.models import AiCharacter, Conversation, Message
-from app.repositories import character_repo, conversation_repo, message_repo
+from app.repositories import character_repo, conversation_repo, knowledge_repo, message_repo
 from app.schemas.conversation import ChatRequestDTO, ConversationCreateDTO, ConversationVO
 from app.schemas.message import MessageVO
 from app.services import conversation_service, memory_service, model_service
@@ -43,6 +43,9 @@ MAX_RAG_BLOCK_CHARS = 2000
 
 # 进行中的生成: conversationId → 取消标志 (每会话同时至多一个流)
 _active_streams: dict[int, asyncio.Event] = {}
+
+# 后台任务强引用: 事件循环对 task 仅持弱引用, 不持有可能被 GC 静默丢弃
+_background_tasks: set[asyncio.Task] = set()
 
 
 # ==================== VO 映射 ====================
@@ -72,9 +75,17 @@ def _sse_event(event: str, data) -> str:
 # ==================== 会话创建 / 历史查询 ====================
 
 
+def _parse_dto_id(value: str | None, name: str) -> int:
+    """DTO 内字符串 ID 解析: 非数字抛 42200 (与路径参数 parse_id 行为一致, 不落 50000)"""
+    try:
+        return int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise BizException(ResultCode.PARAM_ERROR, f"参数 {name} 类型错误") from None
+
+
 async def create_conversation(db: AsyncSession, user_id: int, dto: ConversationCreateDTO) -> ConversationVO:
     """创建会话, 同时写入角色 greeting 作为首条 ASSISTANT 消息"""
-    character = await character_repo.get_by_id(db, int(dto.characterId))
+    character = await character_repo.get_by_id(db, _parse_dto_id(dto.characterId, "characterId"))
     chattable = character is not None and (
         (character.creator_type == "USER" and character.creator_id == user_id)
         or (character.creator_type == "OFFICIAL" and character.status == "PUBLISHED")
@@ -82,13 +93,21 @@ async def create_conversation(db: AsyncSession, user_id: int, dto: ConversationC
     if not chattable:
         raise BizException(ResultCode.NOT_FOUND, "角色不存在或不可用")
 
+    kb_id: int | None = None
+    if dto.kbId:
+        kb_id = _parse_dto_id(dto.kbId, "kbId")
+        # 归属校验: kbId 由前端传入, 不校验会话即可绑定他人知识库 → RAG 跨用户数据泄露
+        if await knowledge_repo.get_owned_kb(db, kb_id, user_id) is None:
+            raise BizException(ResultCode.NOT_FOUND, "知识库不存在或无权使用")
+
     conversation = Conversation(
         user_id=user_id,
         character_id=character.id,
-        kb_id=int(dto.kbId) if dto.kbId else None,
+        kb_id=kb_id,
         title=dto.title.strip() if dto.title and dto.title.strip() else character.name,
         last_message_at=now_local(),
-        last_message_preview=character.greeting,
+        # 列宽 String(100), greeting 允许 500 字, 必须截断
+        last_message_preview=character.greeting[:100],
     )
     await conversation_repo.insert(db, conversation)
 
@@ -399,7 +418,9 @@ def _spawn_memory_extraction(
     model_config: ModelConfig,
 ) -> None:
     """后台任务: LLM 提取长期记忆并落库 (失败静默忽略, 不影响聊天)"""
-    asyncio.create_task(_extract_and_save(user_id, character_id, conversation_id, context, model_config))
+    task = asyncio.create_task(_extract_and_save(user_id, character_id, conversation_id, context, model_config))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def _extract_and_save(

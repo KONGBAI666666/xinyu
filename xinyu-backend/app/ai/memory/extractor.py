@@ -64,11 +64,15 @@ class MemoryExtractor:
             item_content = (item.get("content") or "").strip()
             if not item_content:
                 continue
+            importance = item.get("importance") or "MEDIUM"
+            # LLM 输出不校验直接落库, 会让列表接口的 Literal["HIGH","MEDIUM","LOW"] 反序列化 500
+            if importance not in ("HIGH", "MEDIUM", "LOW"):
+                importance = "MEDIUM"
             result.append(
                 ExtractedMemory(
                     memoryKey=item.get("memory_key") or item.get("memoryKey"),
                     content=item_content,
-                    importance=item.get("importance", "MEDIUM"),
+                    importance=importance,
                 )
             )
         return result
