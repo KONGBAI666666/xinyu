@@ -42,6 +42,8 @@ class UserVO(BaseModel):
     username: str
     nickname: str
     avatarUrl: str | None = None
+    email: str | None = None
+    role: str = "USER"  # USER / ADMIN (管理后台入口判定)
 
 
 class AuthResponse(BaseModel):

@@ -12,6 +12,7 @@ class AiModelSaveDTO(BaseModel):
     baseUrl: str
     apiKey: str | None = None  # 添加必填, 编辑可空 (空则保留原值)
     isDefault: bool | None = None
+    enabled: bool | None = None  # 编辑可空 (空则保留原值); 停用后不可被解析使用
 
     @field_validator("provider", "modelCode", "displayName", "baseUrl")
     @classmethod

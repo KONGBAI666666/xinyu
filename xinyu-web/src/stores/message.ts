@@ -99,7 +99,47 @@ export const useMessageStore = defineStore('message', () => {
       completionTokens: null,
       modelCode: null,
       createdAt: new Date().toISOString().slice(0, 19),
+      parentMessageId: userMessageId,
     })
+  }
+
+  /**
+   * 重新生成瞬间乐观插入本地 ASSISTANT 占位（不插 USER 消息）
+   * parent 挂到最后一条 USER 消息上, meta 到达后由 confirmRegenerateMeta 换真实 id
+   */
+  function beginRegenerate(conversationId: string): void {
+    const parent = [...items.value].reverse().find((m) => m.messageType === 'USER')
+    items.value.push({
+      id: `local-assist-${Date.now()}`,
+      conversationId,
+      sequenceNo: (items.value[items.value.length - 1]?.sequenceNo ?? 0) + 1,
+      messageType: 'ASSISTANT',
+      content: '',
+      status: 'GENERATING',
+      promptTokens: null,
+      completionTokens: null,
+      modelCode: null,
+      createdAt: new Date().toISOString().slice(0, 19),
+      parentMessageId: parent?.id ?? null,
+    })
+    streaming.value = true
+  }
+
+  /** 重新生成的 meta: 占位换真实 id, parent 同步为真实 USER 消息 id */
+  function confirmRegenerateMeta(userMessageId: string, assistantMessageId: string): void {
+    const placeholder = items.value[items.value.length - 1]
+    if (placeholder?.messageType === 'ASSISTANT' && placeholder.id.startsWith('local-assist-')) {
+      placeholder.id = assistantMessageId
+      placeholder.parentMessageId = userMessageId
+    }
+  }
+
+  /** 反馈落库成功后同步本地态 */
+  function setFeedback(messageId: string, feedback: 'LIKE' | 'DISLIKE' | 'NONE'): void {
+    const target = items.value.find((m) => m.id === messageId)
+    if (target) {
+      target.feedback = feedback
+    }
   }
 
   /** delta: 追加增量文本（useSseChat 已做 50ms 节流, 这里直接写入） */
@@ -182,6 +222,9 @@ export const useMessageStore = defineStore('message', () => {
     loadMore,
     appendUserMessage,
     confirmMeta,
+    beginRegenerate,
+    confirmRegenerateMeta,
+    setFeedback,
     appendDelta,
     finishAssistant,
     failAssistant,

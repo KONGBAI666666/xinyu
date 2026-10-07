@@ -7,7 +7,7 @@ from app.api.deps import get_current_user_id
 from app.core.database import get_db
 from app.schemas.auth import UserVO
 from app.schemas.common import Result
-from app.schemas.user import UpdatePasswordDTO
+from app.schemas.user import UpdateEmailDTO, UpdatePasswordDTO
 from app.services import user_service
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -25,4 +25,13 @@ async def update_password(
 ) -> Result:
     """修改密码"""
     await user_service.update_password(db, user_id, dto)
+    return Result.ok()
+
+
+@router.put("/me/email")
+async def update_email(
+    dto: UpdateEmailDTO, user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
+) -> Result:
+    """绑定/更换邮箱 (传空清除); 找回密码等邮件能力的数据基础"""
+    await user_service.update_email(db, user_id, dto.email)
     return Result.ok()

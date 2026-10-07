@@ -1,0 +1,59 @@
+"""管理后台 Schema — user.role=ADMIN 专用接口的出入参"""
+
+from typing import Generic, Literal, TypeVar
+
+from pydantic import BaseModel
+
+from app.schemas.common import DateTimeStr
+
+T = TypeVar("T")
+
+
+class PageVO(BaseModel, Generic[T]):
+    """简易分页包装"""
+
+    items: list[T]
+    total: int
+
+
+class AdminUserVO(BaseModel):
+    id: str
+    username: str
+    nickname: str
+    email: str | None = None
+    role: str
+    status: str
+    lastLoginAt: DateTimeStr | None = None
+    createdAt: DateTimeStr
+
+
+class UserStatusDTO(BaseModel):
+    status: Literal["ACTIVE", "BANNED"]
+
+
+class AdminCharacterVO(BaseModel):
+    id: str
+    name: str
+    intro: str | None = None
+    creatorId: str
+    creatorType: str
+    status: str
+    chatCount: int
+    favoriteCount: int
+    createdAt: DateTimeStr
+
+
+class CharacterReviewDTO(BaseModel):
+    """审核动作: 通过发布 / 下架"""
+
+    status: Literal["PUBLISHED", "OFFLINE"]
+
+
+class PlatformOverviewVO(BaseModel):
+    userCount: int
+    characterCount: int
+    conversationCount: int
+    messageCount: int
+    modelCount: int
+    totalPromptTokens: int
+    totalCompletionTokens: int

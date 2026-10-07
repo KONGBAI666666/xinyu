@@ -18,8 +18,9 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharactersStore } from '@/stores/character'
 import { charactersApi } from '@/api/modules/character'
+import { modelsApi } from '@/api/modules/models'
 import { BizError } from '@/utils/BizError'
-import type { CharacterSaveDTO, CharacterStatus, CharacterVO } from '@/types/api'
+import type { AiModelVO, CharacterSaveDTO, CharacterStatus, CharacterVO } from '@/types/api'
 
 const router = useRouter()
 const store = useCharactersStore()
@@ -46,8 +47,12 @@ function emptyForm(): CharacterSaveDTO {
     temperature: 0.8,
     maxTokens: 1024,
     status: 'DRAFT',
+    modelId: null,
   }
 }
+
+/** 本人启用中的模型 (角色绑定候选) */
+const bindableModels = ref<AiModelVO[]>([])
 
 const officialList = computed(() => store.official())
 const mineList = computed(() => store.mine())
@@ -56,6 +61,8 @@ onMounted(async () => {
   loading.value = true
   try {
     await store.load(true)
+    // 绑定候选只列启用中的模型 (停用模型后端同样拒绝绑定)
+    bindableModels.value = (await modelsApi.list()).filter((m) => m.enabled === 1)
   } catch (e) {
     errorText.value = e instanceof BizError ? e.message : '加载失败'
   } finally {
@@ -81,6 +88,7 @@ function openEdit(c: CharacterVO): void {
     temperature: c.temperature,
     maxTokens: c.maxTokens,
     status: c.status,
+    modelId: c.modelId,
   }
 }
 
@@ -117,6 +125,8 @@ async function submit(): Promise<void> {
   }
   submitting.value = true
   try {
+    // select 的空选项归一为 null (后端以 null/空串识别"清除绑定")
+    form.value.modelId = form.value.modelId || null
     if (creating.value) {
       const created = await charactersApi.create(form.value)
       store.list.push(created)
@@ -369,6 +379,19 @@ const statusLabel: Record<string, string> = {
               <div class="form-group">
                 <label class="form-label">maxTokens</label>
                 <input v-model.number="form.maxTokens" type="number" min="1" max="8192" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  默认模型
+                  <span class="form-hint">新会话将使用该模型 (需为本人启用中的模型)</span>
+                </label>
+                <select v-model="form.modelId" class="form-input">
+                  <option :value="null">不绑定 (使用会话/用户默认)</option>
+                  <option v-for="m in bindableModels" :key="m.id" :value="m.id">
+                    {{ m.displayName }} ({{ m.modelCode }})
+                  </option>
+                </select>
               </div>
             </div>
 

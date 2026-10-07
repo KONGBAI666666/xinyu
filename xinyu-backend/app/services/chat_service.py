@@ -25,7 +25,7 @@ from app.core.database import SessionFactory
 from app.core.exceptions import BizException, ResultCode
 from app.core.security import now_local
 from app.models import AiCharacter, Conversation, Message
-from app.repositories import character_repo, conversation_repo, knowledge_repo, message_repo
+from app.repositories import character_repo, conversation_repo, knowledge_repo, message_repo, model_repo
 from app.schemas.conversation import ChatRequestDTO, ConversationCreateDTO, ConversationVO
 from app.schemas.message import MessageVO
 from app.services import conversation_service, memory_service, model_service
@@ -62,6 +62,9 @@ def _message_to_vo(m: Message) -> MessageVO:
         promptTokens=m.prompt_tokens,
         completionTokens=m.completion_tokens,
         modelCode=m.model_code,
+        parentMessageId=str(m.parent_message_id) if m.parent_message_id is not None else None,
+        regenerateCount=m.regenerate_count,
+        feedback=m.feedback,
         createdAt=m.created_at,
     )
 
@@ -100,9 +103,17 @@ async def create_conversation(db: AsyncSession, user_id: int, dto: ConversationC
         if await knowledge_repo.get_owned_kb(db, kb_id, user_id) is None:
             raise BizException(ResultCode.NOT_FOUND, "知识库不存在或无权使用")
 
+    # 角色绑定了模型且属于当前用户 (启用中) 时, 新会话继承该模型; 否则回落用户默认
+    inherited_model_id: int | None = None
+    if character.model_id is not None:
+        bound = await model_repo.get_by_id_and_user(db, character.model_id, user_id)
+        if bound is not None and bound.enabled == 1:
+            inherited_model_id = character.model_id
+
     conversation = Conversation(
         user_id=user_id,
         character_id=character.id,
+        model_id=inherited_model_id,
         kb_id=kb_id,
         title=dto.title.strip() if dto.title and dto.title.strip() else character.name,
         last_message_at=now_local(),
@@ -197,12 +208,7 @@ async def chat(db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRe
     _active_streams[conversation_id] = cancel
 
     # RAG 参数: 会话绑定了知识库时检索; 必须使用入库时锁定的 Embedding 模型
-    rag_kb_id = str(conversation.kb_id) if conversation.kb_id else None
-    rag_embedding_model = None
-    if conversation.kb_id:
-        from app.services import knowledge_service
-
-        rag_embedding_model = await knowledge_service.get_embedding_model(db, conversation.kb_id)
+    rag_kb_id, rag_embedding_model = await _rag_params(db, conversation)
 
     return StreamingResponse(
         _event_stream(
@@ -241,6 +247,101 @@ async def stop_generation(db: AsyncSession, user_id: int, conversation_id: int) 
     # 无进行中流: 可能已完成或尚未建立连接, 幂等成功
 
 
+async def regenerate(db: AsyncSession, user_id: int, conversation_id: int) -> StreamingResponse:
+    """重新生成最后一条回复 (SSE): 以最后一条 USER 消息为 parent 追加新版本 ASSISTANT
+
+    旧版本保留, 前端可切换查看; 上下文组装时同 parent 只取最新版本。
+    仅支持重发最后一条回复 (最终态的预览/排序语义才保持正确)。
+    """
+    conversation = await conversation_service.require_owned(db, conversation_id, user_id)
+    character = await character_repo.get_by_id(db, conversation.character_id)
+    if character is None:
+        raise BizException(ResultCode.PARAM_ERROR, "该会话的角色已被删除, 请新建会话")
+
+    # 同会话同时至多一个生成流 (与 chat 一致)
+    if conversation_id in _active_streams:
+        raise BizException(ResultCode.PARAM_ERROR, "当前会话正在生成中, 请等待完成或先停止生成")
+
+    parent = await message_repo.last_user_message(db, conversation_id)
+    if parent is None:
+        raise BizException(ResultCode.NOT_FOUND, "会话内没有可重新生成的消息")
+
+    model_config = await _resolve_model_config(db, conversation, user_id)
+
+    version_count = await message_repo.count_assistant_versions(db, parent.id)
+    seq = await message_repo.next_sequence_no(db, conversation_id)
+    assistant_msg = Message(
+        conversation_id=conversation_id,
+        user_id=user_id,
+        sequence_no=seq,
+        parent_message_id=parent.id,
+        message_type="ASSISTANT",
+        content="",
+        status="GENERATING",
+        model_code=model_config.modelCode,
+        regenerate_count=version_count,
+    )
+    await message_repo.insert(db, assistant_msg)
+
+    memory_block = await memory_service.build_memory_block(db, user_id, conversation.character_id)
+    history = await message_repo.list_context_window(
+        db, conversation_id, parent.sequence_no, MAX_CONTEXT_MESSAGES
+    )
+    context = _assemble_context(character, memory_block, history)
+    await db.commit()
+
+    cancel = asyncio.Event()
+    _active_streams[conversation_id] = cancel
+
+    rag_kb_id, rag_embedding_model = await _rag_params(db, conversation)
+
+    return StreamingResponse(
+        _event_stream(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            character_id=conversation.character_id,
+            user_msg_id=parent.id,
+            assistant_msg_id=assistant_msg.id,
+            context=context,
+            model_config=model_config,
+            rag_kb_id=rag_kb_id,
+            rag_embedding_model=rag_embedding_model,
+            user_query=parent.content or "",
+            temperature=float(character.temperature) if character.temperature is not None else 0.8,
+            max_tokens=character.max_tokens if character.max_tokens is not None else 1024,
+            cancel=cancel,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+async def set_feedback(
+    db: AsyncSession, user_id: int, conversation_id: int, message_id: int, feedback: str
+) -> None:
+    """消息反馈 (点赞/点踩): 接线 message.feedback 列, 仅本人会话内的 ASSISTANT 消息"""
+    await conversation_service.require_owned(db, conversation_id, user_id)
+    message = await message_repo.get_by_id(db, message_id)
+    if message is None or message.conversation_id != conversation_id or message.message_type != "ASSISTANT":
+        raise BizException(ResultCode.NOT_FOUND, "消息不存在")
+    await message_repo.update_feedback(db, message_id, feedback)
+    await db.commit()
+
+
+async def _rag_params(db: AsyncSession, conversation: Conversation) -> tuple[str | None, str | None]:
+    """会话绑定的知识库 RAG 参数: (kb_id, 锁定的 embedding 模型); 未绑定返回 (None, None)"""
+    if not conversation.kb_id:
+        return None, None
+    from app.services import knowledge_service
+
+    rag_embedding_model = await knowledge_service.get_embedding_model(db, conversation.kb_id)
+    return str(conversation.kb_id), rag_embedding_model
+
+
 # ==================== 内部编排 ====================
 
 
@@ -264,12 +365,26 @@ def _assemble_context(character: AiCharacter, memory_block: str, history: list[M
         system_prompt = system_prompt + memory_block
     messages = [ChatMessage.system(system_prompt)]
 
+    # 同一 parent 的多条 ASSISTANT 是重新生成的不同版本, 上下文只取最新一条
+    latest_version_seq: dict[int, int] = {}
+    for msg in history:
+        if msg.message_type == "ASSISTANT" and msg.parent_message_id is not None:
+            known = latest_version_seq.get(msg.parent_message_id)
+            if known is None or msg.sequence_no > known:
+                latest_version_seq[msg.parent_message_id] = msg.sequence_no
+
     for msg in history:
         if msg.message_type == "USER":
             messages.append(ChatMessage.user(msg.content or ""))
         elif msg.message_type == "ASSISTANT":
             # GENERATING 占位/FAILED 无有效文本, 不进上下文
             if msg.status in ("COMPLETED", "STOPPED") and msg.content:
+                # 旧版本回复不进上下文 (sequence_no 小于同 parent 最新版)
+                if (
+                    msg.parent_message_id is not None
+                    and msg.sequence_no != latest_version_seq.get(msg.parent_message_id)
+                ):
+                    continue
                 messages.append(ChatMessage.assistant(msg.content))
         # SYSTEM 类消息是站内提示, 不参与模型对话
     return messages

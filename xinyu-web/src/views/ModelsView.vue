@@ -101,6 +101,15 @@ async function setDefault(id: string): Promise<void> {
   }
 }
 
+async function toggleEnabled(model: AiModelVO): Promise<void> {
+  try {
+    await modelsApi.setEnabled(model.id, model.enabled !== 1)
+    await modelsStore.load(true)
+  } catch (e) {
+    errorText.value = e instanceof BizError ? e.message : '操作失败'
+  }
+}
+
 async function confirmDelete(): Promise<void> {
   if (!deletingId.value) return
   try {
@@ -171,6 +180,7 @@ function applyPreset(preset: string): void {
             <span class="provider-badge">{{ model.provider }}</span>
             <h3 class="display-name">{{ model.displayName }}</h3>
             <span v-if="model.isDefault === 1" class="default-badge">默认</span>
+            <span v-else-if="model.enabled !== 1" class="default-badge disabled-badge">已停用</span>
           </div>
           <span class="model-code">{{ model.modelCode }}</span>
         </div>
@@ -190,6 +200,9 @@ function applyPreset(preset: string): void {
         <div class="card-actions">
           <button v-if="model.isDefault !== 1" class="action-btn" type="button" @click="setDefault(model.id)">
             设为默认
+          </button>
+          <button class="action-btn" type="button" @click="toggleEnabled(model)">
+            {{ model.enabled === 1 ? '停用' : '启用' }}
           </button>
           <button class="action-btn" type="button" @click="openEdit(model)">编辑</button>
           <button class="action-btn danger" type="button" @click="deletingId = model.id">删除</button>
@@ -465,6 +478,10 @@ function applyPreset(preset: string): void {
   font-size: 10px;
   font-weight: 600;
   color: white;
+}
+.disabled-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
 }
 .model-code {
   font-size: 12px;

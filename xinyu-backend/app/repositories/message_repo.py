@@ -87,18 +87,70 @@ async def delete_by_conversation(db, conversation_id: int) -> None:
     )
 
 
-async def summarize_usage(db, user_id: int, since=None) -> UsageSummary:
-    """聚合统计用户在 [since, +∞) 时间段内的 LLM 用量
+async def last_user_message(db, conversation_id: int) -> Message | None:
+    """会话内最后一条 USER 消息 (重新生成的挂靠点)"""
+    result = await db.execute(
+        select(Message)
+        .where(
+            Message.conversation_id == conversation_id,
+            Message.message_type == "USER",
+            Message.deleted == 0,
+        )
+        .order_by(desc(Message.id))
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def count_assistant_versions(db, parent_message_id: int) -> int:
+    """同一 parent 下已有的 ASSISTANT 回复版本数 (重新生成计数)"""
+    result = await db.execute(
+        select(func.count(Message.id)).where(
+            Message.parent_message_id == parent_message_id,
+            Message.message_type == "ASSISTANT",
+            Message.deleted == 0,
+        )
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def list_context_window(db, conversation_id: int, max_sequence_no: int, size: int) -> list[Message]:
+    """取 sequence_no <= max_sequence_no 的最近 size 条 (升序返回)
+
+    重新生成用: 只看 parent 之前的历史, 天然排除旧版本的 ASSISTANT 回复。
+    """
+    result = await db.execute(
+        select(Message)
+        .where(
+            Message.conversation_id == conversation_id,
+            Message.sequence_no <= max_sequence_no,
+            Message.deleted == 0,
+        )
+        .order_by(desc(Message.sequence_no))
+        .limit(size)
+    )
+    return sorted(result.scalars(), key=lambda m: m.sequence_no)
+
+
+async def update_feedback(db, message_id: int, feedback: str) -> None:
+    await db.execute(
+        update(Message).where(Message.id == message_id).values(feedback=feedback, updated_at=now_local())
+    )
+
+
+async def summarize_usage(db, user_id: int | None = None, since=None) -> UsageSummary:
+    """聚合统计 LLM 用量; user_id 为空时统计全站 (管理概览用)
 
     口径: ASSISTANT 消息且 prompt/completion tokens 至少一个非空
     (即真实发生 LLM 调用, 排除 greeting 与中断占位)
     """
     conditions = [
-        Message.user_id == user_id,
         Message.message_type == "ASSISTANT",
         Message.deleted == 0,
         (Message.prompt_tokens.isnot(None)) | (Message.completion_tokens.isnot(None)),
     ]
+    if user_id is not None:
+        conditions.append(Message.user_id == user_id)
     if since is not None:
         conditions.append(Message.created_at >= since)
 

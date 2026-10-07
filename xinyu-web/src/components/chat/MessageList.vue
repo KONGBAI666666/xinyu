@@ -2,10 +2,12 @@
 /**
  * 消息区域: 历史消息 + 流式气泡, 新消息/流式追加时自动滚到底部;
  * 滚到顶部时向上加载更早历史（游标分页）并保持滚动位置不跳动
+ * M4+: 同一 parent 的连续 ASSISTANT 折叠为重新生成版本组 (‹ n/m › 切换, 默认展示最新)
  */
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { PAGE_SIZE, useMessageStore } from '@/stores/message'
 import { useConversationStore } from '@/stores/conversation'
+import type { MessageFeedback, MessageVO } from '@/types/api'
 import MessageBubble from './MessageBubble.vue'
 
 const messageStore = useMessageStore()
@@ -18,6 +20,72 @@ defineProps<{
   /** 是否已选中会话（未选中显示引导空态） */
   hasActive: boolean
 }>()
+
+const emit = defineEmits<{
+  regenerate: []
+  feedback: [messageId: string, value: MessageFeedback]
+}>()
+
+interface RenderItem {
+  key: string
+  message: MessageVO
+  versionIndex: number
+  versionTotal: number
+  canRegenerate: boolean
+}
+
+/** 手动切换过的版本选择 (parent → 版本下标); 未手动切换时始终跟随最新版本 */
+const versionPick = ref<Record<string, number>>({})
+
+/** 同一 parent 的连续 ASSISTANT 为一个版本组; 其余逐条渲染 */
+const rendered = computed<RenderItem[]>(() => {
+  const items = messageStore.items
+  const out: RenderItem[] = []
+  let i = 0
+  while (i < items.length) {
+    const m = items[i]
+    let entry: RenderItem
+    if (m.messageType === 'ASSISTANT' && m.parentMessageId) {
+      const parent = m.parentMessageId
+      const versions: MessageVO[] = []
+      while (i < items.length && items[i].messageType === 'ASSISTANT' && items[i].parentMessageId === parent) {
+        versions.push(items[i])
+        i++
+      }
+      const picked = versionPick.value[parent]
+      const index = Math.min(Math.max(picked ?? versions.length - 1, 0), versions.length - 1)
+      entry = {
+        key: `v-${parent}`,
+        message: versions[index],
+        versionIndex: index,
+        versionTotal: versions.length,
+        canRegenerate: false,
+      }
+    } else {
+      entry = { key: m.id, message: m, versionIndex: 0, versionTotal: 1, canRegenerate: false }
+      i++
+    }
+    out.push(entry)
+  }
+  // 「重新生成」只出现在最后一条 ASSISTANT 渲染项上, 且不在生成中
+  if (!messageStore.streaming && out.length > 0) {
+    const last = out[out.length - 1]
+    if (last.message.messageType === 'ASSISTANT' && last.message.status !== 'GENERATING') {
+      last.canRegenerate = true
+    }
+  }
+  return out
+})
+
+function switchVersion(parent: string, dir: number, total: number): void {
+  const current = versionPick.value[parent] ?? total - 1
+  versionPick.value[parent] = Math.min(Math.max(current + dir, 0), total - 1)
+}
+
+function onFeedback(item: RenderItem, value: 'LIKE' | 'DISLIKE'): void {
+  const next: MessageFeedback = item.message.feedback === value ? 'NONE' : value
+  emit('feedback', item.message.id, next)
+}
 
 // 消息数变化（加载/发送）或流式文本增长时滚到底部
 watch(
@@ -66,7 +134,17 @@ async function handleScroll(): Promise<void> {
         >
           已显示全部消息
         </p>
-        <MessageBubble v-for="item in messageStore.items" :key="item.id" :message="item" />
+        <MessageBubble
+          v-for="item in rendered"
+          :key="item.key"
+          :message="item.message"
+          :version-index="item.versionTotal > 1 ? item.versionIndex : undefined"
+          :version-total="item.versionTotal"
+          :can-regenerate="item.canRegenerate"
+          @version="(dir) => item.message.parentMessageId && switchVersion(item.message.parentMessageId, dir, item.versionTotal)"
+          @feedback="(value) => onFeedback(item, value)"
+          @regenerate="emit('regenerate')"
+        />
       </div>
     </template>
   </div>

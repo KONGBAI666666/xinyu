@@ -1,6 +1,6 @@
 """AI 模型配置接口（用户级 CRUD）— 对应 Java AiModelController"""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user_id, parse_id
@@ -60,4 +60,16 @@ async def set_default(
 ) -> Result:
     """设为默认模型"""
     await model_service.set_default(db, parse_id(model_id, "modelId"), user_id)
+    return Result.ok()
+
+
+@router.put("/{model_id}/enabled")
+async def set_enabled(
+    model_id: str,
+    enabled: bool = Query(...),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result:
+    """启用/停用模型 (停用后不可被会话覆盖与默认解析使用)"""
+    await model_service.set_enabled(db, parse_id(model_id, "modelId"), user_id, enabled)
     return Result.ok()

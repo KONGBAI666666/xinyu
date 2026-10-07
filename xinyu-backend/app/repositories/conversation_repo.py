@@ -1,6 +1,6 @@
 """会话数据访问"""
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 
 from app.core.security import now_local
 from app.models import Conversation

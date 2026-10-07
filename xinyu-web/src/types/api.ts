@@ -18,6 +18,10 @@ export interface UserVO {
   username: string
   nickname: string
   avatarUrl: string | null
+  /** 旧版本地缓存的对象可能缺省 (fetchMe 后刷新) */
+  email?: string | null
+  /** USER / ADMIN (管理后台入口判定); 旧缓存可能缺省 */
+  role?: 'USER' | 'ADMIN'
 }
 
 /** 注册/登录共用响应: 注册即登录 */
@@ -85,7 +89,16 @@ export interface MessageVO {
   createdAt: string
   /** SSE error 事件带回的失败原因（仅前端本地态, 后端不存储） */
   errorMessage?: string | null
+  /** 挂靠的 USER 消息 (同一 parent 的多条 ASSISTANT = 重新生成的不同版本) */
+  parentMessageId?: string | null
+  /** 重新生成的版本序号 (0=原始回复) */
+  regenerateCount?: number
+  /** 点赞/点踩 (仅 ASSISTANT) */
+  feedback?: 'NONE' | 'LIKE' | 'DISLIKE'
 }
+
+/** PUT /conversations/{id}/messages/{messageId}/feedback 请求体 */
+export type MessageFeedback = 'LIKE' | 'DISLIKE' | 'NONE'
 
 // ---------- SSE 事件载荷（契约二 2.2, 与后端 Sse*VO 逐字段一致） ----------
 
@@ -164,6 +177,8 @@ export interface AiModelSaveDTO {
   /** 明文 API Key: 添加必填, 编辑可空（空则保留原值） */
   apiKey?: string
   isDefault?: boolean
+  /** 编辑可空（空则保留原值）; 停用后不可被解析使用 */
+  enabled?: boolean
 }
 
 // ---------- 长期记忆（M2.1 Memory） ----------
@@ -237,6 +252,40 @@ export interface CharacterSaveDTO {
   maxTokens: number
   /** 创建可不传(默认 DRAFT); 编辑可传 DRAFT/PUBLISHED/OFFLINE */
   status?: CharacterStatus
+  /** 角色级默认模型 (本人启用中的模型), null=不绑定 */
+  modelId?: string | null
+}
+
+// ==================== 管理后台 (role=ADMIN) ====================
+
+export interface AdminUserVO {
+  id: string
+  username: string
+  nickname: string
+  email: string | null
+  role: 'USER' | 'ADMIN'
+  /** ACTIVE / BANNED */
+  status: string
+  lastLoginAt: string | null
+  createdAt: string
+}
+
+export interface AdminCharacterVO {
+  id: string
+  name: string
+  intro: string | null
+  creatorId: string
+  creatorType: 'OFFICIAL' | 'USER'
+  status: CharacterStatus
+  chatCount: number
+  favoriteCount: number
+  createdAt: string
+}
+
+export interface PlatformOverviewVO {
+  messageCount: number
+  totalPromptTokens: number
+  totalCompletionTokens: number
 }
 
 // ==================== M3 RAG 知识库 ====================

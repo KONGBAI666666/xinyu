@@ -14,7 +14,18 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import auth, characters, conversations, knowledge_bases, memories, messages, models, stats, users
+from app.api import (
+    admin,
+    auth,
+    characters,
+    conversations,
+    knowledge_bases,
+    memories,
+    messages,
+    models,
+    stats,
+    users,
+)
 from app.core.exceptions import BizException, ResultCode
 from app.schemas.common import Result
 
@@ -41,6 +52,7 @@ app = FastAPI(title="Xinyu Backend", version="1.0.0", lifespan=lifespan, docs_ur
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(admin.router)
 app.include_router(characters.router)
 app.include_router(conversations.router)
 app.include_router(messages.router)

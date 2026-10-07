@@ -15,6 +15,7 @@ import { useConversationStore } from '@/stores/conversation'
 import { useMessageStore } from '@/stores/message'
 import { useStatsStore } from '@/stores/stats'
 import { useSseChat } from '@/composables/useSseChat'
+import { conversationApi } from '@/api/modules/conversation'
 import { BizError } from '@/utils/BizError'
 import ConversationList from '@/components/chat/ConversationList.vue'
 import ChatHeader from '@/components/chat/ChatHeader.vue'
@@ -28,7 +29,7 @@ const authStore = useAuthStore()
 const conversationStore = useConversationStore()
 const messageStore = useMessageStore()
 const statsStore = useStatsStore()
-const { send, stop } = useSseChat()
+const { send, regenerate, stop } = useSseChat()
 
 const creating = ref(false)
 const errorText = ref('')
@@ -111,6 +112,30 @@ function handleLogout(): void {
   window.location.href = '/login'
 }
 
+async function handleRegenerate(): Promise<void> {
+  const conversationId = conversationStore.activeId
+  if (!conversationId) return
+  try {
+    await regenerate(conversationId)
+  } catch (e) {
+    showError(e)
+  } finally {
+    // 终态后刷新列表冗余字段（摘要/排序由后端维护）
+    conversationStore.fetchList().catch(() => {})
+  }
+}
+
+async function handleFeedback(messageId: string, value: 'LIKE' | 'DISLIKE' | 'NONE'): Promise<void> {
+  const conversationId = conversationStore.activeId
+  if (!conversationId) return
+  try {
+    await conversationApi.setFeedback(conversationId, messageId, value)
+    messageStore.setFeedback(messageId, value)
+  } catch (e) {
+    showError(e)
+  }
+}
+
 function showError(e: unknown): void {
   errorText.value = e instanceof BizError ? e.message : '出了点小状况，请稍后重试'
   window.setTimeout(() => {
@@ -127,7 +152,11 @@ function showError(e: unknown): void {
 
     <div class="flex min-w-0 flex-1 flex-col">
       <ChatHeader :title="conversationStore.active?.title ?? ''" @logout="handleLogout" />
-      <MessageList :has-active="!!conversationStore.activeId" />
+      <MessageList
+        :has-active="!!conversationStore.activeId"
+        @regenerate="handleRegenerate"
+        @feedback="handleFeedback"
+      />
       <ChatInput
         :disabled="!conversationStore.activeId"
         :streaming="messageStore.streaming"

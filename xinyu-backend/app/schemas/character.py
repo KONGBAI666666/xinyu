@@ -18,6 +18,8 @@ class CharacterSaveDTO(BaseModel):
     temperature: float
     maxTokens: int
     status: CharacterStatusStr | None = None
+    # 角色级默认模型: 必须是本人启用中的模型; 空串/null 清除绑定; 新会话继承
+    modelId: str | None = None
 
     @field_validator("name")
     @classmethod

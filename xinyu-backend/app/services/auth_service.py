@@ -19,6 +19,8 @@ def to_user_vo(user: User) -> UserVO:
         username=user.username,
         nickname=user.nickname,
         avatarUrl=user.avatar_url,
+        email=user.email,
+        role=user.role,
     )
 
 

@@ -1,5 +1,5 @@
 import { del, get, post, put } from '@/api/request'
-import type { ConversationVO, CreateConversationDTO, MessageVO } from '@/types/api'
+import type { ConversationVO, CreateConversationDTO, MessageFeedback, MessageVO } from '@/types/api'
 
 /**
  * 会话/消息接口（契约一 1.3, 需登录）
@@ -34,5 +34,10 @@ export const conversationApi = {
   /** 停止当前生成: 后端断开 AI 调用, 消息置 STOPPED 保留已生成文本 (幂等) */
   stopGeneration(conversationId: string): Promise<void> {
     return post(`/conversations/${conversationId}/stop`)
+  },
+
+  /** 消息反馈: 点赞/点踩 (再传 NONE 取消); 仅本人会话内的 ASSISTANT 消息 */
+  setFeedback(conversationId: string, messageId: string, feedback: MessageFeedback): Promise<void> {
+    return put(`/conversations/${conversationId}/messages/${messageId}/feedback`, { feedback })
   },
 }

@@ -57,7 +57,7 @@ async def create(db: AsyncSession, user_id: int, req: AiModelSaveDTO) -> AiModel
         base_url=base_url,
         api_key_encrypted=aes_encrypt(req.apiKey),
         is_default=is_default,
-        enabled=1,
+        enabled=0 if req.enabled is False else 1,
     )
     # 若设为默认, 先清掉旧的默认
     if is_default == 1:
@@ -74,6 +74,8 @@ async def update(db: AsyncSession, model_id: int, user_id: int, req: AiModelSave
     model.model_code = req.modelCode
     model.display_name = req.displayName
     model.base_url = await assert_public_baseurl(req.baseUrl)
+    if req.enabled is not None:
+        model.enabled = 1 if req.enabled else 0
 
     # apiKey 非空才覆盖, 空保留原值
     if req.apiKey and req.apiKey.strip():
@@ -114,6 +116,13 @@ async def delete(db: AsyncSession, model_id: int, user_id: int) -> None:
     await db.commit()
 
 
+async def set_enabled(db: AsyncSession, model_id: int, user_id: int, enabled: bool) -> None:
+    """启用/停用模型 (停用后不可被会话覆盖/默认解析使用, 角色绑定校验同样拒绝)"""
+    model = await _require_owned(db, model_id, user_id)
+    model.enabled = 1 if enabled else 0
+    await db.commit()
+
+
 async def set_default(db: AsyncSession, model_id: int, user_id: int) -> None:
     """设为默认模型（先把该用户其他模型 is_default 置 0）"""
     await _require_owned(db, model_id, user_id)
@@ -142,14 +151,16 @@ async def _validated_config(model: AiModel) -> ModelConfig:
 
 
 async def resolve_config(db: AsyncSession, model_id: int, user_id: int) -> ModelConfig:
-    """按 modelId 解析模型配置 (解密 API Key)"""
+    """按 modelId 解析模型配置 (解密 API Key); 已停用的模型拒绝使用"""
     model = await _require_owned(db, model_id, user_id)
+    if model.enabled != 1:
+        raise BizException(ResultCode.PARAM_ERROR, "该模型已停用, 请先在「模型管理」中启用")
     return await _validated_config(model)
 
 
 async def resolve_default_config(db: AsyncSession, user_id: int) -> ModelConfig | None:
-    """解析用户默认模型配置; 无默认模型返回 None"""
+    """解析用户默认模型配置; 无默认模型或默认模型已停用返回 None (走降级/报错路径)"""
     model = await model_repo.get_default(db, user_id)
-    if model is None:
+    if model is None or model.enabled != 1:
         return None
     return await _validated_config(model)

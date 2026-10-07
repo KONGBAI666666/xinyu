@@ -57,26 +57,23 @@ export function useSseChat() {
   }
 
   /**
-   * 发送消息并建立 SSE 连接
-   * @throws BizError 业务失败（40100/40400/42200 等 JSON 响应）时上抛给调用方展示
+   * SSE 连接的公共骨架: 建连 → 四事件分发 → 节流写入 store
+   * meta 事件由调用方决定落库方式 (send 换 USER id, regenerate 换占位 id)
    */
-  async function send(conversationId: string, content: string): Promise<void> {
-    if (messageStore.streaming) return
-
-    messageStore.appendUserMessage(conversationId, content)
-    finished = false
-    activeConversationId = conversationId
-    controller = new AbortController()
-    const signal = controller.signal
-
+  async function runStream(
+    url: string,
+    body: string | undefined,
+    onMeta: (meta: SseMetaEvent) => void,
+  ): Promise<void> {
+    const signal = controller!.signal
     try {
-      await fetchEventSource(`/api/conversations/${conversationId}/chat`, {
+      await fetchEventSource(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
           Authorization: `Bearer ${tokenStorage.get() ?? ''}`,
         },
-        body: JSON.stringify({ content, clientMessageId: crypto.randomUUID() }),
+        body,
         signal,
         // 后台标签页不断开, 避免切 tab 触发意外重连（契约二 2.3）
         openWhenHidden: true,
@@ -96,8 +93,7 @@ export function useSseChat() {
         onmessage(event) {
           switch (event.event) {
             case 'meta': {
-              const meta = JSON.parse(event.data) as SseMetaEvent
-              messageStore.confirmMeta(meta.userMessageId, meta.assistantMessageId)
+              onMeta(JSON.parse(event.data) as SseMetaEvent)
               startFlushTimer()
               break
             }
@@ -138,13 +134,51 @@ export function useSseChat() {
         flushDelta()
         // 原生网络异常 (TypeError 等) 收敛为 BizError, 调用方统一按业务错误处理
         const bizError = e instanceof BizError ? e : new BizError(50000, '网络连接中断，请稍后重试')
-        // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的 USER 消息
+        // meta 未到达时（如 40400/42200 业务拒绝）服务端未落库, 需回滚本地乐观插入的消息
         messageStore.failOrRollback(bizError.message)
         cleanup()
         throw bizError
       }
     }
     cleanup()
+  }
+
+  /**
+   * 发送消息并建立 SSE 连接
+   * @throws BizError 业务失败（40100/40400/42200 等 JSON 响应）时上抛给调用方展示
+   */
+  async function send(conversationId: string, content: string): Promise<void> {
+    if (messageStore.streaming) return
+
+    messageStore.appendUserMessage(conversationId, content)
+    finished = false
+    activeConversationId = conversationId
+    controller = new AbortController()
+
+    await runStream(
+      `/api/conversations/${conversationId}/chat`,
+      JSON.stringify({ content, clientMessageId: crypto.randomUUID() }),
+      (meta) => messageStore.confirmMeta(meta.userMessageId, meta.assistantMessageId),
+    )
+  }
+
+  /**
+   * 重新生成最后一条回复: 复用 SSE 链路, 乐观插入 ASSISTANT 占位（不重复发 USER 消息）
+   * 新版本由后端挂靠到最后一条 USER 消息, 旧版本保留供切换查看
+   */
+  async function regenerate(conversationId: string): Promise<void> {
+    if (messageStore.streaming) return
+
+    messageStore.beginRegenerate(conversationId)
+    finished = false
+    activeConversationId = conversationId
+    controller = new AbortController()
+
+    await runStream(
+      `/api/conversations/${conversationId}/regenerate`,
+      undefined,
+      (meta) => messageStore.confirmRegenerateMeta(meta.userMessageId, meta.assistantMessageId),
+    )
   }
 
   /** 停止生成: 通知后端断开 AI 调用 → 本地断连 → 置 STOPPED */
@@ -160,5 +194,5 @@ export function useSseChat() {
     messageStore.stopAssistant()
   }
 
-  return { send, stop }
+  return { send, regenerate, stop }
 }

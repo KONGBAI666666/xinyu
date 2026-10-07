@@ -19,6 +19,10 @@ export function setupRouterGuards(router: Router): void {
     if (to.meta.requiresAuth && !auth.isLoggedIn) {
       return { path: '/login', query: { redirect: to.fullPath } }
     }
+    // 管理后台: 登录之外还要求 role=ADMIN (本地缓存缺 role 时按非管理员处理)
+    if (to.meta.requiresAdmin && auth.user?.role !== 'ADMIN') {
+      return { path: '/chat' }
+    }
     if (to.path === '/login' && auth.isLoggedIn) {
       return { path: '/chat' }
     }

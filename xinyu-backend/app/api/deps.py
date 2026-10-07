@@ -5,8 +5,10 @@
 - get_db: 每请求一个数据库会话 (见 core.database)
 """
 
-from fastapi import Request
+from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import get_db
 from app.core.exceptions import BizException, ResultCode
 from app.core.security import get_user_id_from_claims, parse_token
 
@@ -42,6 +44,16 @@ async def get_optional_user_id(request: Request) -> int | None:
     if claims is None:
         return None
     return get_user_id_from_claims(claims)
+
+
+async def require_admin(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)) -> int:
+    """管理员依赖: role=ADMIN 且账号 ACTIVE, 其余 40300 (user.role 字段的消费点)"""
+    from app.repositories import user_repo
+
+    user = await user_repo.get_by_id(db, user_id)
+    if user is None or user.role != "ADMIN" or user.status != "ACTIVE":
+        raise BizException(ResultCode.FORBIDDEN, "无管理员权限")
+    return user_id
 
 
 def client_ip(request: Request) -> str:

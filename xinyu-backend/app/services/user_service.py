@@ -30,3 +30,15 @@ async def update_password(db: AsyncSession, user_id: int, dto: UpdatePasswordDTO
         raise BizException(ResultCode.PARAM_ERROR, "原密码错误")
     await user_repo.update_password(db, user_id, hash_password(dto.newPassword))
     await db.commit()
+
+
+async def update_email(db: AsyncSession, user_id: int, email: str | None) -> None:
+    """绑定/更换邮箱 (传 None 清除); 找回密码等邮件能力的数据基础
+
+    唯一性校验暂缺 (邮箱尚未承载登录/找回流程), 启用邮件能力前应补齐。
+    """
+    user = await user_repo.get_by_id(db, user_id)
+    if user is None:
+        raise BizException(ResultCode.NOT_FOUND, "用户不存在")
+    user.email = email
+    await db.commit()

@@ -5,6 +5,7 @@
  *   GENERATING 无文本=呼吸点 / 有文本=打字机+光标
  *   FAILED=错误文案  STOPPED=灰字标注
  * M1-6: ASSISTANT 经 markdown 安全渲染管线(marked+DOMPurify+hljs); USER 保持纯文本
+ * M4+: ASSISTANT 气泡下挂操作行 — 重新生成版本切换 / 点赞点踩
  */
 import { computed } from 'vue'
 import type { MessageVO } from '@/types/api'
@@ -12,10 +13,25 @@ import { renderMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   message: MessageVO
+  /** 重新生成版本组的展示信息 (多于 1 个版本时出现切换器) */
+  versionIndex?: number
+  versionTotal?: number
+  /** 是否展示「重新生成」按钮 (仅最后一条回复且非生成中) */
+  canRegenerate?: boolean
+}>()
+
+const emit = defineEmits<{
+  version: [dir: number]
+  feedback: [value: 'LIKE' | 'DISLIKE']
+  regenerate: []
 }>()
 
 const isUser = computed(() => props.message.messageType === 'USER')
 const generating = computed(() => props.message.status === 'GENERATING')
+/** 终态才允许反馈/重发 (生成中/失败中不可点) */
+const actionable = computed(
+  () => !isUser.value && (props.message.status === 'COMPLETED' || props.message.status === 'STOPPED'),
+)
 
 /** ASSISTANT 消息的安全 HTML（已消毒, 流式期间随 content 增长重算） */
 const renderedContent = computed(() =>
@@ -25,32 +41,91 @@ const renderedContent = computed(() =>
 
 <template>
   <div class="flex" :class="isUser ? 'justify-end' : 'justify-start'">
-    <div class="bubble text-sm" :class="isUser ? 'bubble-user' : 'bubble-assistant'">
-      <!-- 思考中: 尚无文本时的呼吸点 -->
-      <span v-if="generating && !message.content" class="dots" aria-label="思考中">
-        <i></i><i></i><i></i>
-      </span>
-      <template v-else>
-        <!-- USER 纯文本插值; ASSISTANT 经消毒后的 HTML, 流式光标由 .generating 伪元素追加 -->
-        <span v-if="isUser" class="user-text">{{ message.content }}</span>
-        <div v-else class="md-body" :class="{ generating }" v-html="renderedContent"></div>
-      </template>
+    <div class="bubble-wrap" :class="isUser ? 'is-user' : 'is-assistant'">
+      <div class="bubble text-sm" :class="isUser ? 'bubble-user' : 'bubble-assistant'">
+        <!-- 思考中: 尚无文本时的呼吸点 -->
+        <span v-if="generating && !message.content" class="dots" aria-label="思考中">
+          <i></i><i></i><i></i>
+        </span>
+        <template v-else>
+          <!-- USER 纯文本插值; ASSISTANT 经消毒后的 HTML, 流式光标由 .generating 伪元素追加 -->
+          <span v-if="isUser" class="user-text">{{ message.content }}</span>
+          <div v-else class="md-body" :class="{ generating }" v-html="renderedContent"></div>
+        </template>
 
-      <p v-if="message.status === 'FAILED'" class="status-note failed">
-        {{ message.errorMessage || '生成失败，请稍后重试' }}
-      </p>
-      <p v-else-if="message.status === 'STOPPED'" class="status-note stopped">已停止生成</p>
+        <p v-if="message.status === 'FAILED'" class="status-note failed">
+          {{ message.errorMessage || '生成失败，请稍后重试' }}
+        </p>
+        <p v-else-if="message.status === 'STOPPED'" class="status-note stopped">已停止生成</p>
+      </div>
+
+      <!-- ASSISTANT 操作行: 版本切换 / 反馈 / 重新生成 -->
+      <div v-if="!isUser && !generating" class="msg-actions">
+        <template v-if="(versionTotal ?? 0) > 1">
+          <button
+            type="button"
+            class="act-btn"
+            :disabled="versionIndex === 0"
+            title="上一版本"
+            @click="emit('version', -1)"
+          >‹</button>
+          <span class="ver-indicator">{{ (versionIndex ?? 0) + 1 }}/{{ versionTotal }}</span>
+          <button
+            type="button"
+            class="act-btn"
+            :disabled="versionIndex === (versionTotal ?? 1) - 1"
+            title="下一版本"
+            @click="emit('version', 1)"
+          >›</button>
+        </template>
+        <template v-if="actionable">
+          <button
+            type="button"
+            class="act-btn"
+            :class="{ active: message.feedback === 'LIKE' }"
+            title="有用"
+            @click="emit('feedback', 'LIKE')"
+          >👍</button>
+          <button
+            type="button"
+            class="act-btn"
+            :class="{ active: message.feedback === 'DISLIKE' }"
+            title="没帮助"
+            @click="emit('feedback', 'DISLIKE')"
+          >👎</button>
+        </template>
+        <button
+          v-if="canRegenerate"
+          type="button"
+          class="act-btn regenerate"
+          title="重新生成回复"
+          @click="emit('regenerate')"
+        >↻ 重新生成</button>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.bubble {
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
   max-width: 72%;
+  min-width: 0;
+}
+.bubble-wrap.is-user {
+  align-items: flex-end;
+}
+.bubble-wrap.is-assistant {
+  align-items: flex-start;
+}
+
+.bubble {
   padding: 10px 14px;
   line-height: 1.6;
   word-break: break-word;
   border-radius: var(--radius-bubble);
+  max-width: 100%;
 }
 
 /* 用户消息保留手动换行（markdown 侧由块级标签自行排版） */
@@ -68,6 +143,57 @@ const renderedContent = computed(() =>
   background: var(--bg-elevated);
   color: var(--text-primary);
   border-bottom-left-radius: var(--radius-bubble-tail);
+}
+
+/* ---------- 操作行 ---------- */
+.msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-base);
+}
+.bubble-wrap:hover .msg-actions,
+.msg-actions:focus-within {
+  opacity: 1;
+}
+
+.act-btn {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-base);
+}
+.act-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.act-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.act-btn.active {
+  color: var(--brand-to);
+}
+.act-btn.regenerate {
+  color: var(--text-secondary);
+}
+.act-btn.regenerate:hover {
+  color: var(--brand-to);
+}
+
+.ver-indicator {
+  min-width: 30px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 思考中呼吸点 */

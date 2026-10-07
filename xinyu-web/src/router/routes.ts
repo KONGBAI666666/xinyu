@@ -59,4 +59,10 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     component: () => import('@/views/KnowledgeBaseView.vue'),
   },
+  {
+    path: '/admin',
+    name: 'admin',
+    meta: { requiresAuth: true, requiresAdmin: true },
+    component: () => import('@/views/AdminView.vue'),
+  },
 ]

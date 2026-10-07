@@ -25,4 +25,9 @@ export const authApi = {
   updatePassword(dto: UpdatePasswordDTO): Promise<void> {
     return put('/users/me/password', dto)
   },
+
+  /** 绑定/更换邮箱 (传 null 清除) */
+  updateEmail(email: string | null): Promise<void> {
+    return put('/users/me/email', { email })
+  },
 }

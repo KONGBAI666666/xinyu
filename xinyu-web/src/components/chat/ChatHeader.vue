@@ -50,6 +50,12 @@ watch(
   { immediate: true }
 )
 
+/** 可切换的模型: 已停用的不在切换器中出现 (后端解析同样拒绝) */
+const switchableModels = computed(() => modelsStore.list.filter((m) => m.enabled === 1))
+
+/** 是否管理员 (控制「管理后台」入口) */
+const isAdmin = computed(() => authStore.user?.role === 'ADMIN')
+
 async function switchModel(model: AiModelVO | null): Promise<void> {
   const convId = conversationStore.activeId
   if (!convId) return
@@ -130,6 +136,53 @@ async function submitPassword(): Promise<void> {
     pwSubmitting.value = false
   }
 }
+
+// ---------- 绑定邮箱弹窗 ----------
+
+const emailModalOpen = ref(false)
+const emailSubmitting = ref(false)
+const emailError = ref('')
+const emailValue = ref('')
+
+function openEmailModal(): void {
+  emailValue.value = authStore.user?.email ?? ''
+  emailError.value = ''
+  emailModalOpen.value = true
+}
+
+function closeEmailModal(): void {
+  emailModalOpen.value = false
+}
+
+/** 与后端 UpdateEmailDTO 校验对齐: 非空时须为合法邮箱格式 */
+function validateEmailForm(): string {
+  const v = emailValue.value.trim()
+  if (!v) return '' // 空 = 清除绑定, 合法
+  if (v.length > 64 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return '邮箱格式不正确'
+  return ''
+}
+
+async function submitEmail(): Promise<void> {
+  emailError.value = validateEmailForm()
+  if (emailError.value) return
+  emailSubmitting.value = true
+  try {
+    const next = emailValue.value.trim() || null
+    await authApi.updateEmail(next)
+    // 同步本地缓存, 让 /admin 守卫与展示即时生效
+    if (authStore.user) {
+      const updated = { ...authStore.user, email: next }
+      authStore.user = updated
+    }
+    emailModalOpen.value = false
+    pwTip.value = '邮箱已更新'
+    setTimeout(() => (pwTip.value = ''), 2000)
+  } catch (e) {
+    emailError.value = e instanceof BizError ? e.message : '保存失败，请稍后重试'
+  } finally {
+    emailSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -176,7 +229,7 @@ async function submitPassword(): Promise<void> {
 
             <!-- 模型列表 -->
             <div
-              v-for="model in modelsStore.list"
+              v-for="model in switchableModels"
               :key="model.id"
               class="dropdown-item"
               :class="{ selected: conversationStore.active?.modelId === model.id }"
@@ -219,6 +272,12 @@ async function submitPassword(): Promise<void> {
               </svg>
               <span>知识库 (RAG)</span>
             </div>
+            <div v-if="isAdmin" class="dropdown-item manage" @click="router.push('/admin'); closeDropdown()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12V7M7 12V2M12 12V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              <span>管理后台</span>
+            </div>
           </div>
         </Transition>
       </div>
@@ -246,6 +305,7 @@ async function submitPassword(): Promise<void> {
         </svg>
       </button>
       <span class="nickname text-sm">{{ authStore.user?.nickname }}</span>
+      <button type="button" class="pw-btn text-xs" @click="openEmailModal">绑定邮箱</button>
       <button type="button" class="pw-btn text-xs" @click="openPwModal">修改密码</button>
       <button type="button" class="logout-btn text-xs" @click="$emit('logout')">退出登录</button>
     </div>
@@ -306,6 +366,34 @@ async function submitPassword(): Promise<void> {
             @click="submitPassword"
           >
             {{ pwSubmitting ? '提交中…' : '确认修改' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 绑定邮箱弹窗 -->
+    <div v-if="emailModalOpen" class="modal-mask" @click.self="closeEmailModal">
+      <div class="pw-modal">
+        <h3 class="pw-modal-title">绑定邮箱</h3>
+        <div class="pw-field">
+          <label class="pw-label" for="email-input">邮箱地址</label>
+          <input
+            id="email-input"
+            v-model="emailValue"
+            class="pw-input"
+            type="email"
+            maxlength="64"
+            placeholder="用于后续找回密码等邮件服务"
+          />
+        </div>
+        <p class="pw-hint">留空提交 = 清除绑定</p>
+        <p v-if="emailError" class="pw-error">{{ emailError }}</p>
+        <div class="pw-actions">
+          <button type="button" class="pw-cancel" :disabled="emailSubmitting" @click="closeEmailModal">
+            取消
+          </button>
+          <button type="button" class="pw-submit" :disabled="emailSubmitting" @click="submitEmail">
+            {{ emailSubmitting ? '提交中…' : '保存' }}
           </button>
         </div>
       </div>
@@ -600,6 +688,12 @@ async function submitPassword(): Promise<void> {
   margin: 0 0 12px;
   font-size: 12px;
   color: #fca5a5;
+}
+
+.pw-hint {
+  margin: -6px 0 10px;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .pw-actions {

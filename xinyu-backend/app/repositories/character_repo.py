@@ -34,6 +34,7 @@ async def update_character(db, character: AiCharacter) -> None:
             greeting=character.greeting,
             temperature=character.temperature,
             max_tokens=character.max_tokens,
+            model_id=character.model_id,
             status=character.status,
             updated_at=now_local(),
         )
@@ -132,3 +133,24 @@ async def increase_favorite_count(db, character_id: int, delta: int) -> None:
         update(AiCharacter).where(AiCharacter.id == character_id).values(favorite_count=expr),
         {"delta": delta},
     )
+
+
+async def list_characters_page(db, status: str | None, offset: int, limit: int) -> list[AiCharacter]:
+    """管理审核分页列表 (id 倒序, 可按状态过滤; 页满即视为可能还有更多)"""
+    if status:
+        result = await db.execute(
+            select(AiCharacter)
+            .where(AiCharacter.deleted == 0, AiCharacter.status == status)
+            .order_by(AiCharacter.id.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+    else:
+        result = await db.execute(
+            select(AiCharacter)
+            .where(AiCharacter.deleted == 0)
+            .order_by(AiCharacter.id.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+    return list(result.scalars())

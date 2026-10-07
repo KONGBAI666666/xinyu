@@ -25,6 +25,11 @@ export const modelsApi = {
     return put(`/models/${id}/default`)
   },
 
+  /** 启用/停用模型 (停用后不可被会话覆盖与默认解析使用) */
+  setEnabled(id: string, enabled: boolean): Promise<void> {
+    return put(`/models/${id}/enabled?enabled=${enabled}`)
+  },
+
   /** 切换会话使用的模型（modelId 不传 = 回到用户默认模型） */
   switchConversationModel(conversationId: string, modelId: string | null): Promise<void> {
     const query = modelId ? `?modelId=${modelId}` : ''

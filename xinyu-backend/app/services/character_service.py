@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BizException, ResultCode
 from app.models import AiCharacter, CharacterFavorite
-from app.repositories import character_repo, conversation_repo
+from app.repositories import character_repo, conversation_repo, model_repo
 from app.schemas.character import CharacterSaveDTO, CharacterVO
 
 logger = logging.getLogger("xinyu.character")
@@ -76,6 +76,22 @@ async def get_by_id_for_user(db: AsyncSession, character_id: int, user_id: int |
     return _to_vo(character, user_id, favorited)
 
 
+async def _resolve_model_binding(db: AsyncSession, user_id: int, model_id: str | None) -> int | None:
+    """校验角色绑定的模型: 必须是本人启用中的模型; 空串/null 清除绑定"""
+    if model_id is None or model_id == "":
+        return None
+    try:
+        mid = int(model_id)
+    except ValueError:
+        raise BizException(ResultCode.PARAM_ERROR, "modelId 格式错误") from None
+    model = await model_repo.get_by_id_and_user(db, mid, user_id)
+    if model is None:
+        raise BizException(ResultCode.PARAM_ERROR, "绑定的模型不存在或无权使用")
+    if model.enabled != 1:
+        raise BizException(ResultCode.PARAM_ERROR, "绑定的模型已停用, 请先在「模型管理」中启用")
+    return mid
+
+
 async def create(db: AsyncSession, user_id: int, req: CharacterSaveDTO) -> CharacterVO:
     """创建角色, 默认状态 DRAFT(仅创建者可见)"""
     character = AiCharacter(
@@ -87,6 +103,7 @@ async def create(db: AsyncSession, user_id: int, req: CharacterSaveDTO) -> Chara
         greeting=req.greeting,
         temperature=req.temperature,
         max_tokens=req.maxTokens,
+        model_id=await _resolve_model_binding(db, user_id, req.modelId),
         creator_id=user_id,
         creator_type="USER",
         status=req.status or "DRAFT",
@@ -109,6 +126,7 @@ async def update(db: AsyncSession, character_id: int, user_id: int, req: Charact
     character.greeting = req.greeting
     character.temperature = req.temperature
     character.max_tokens = req.maxTokens
+    character.model_id = await _resolve_model_binding(db, user_id, req.modelId)
     if req.status:
         character.status = req.status
     await character_repo.update_character(db, character)

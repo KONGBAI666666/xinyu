@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "pretooluse-f2ea9e5a03f31b1284737a4223116489",
+  "runId": null,
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "PreToolUse"
+  },
+  "revision": null,
+  "diffHash": null,
+  "rulesVersion": null,
+  "sessionHash": "2544b413c7a93dc56d0171000996be5b952fc30c6abedac312d88fecfa0db637",
+  "reportRef": null,
+  "events": [
+    {
+      "eventId": "hook-e2f85fd5411ca543d4dc0a8285197431",
+      "findingId": "mimosa-96ca46e5abab2aa13bf58ff3",
+      "type": "finding_blocked",
+      "at": "2026-10-07T08:52:36.642Z",
+      "identity": {
+        "projectRelativeFile": "app/repositories/admin_repo.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "1292f56d34969d20747f3c8072da9c9db3fdaeda2ac42e797cb6d8b3054a5dd6",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 39,
+      "endLine": 39,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "1292f56d34969d20747f3c8072da9c9db3fdaeda2ac42e797cb6d8b3054a5dd6"
+      },
+      "sequence": 0
+    },
+    {
+      "eventId": "hook-a72384ffa8a1c7d51493c35360e55556",
+      "findingId": "mimosa-6500c1f62a08b1f440f0d737",
+      "type": "finding_blocked",
+      "at": "2026-10-07T08:52:36.642Z",
+      "identity": {
+        "projectRelativeFile": "app/repositories/admin_repo.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "9861fe6f2a1d69774a34c999cfa6462d8c9861794aa00433f73c1d103581b2b4",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 44,
+      "endLine": 44,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "9861fe6f2a1d69774a34c999cfa6462d8c9861794aa00433f73c1d103581b2b4"
+      },
+      "sequence": 1
+    },
+    {
+      "eventId": "hook-36d36ccf22df77ba7f345428a78cfb9f",
+      "findingId": "mimosa-333bfb5a4656bb0905fac8dc",
+      "type": "finding_blocked",
+      "at": "2026-10-07T08:52:36.642Z",
+      "identity": {
+        "projectRelativeFile": "app/repositories/admin_repo.py",
+        "ruleId": "security",
+        "codeEvidenceHash": "079932d13323fb7fc9521a0193d9224da0f70865f7f27b7385627355c2215b68",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 49,
+      "endLine": 49,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "079932d13323fb7fc9521a0193d9224da0f70865f7f27b7385627355c2215b68"
+      },
+      "sequence": 2
+    }
+  ],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-10-07T08:52:37.027Z"
+}
