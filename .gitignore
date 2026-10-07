@@ -37,3 +37,7 @@ __pycache__/
 .dbcheck.py
 _dbcheck_result.txt
 .start-logs/
+
+# ---------- 安全扫描插件会话状态 (每次运行都会变化, 不入库) ----------
+.mimosa/
+.video_agent/

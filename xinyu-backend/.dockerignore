@@ -1,0 +1,10 @@
+# 后端构建上下文瘦身: 缓存/测试/本地文件不进镜像
+__pycache__/
+*.pyc
+.venv*/
+.mimosa/
+tests/
+scripts/
+start-logs/
+.env
+.env.*

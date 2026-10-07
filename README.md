@@ -184,10 +184,10 @@ python -m unittest discover -s tests -v
 # 2. 前端（/api 自动代理到 9000）
 cd xinyu-web
 npm install
-npm run dev   # :5173
+npm run dev   # :5280
 ```
 
-浏览器访问 `http://localhost:5173`。
+浏览器访问 `http://localhost:5280`。
 
 ## 📁 项目结构
 

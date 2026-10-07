@@ -16,6 +16,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: xinyu-mysql
+    restart: unless-stopped
     environment:
       # :? 语法: 变量缺失或为空时 compose 直接报错退出, 避免 MySQL 以空 root 密码启动
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:?请先复制 .env.example 为 .env 并设置 MYSQL_PASSWORD}
@@ -33,7 +34,8 @@ services:
     expose:
       - "3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_PASSWORD}"]
+      # 不带密码: 服务存活即返回 0 (密文出现在 healthcheck 配置里会被 docker inspect 泄露)
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -42,6 +44,7 @@ services:
   qdrant:
     image: qdrant/qdrant:v1.12.4
     container_name: xinyu-qdrant
+    restart: unless-stopped
     environment:
       TZ: Asia/Shanghai
     volumes:
@@ -62,6 +65,7 @@ services:
   backend:
     build: ./xinyu-backend
     container_name: xinyu-backend
+    restart: unless-stopped
     environment:
       XINYU_ENV: prod
       XINYU_DB_HOST: mysql
@@ -100,6 +104,7 @@ services:
   nginx:
     build: ./xinyu-web
     container_name: xinyu-nginx
+    restart: unless-stopped
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
