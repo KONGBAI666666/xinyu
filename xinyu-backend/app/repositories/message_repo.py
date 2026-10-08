@@ -27,7 +27,11 @@ async def insert(db, message: Message) -> Message:
 
 
 async def next_sequence_no(db, conversation_id: int) -> int:
-    """计算会话内下一个业务序号 (MAX+1, 单用户写场景无并发问题)"""
+    """计算会话内下一个业务序号 (MAX+1)
+
+    单进程内由 chat_service._active_streams 会话级串行, 无并发问题;
+    多 worker 并发由 uk_conv_seq 唯一索引兜底, 冲突在 commit 时响亮失败。
+    """
     result = await db.execute(
         select(func.max(Message.sequence_no)).where(
             Message.conversation_id == conversation_id, Message.deleted == 0

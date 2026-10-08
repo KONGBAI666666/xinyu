@@ -215,7 +215,14 @@ async def chat(db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRe
         context = _assemble_context(character, memory_block, history, lorebook_block)
 
         # 前置落库全部提交, 流式阶段改用独立会话写库
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            # uk_conv_seq 冲突: 多 worker 同时向同一会话写消息 (单进程已被
+            # _active_streams 串行化, 只有跨进程才会命中), 不重试以免回滚后
+            # 会话/角色对象过期引入新问题, 让用户重发即可
+            await db.rollback()
+            raise BizException(ResultCode.PARAM_ERROR, "消息写入冲突, 请稍后重试") from None
 
         # 停止标志已登记 (见入口), 停止请求早于流启动到达时也能生效
         # RAG 参数: 会话绑定了知识库时检索; 必须使用入库时锁定的 Embedding 模型

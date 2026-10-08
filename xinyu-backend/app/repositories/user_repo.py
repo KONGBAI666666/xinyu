@@ -11,6 +11,11 @@ async def get_by_username(db, username: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_by_email(db, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email, User.deleted == 0))
+    return result.scalar_one_or_none()
+
+
 async def get_by_id(db, user_id: int) -> User | None:
     result = await db.execute(select(User).where(User.id == user_id, User.deleted == 0))
     return result.scalar_one_or_none()

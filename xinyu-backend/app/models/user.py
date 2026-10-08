@@ -11,7 +11,10 @@ from app.models.base import Base, id_primary_key
 
 class User(Base):
     __tablename__ = "user"
-    __table_args__ = (UniqueConstraint("username", name="uk_username"),)
+    __table_args__ = (
+        UniqueConstraint("username", name="uk_username"),
+        UniqueConstraint("email", name="uk_email"),
+    )
 
     id: Mapped[int] = id_primary_key()
     username: Mapped[str] = mapped_column(String(32), nullable=False)

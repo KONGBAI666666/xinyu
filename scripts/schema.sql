@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS `user` (
   `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted`       TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_username` (`username`)
+  UNIQUE KEY `uk_username` (`username`),
+  UNIQUE KEY `uk_email` (`email`)
 ) ENGINE=InnoDB COMMENT='用户表';
 
 -- ------------------------------------------------------------
@@ -150,6 +151,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `deleted`           TINYINT     NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_client_msg` (`user_id`, `client_message_id`),
+  UNIQUE KEY `uk_conv_seq` (`conversation_id`, `sequence_no`),
   KEY `idx_conv` (`conversation_id`, `id`),
   KEY `idx_user_created` (`user_id`, `created_at`),
   KEY `idx_feedback` (`feedback`)
