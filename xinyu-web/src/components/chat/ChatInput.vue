@@ -43,7 +43,7 @@ function handleKeydown(event: KeyboardEvent): void {
 </script>
 
 <template>
-  <div class="input-bar px-6 py-4">
+  <div class="input-bar px-6 py-4 max-md:px-3">
     <div class="input-box mx-auto flex max-w-3xl items-end gap-3">
       <textarea
         v-model="draft"

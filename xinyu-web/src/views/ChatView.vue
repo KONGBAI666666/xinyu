@@ -145,16 +145,41 @@ function showError(e: unknown): void {
     errorText.value = ''
   }, 3000)
 }
+
+// ——— 移动端侧栏抽屉 (M5): <768px 隐藏侧栏, 汉堡按钮唤起 ———
+const mobileSidebarOpen = ref(false)
 </script>
 
 <template>
   <div class="flex h-full">
-    <div class="w-64 shrink-0">
-      <ConversationList :creating="creating" @select="handleSelect" />
+    <!-- 移动端遮罩: 抽屉打开时点击关闭 -->
+    <div
+      v-if="mobileSidebarOpen"
+      class="fixed inset-0 z-30 bg-black/40 md:hidden"
+      @click="mobileSidebarOpen = false"
+    ></div>
+
+    <div
+      class="w-64 shrink-0 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:shadow-2xl max-md:transition-transform"
+      :class="{ 'max-md:-translate-x-full': !mobileSidebarOpen }"
+    >
+      <ConversationList
+        :creating="creating"
+        @select="
+          (id, kbId) => {
+            mobileSidebarOpen = false
+            handleSelect(id, kbId)
+          }
+        "
+      />
     </div>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <ChatHeader :title="conversationStore.active?.title ?? ''" @logout="handleLogout" />
+      <ChatHeader
+        :title="conversationStore.active?.title ?? ''"
+        @logout="handleLogout"
+        @toggle-sidebar="mobileSidebarOpen = !mobileSidebarOpen"
+      />
       <MessageList
         :has-active="!!conversationStore.activeId"
         @regenerate="handleRegenerate"

@@ -131,7 +131,11 @@ async function handleScroll(): Promise<void> {
 </script>
 
 <template>
-  <div ref="scrollRef" class="flex-1 overflow-y-auto px-6 py-4" @scroll.passive="handleScroll">
+  <div
+    ref="scrollRef"
+    class="flex-1 overflow-y-auto px-6 py-4 max-md:px-3"
+    @scroll.passive="handleScroll"
+  >
     <p v-if="!hasActive" class="hint text-center text-sm">选择左侧会话，或点「+ 新聊天」开始</p>
     <p v-else-if="messageStore.loadingHistory" class="hint text-center text-sm">加载消息中…</p>
     <template v-else>

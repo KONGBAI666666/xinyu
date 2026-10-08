@@ -49,6 +49,7 @@ defineProps<{
 
 defineEmits<{
   logout: []
+  toggleSidebar: []
 }>()
 
 /** 模型选择下拉是否展开 */
@@ -218,9 +219,25 @@ async function submitEmail(): Promise<void> {
 </script>
 
 <template>
-  <header class="header flex items-center justify-between px-6">
-    <!-- 左侧: 标题 -->
-    <div class="header-left">
+  <header class="header flex items-center justify-between px-6 max-md:px-3">
+    <!-- 左侧: 汉堡(移动端) + 标题 -->
+    <div class="header-left flex items-center gap-2">
+      <!-- 移动端会话抽屉开关 -->
+      <button
+        type="button"
+        class="stats-btn md:hidden"
+        title="会话列表"
+        @click="$emit('toggleSidebar')"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M2 4H14M2 8H14M2 12H9"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
       <!-- 模型切换器 -->
       <div class="model-switcher">
         <button
@@ -381,8 +398,8 @@ async function submitEmail(): Promise<void> {
       <span class="title text-sm font-medium">{{ title || '选择或创建一个会话' }}</span>
     </div>
 
-    <!-- 右侧: 统计 + 用户 -->
-    <div class="flex items-center gap-3">
+    <!-- 右侧: 统计 + 用户 (移动端精简: 收起昵称与文字按钮) -->
+    <div class="flex items-center gap-3 max-md:gap-2">
       <button type="button" class="stats-btn" title="用量统计" @click="statsStore.openPanel()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
@@ -415,9 +432,13 @@ async function submitEmail(): Promise<void> {
         ></span>
         <span v-else class="avatar-fallback">{{ authStore.user?.nickname?.charAt(0) ?? '?' }}</span>
       </button>
-      <span class="nickname text-sm">{{ authStore.user?.nickname }}</span>
-      <button type="button" class="pw-btn text-xs" @click="openEmailModal">绑定邮箱</button>
-      <button type="button" class="pw-btn text-xs" @click="openPwModal">修改密码</button>
+      <span class="nickname text-sm max-md:hidden">{{ authStore.user?.nickname }}</span>
+      <button type="button" class="pw-btn text-xs max-md:hidden" @click="openEmailModal">
+        绑定邮箱
+      </button>
+      <button type="button" class="pw-btn text-xs max-md:hidden" @click="openPwModal">
+        修改密码
+      </button>
       <button type="button" class="logout-btn text-xs" @click="$emit('logout')">退出登录</button>
     </div>
 

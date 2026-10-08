@@ -161,6 +161,13 @@ const renderedContent = computed(() => (isUser.value ? '' : renderMarkdown(props
   max-width: 72%;
   min-width: 0;
 }
+
+/* 移动端: 气泡放宽到 88%, 提高小屏可读性 */
+@media (max-width: 767px) {
+  .bubble-wrap {
+    max-width: 88%;
+  }
+}
 .bubble-wrap.is-user {
   align-items: flex-end;
 }
