@@ -27,11 +27,15 @@ class AiCharacter(Base):
     max_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=1024)
     model_id: Mapped[int | None] = mapped_column(BigInteger)
     creator_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    creator_type: Mapped[str] = mapped_column(String(20), nullable=False, default="USER", server_default="USER")
+    creator_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="USER", server_default="USER"
+    )
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="DRAFT", server_default="DRAFT")
     chat_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     favorite_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )
@@ -48,4 +52,6 @@ class CharacterFavorite(Base):
     id: Mapped[int] = id_primary_key()
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     character_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )

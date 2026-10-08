@@ -10,7 +10,9 @@ MAX_LIST_SIZE = 200
 
 
 async def get_by_id(db, character_id: int) -> AiCharacter | None:
-    result = await db.execute(select(AiCharacter).where(AiCharacter.id == character_id, AiCharacter.deleted == 0))
+    result = await db.execute(
+        select(AiCharacter).where(AiCharacter.id == character_id, AiCharacter.deleted == 0)
+    )
     return result.scalar_one_or_none()
 
 

@@ -50,7 +50,9 @@ async def find_user_by_username(db: AsyncSession, username: str) -> AdminUserVO 
     return _user_to_vo(user) if user is not None else None
 
 
-async def set_user_status(db: AsyncSession, operator_id: int, target_user_id: int, status: str) -> AdminUserVO:
+async def set_user_status(
+    db: AsyncSession, operator_id: int, target_user_id: int, status: str
+) -> AdminUserVO:
     """封禁/解封用户; 不能操作自己 (防误操作把自己锁在门外)"""
     if target_user_id == operator_id:
         from app.core.exceptions import BizException, ResultCode

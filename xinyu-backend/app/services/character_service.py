@@ -147,7 +147,10 @@ async def delete(db: AsyncSession, character_id: int, user_id: int) -> None:
     await db.commit()
     logger.info(
         "用户删除角色: userId=%s, characterId=%s, 级联清理会话数=%s, 消息数=%s",
-        user_id, character_id, removed_convs, removed_msgs,
+        user_id,
+        character_id,
+        removed_convs,
+        removed_msgs,
     )
 
 
@@ -301,6 +304,8 @@ async def import_card(db: AsyncSession, user_id: int, card: CharacterCardDTO) ->
             ),
         )
     await db.commit()
-    logger.info("角色卡导入: userId=%s, characterId=%s, 世界书条目=%s", user_id, character.id, len(card.lorebook))
+    logger.info(
+        "角色卡导入: userId=%s, characterId=%s, 世界书条目=%s", user_id, character.id, len(card.lorebook)
+    )
     favorited = await character_repo.favorited_ids(db, user_id)
     return _to_vo(character, user_id, favorited)

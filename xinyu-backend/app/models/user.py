@@ -25,7 +25,9 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="USER", server_default="USER")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="ACTIVE", server_default="ACTIVE")
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )

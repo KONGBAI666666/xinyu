@@ -14,7 +14,9 @@ MAX_DOC_SIZE = 500
 
 
 async def get_kb_by_id(db, kb_id: int) -> KnowledgeBase | None:
-    result = await db.execute(select(KnowledgeBase).where(KnowledgeBase.id == kb_id, KnowledgeBase.deleted == 0))
+    result = await db.execute(
+        select(KnowledgeBase).where(KnowledgeBase.id == kb_id, KnowledgeBase.deleted == 0)
+    )
     return result.scalar_one_or_none()
 
 

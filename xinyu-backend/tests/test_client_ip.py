@@ -9,14 +9,16 @@ from app.core.config import settings
 
 
 def _request(peer_host: str, headers: dict[str, str]) -> Request:
-    req = Request(scope={
-        "type": "http",
-        "method": "GET",
-        "path": "/",
-        "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],
-        "query_string": b"",
-        "client": (peer_host, 51000) if peer_host else None,
-    })
+    req = Request(
+        scope={
+            "type": "http",
+            "method": "GET",
+            "path": "/",
+            "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],
+            "query_string": b"",
+            "client": (peer_host, 51000) if peer_host else None,
+        }
+    )
     return req
 
 

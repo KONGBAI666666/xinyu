@@ -37,7 +37,9 @@ class Message(Base):
     regenerate_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     # RAG 引用溯源: JSON 数组 [{docId,fileName,snippet,score}], 仅绑知识库的会话有值
     citations: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )

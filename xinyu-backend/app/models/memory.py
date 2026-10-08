@@ -18,10 +18,14 @@ class Memory(Base):
     character_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     memory_key: Mapped[str | None] = mapped_column(String(50))
     content: Mapped[str] = mapped_column(String(500), nullable=False)
-    importance: Mapped[str] = mapped_column(String(20), nullable=False, default="MEDIUM", server_default="MEDIUM")
+    importance: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="MEDIUM", server_default="MEDIUM"
+    )
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="ACTIVE", server_default="ACTIVE")
     source_conversation_id: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )

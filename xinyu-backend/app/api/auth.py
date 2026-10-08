@@ -14,7 +14,9 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.post("/register")
-async def register(dto: RegisterDTO, request: Request, db: AsyncSession = Depends(get_db)) -> Result[AuthResponse]:
+async def register(
+    dto: RegisterDTO, request: Request, db: AsyncSession = Depends(get_db)
+) -> Result[AuthResponse]:
     """注册（注册即登录, 返回 token）"""
     rate_limiter.check_register(client_ip(request))
     return Result.ok(await auth_service.register(db, dto))

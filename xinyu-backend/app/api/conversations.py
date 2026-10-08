@@ -68,7 +68,11 @@ async def rename_conversation(
     db: AsyncSession = Depends(get_db),
 ) -> Result[ConversationVO]:
     """重命名会话"""
-    return Result.ok(await conversation_service.rename(db, parse_id(conversation_id, "conversationId"), user_id, body.title))
+    return Result.ok(
+        await conversation_service.rename(
+            db, parse_id(conversation_id, "conversationId"), user_id, body.title
+        )
+    )
 
 
 @router.put("/{conversation_id}/model")

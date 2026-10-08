@@ -168,7 +168,9 @@ async def list_messages(
 # ==================== SSE 流式聊天 ====================
 
 
-async def chat(db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRequestDTO) -> StreamingResponse:
+async def chat(
+    db: AsyncSession, user_id: int, conversation_id: int, dto: ChatRequestDTO
+) -> StreamingResponse:
     """SSE 流式聊天: 落库 USER 消息与 ASSISTANT 占位 → 异步调 LLM 逐段推送"""
     conversation = await conversation_service.require_owned(db, conversation_id, user_id)
     character = await character_repo.get_by_id(db, conversation.character_id)
@@ -457,9 +459,8 @@ def _assemble_context(
             # GENERATING 占位/FAILED 无有效文本, 不进上下文
             if msg.status in ("COMPLETED", "STOPPED") and msg.content:
                 # 旧版本回复不进上下文 (sequence_no 小于同 parent 最新版)
-                if (
-                    msg.parent_message_id is not None
-                    and msg.sequence_no != latest_version_seq.get(msg.parent_message_id)
+                if msg.parent_message_id is not None and msg.sequence_no != latest_version_seq.get(
+                    msg.parent_message_id
                 ):
                     continue
                 messages.append(ChatMessage.assistant(msg.content))
@@ -510,7 +511,9 @@ async def _event_stream(
     citations_json: str | None = None
     try:
         # 1. meta: 双消息 ID 回执
-        yield _sse_event("meta", {"userMessageId": str(user_msg_id), "assistantMessageId": str(assistant_msg_id)})
+        yield _sse_event(
+            "meta", {"userMessageId": str(user_msg_id), "assistantMessageId": str(assistant_msg_id)}
+        )
 
         # 2. RAG 检索 (会话绑定了知识库时); search 内部失败降级为空, 不阻断聊天
         messages = list(context)
@@ -532,9 +535,7 @@ async def _event_stream(
                 citations = await _build_citations(chunks)
                 if citations:
                     yield _sse_event("citations", {"citations": [c.model_dump() for c in citations]})
-                    citations_json = json.dumps(
-                        [c.model_dump() for c in citations], ensure_ascii=False
-                    )
+                    citations_json = json.dumps([c.model_dump() for c in citations], ensure_ascii=False)
 
         # 3. 选择 LLM 客户端 (mock 配置 = dev 无模型时的降级路径)
         if settings.mock_mode or model_config.modelCode == "mock":
@@ -588,14 +589,24 @@ async def _event_stream(
                         )
                         finished = True
                         # 异步触发记忆提取 (不阻塞聊天主链路)
-                        _spawn_memory_extraction(user_id, character_id, conversation_id, context, model_config)
+                        _spawn_memory_extraction(
+                            user_id, character_id, conversation_id, context, model_config
+                        )
                         return
                     elif event_type == "error":
                         logger.error(
                             "AI 生成失败: assistantMessageId=%s, code=%s, msg=%s",
-                            assistant_msg_id, payload.get("code"), payload.get("message"),
+                            assistant_msg_id,
+                            payload.get("code"),
+                            payload.get("message"),
                         )
-                        await _finalize(assistant_msg_id, conversation_id, "".join(generated), "FAILED", citations_json=citations_json)
+                        await _finalize(
+                            assistant_msg_id,
+                            conversation_id,
+                            "".join(generated),
+                            "FAILED",
+                            citations_json=citations_json,
+                        )
                         yield _sse_event("error", payload)
                         finished = True
                         return
@@ -605,12 +616,24 @@ async def _event_stream(
         # 取消/超时收尾: 消息仍为 GENERATING 时置 STOPPED (若流恰好自然结束, 守卫保证幂等)
         if not finished:
             logger.info("生成已停止: assistantMessageId=%s", assistant_msg_id)
-            await _finalize(assistant_msg_id, conversation_id, "".join(generated), "STOPPED", citations_json=citations_json)
+            await _finalize(
+                assistant_msg_id,
+                conversation_id,
+                "".join(generated),
+                "STOPPED",
+                citations_json=citations_json,
+            )
     except asyncio.CancelledError:
         # 客户端断连 (AbortController/停止生成): 消息置 STOPPED 保留已生成文本
         logger.info("SSE 客户端断连, 消息置 STOPPED: assistantMessageId=%s", assistant_msg_id)
         try:
-            await _finalize(assistant_msg_id, conversation_id, "".join(generated), "STOPPED", citations_json=citations_json)
+            await _finalize(
+                assistant_msg_id,
+                conversation_id,
+                "".join(generated),
+                "STOPPED",
+                citations_json=citations_json,
+            )
         except Exception:
             logger.exception("断连收尾失败: assistantMessageId=%s", assistant_msg_id)
         raise
@@ -634,7 +657,9 @@ def _spawn_memory_extraction(
     model_config: ModelConfig,
 ) -> None:
     """后台任务: LLM 提取长期记忆并落库 (失败静默忽略, 不影响聊天)"""
-    task = asyncio.create_task(_extract_and_save(user_id, character_id, conversation_id, context, model_config))
+    task = asyncio.create_task(
+        _extract_and_save(user_id, character_id, conversation_id, context, model_config)
+    )
     _background_tasks.add(task)
     task.add_done_callback(_background_tasks.discard)
 
@@ -658,9 +683,7 @@ async def _extract_and_save(
         return
 
     # 把对话拼成纯文本给提取模型
-    dialog_text = "".join(
-        f"{'用户' if m.role == 'user' else 'AI'}: {m.content}\n" for m in dialog
-    )
+    dialog_text = "".join(f"{'用户' if m.role == 'user' else 'AI'}: {m.content}\n" for m in dialog)
 
     try:
         result = await MemoryExtractor.extract(model_config, dialog_text)
@@ -670,9 +693,14 @@ async def _extract_and_save(
         async with SessionFactory() as session:
             await memory_service.save_extracted(user_id, character_id, conversation_id, result.memories)
             await session.commit()
-        logger.info("记忆提取成功: userId=%s, characterId=%s, 条数=%s", user_id, character_id, len(result.memories))
+        logger.info(
+            "记忆提取成功: userId=%s, characterId=%s, 条数=%s", user_id, character_id, len(result.memories)
+        )
     except Exception as e:
         logger.warning(
             "记忆提取失败（静默忽略）: userId=%s, characterId=%s, convId=%s, cause=%s",
-            user_id, character_id, conversation_id, e,
+            user_id,
+            character_id,
+            conversation_id,
+            e,
         )

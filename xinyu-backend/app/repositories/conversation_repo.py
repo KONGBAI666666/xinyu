@@ -59,7 +59,9 @@ async def rename(db, conversation: Conversation, new_title: str) -> None:
 
 async def soft_delete(db, conversation_id: int) -> None:
     await db.execute(
-        update(Conversation).where(Conversation.id == conversation_id).values(deleted=1, updated_at=now_local())
+        update(Conversation)
+        .where(Conversation.id == conversation_id)
+        .values(deleted=1, updated_at=now_local())
     )
 
 
@@ -67,7 +69,11 @@ async def soft_delete_by_character(db, character_id: int, user_id: int) -> int:
     """级联软删某角色下指定用户的全部会话 (角色删除时调用), 返回受影响行数"""
     result = await db.execute(
         update(Conversation)
-        .where(Conversation.character_id == character_id, Conversation.user_id == user_id, Conversation.deleted == 0)
+        .where(
+            Conversation.character_id == character_id,
+            Conversation.user_id == user_id,
+            Conversation.deleted == 0,
+        )
         .values(deleted=1, updated_at=now_local())
     )
     return result.rowcount or 0

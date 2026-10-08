@@ -1,4 +1,5 @@
 """迁移前存量数据体检: 检查 xinyu 库是否已有 uk_conv_seq / uk_email 冲突数据"""
+
 import asyncio
 import os
 
@@ -12,8 +13,9 @@ import aiomysql  # noqa: E402
 
 
 async def main() -> bool:
-    conn = await aiomysql.connect(host="127.0.0.1", port=3306, user="root",
-                                  password=os.environ["MYSQL_PASSWORD"], db="xinyu")
+    conn = await aiomysql.connect(
+        host="127.0.0.1", port=3306, user="root", password=os.environ["MYSQL_PASSWORD"], db="xinyu"
+    )
     cur = await conn.cursor()
 
     await cur.execute(

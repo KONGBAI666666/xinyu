@@ -58,9 +58,7 @@ async def list_entries(db: AsyncSession, character_id: int, user_id: int) -> lis
     return [_to_vo(e) for e in await lorebook_repo.list_by_character(db, character_id)]
 
 
-async def create(
-    db: AsyncSession, character_id: int, user_id: int, dto: LorebookSaveDTO
-) -> LorebookEntryVO:
+async def create(db: AsyncSession, character_id: int, user_id: int, dto: LorebookSaveDTO) -> LorebookEntryVO:
     await _require_owned_character(db, character_id, user_id)
     entry = LorebookEntry(
         character_id=character_id,

@@ -44,9 +44,7 @@ TOOLS: list[dict] = [
             "description": "精确计算数学表达式 (支持 + - * / // % ** 和括号)",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "expression": {"type": "string", "description": "算术表达式, 如 (3+4)*2"}
-                },
+                "properties": {"expression": {"type": "string", "description": "算术表达式, 如 (3+4)*2"}},
                 "required": ["expression"],
             },
         },
@@ -150,10 +148,7 @@ def make_executor(user_id: int) -> ToolExecutor:
                     hits = await message_repo.search_user_messages(db, user_id, keyword)
                 if not hits:
                     return "未找到相关历史消息"
-                lines = [
-                    f"[{m.created_at:%m-%d %H:%M}] {m.message_type}: {m.content[:80]}"
-                    for m in hits
-                ]
+                lines = [f"[{m.created_at:%m-%d %H:%M}] {m.message_type}: {m.content[:80]}" for m in hits]
                 return "找到的历史消息:\n" + "\n".join(lines)
 
             return f"未知工具: {name}"

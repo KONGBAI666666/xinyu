@@ -34,7 +34,9 @@ class QdrantService:
                 vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
             )
 
-    def _upsert_chunks_sync(self, kb_id: str, doc_id: str, chunks: list[str], embeddings: list[list[float]]) -> None:
+    def _upsert_chunks_sync(
+        self, kb_id: str, doc_id: str, chunks: list[str], embeddings: list[list[float]]
+    ) -> None:
         name = self._collection_for(kb_id)
         points = [
             PointStruct(
@@ -87,7 +89,9 @@ class QdrantService:
     async def ensure_kb_collection(self, kb_id: str, dim: int) -> None:
         await asyncio.to_thread(self._ensure_kb_collection_sync, kb_id, dim)
 
-    async def upsert_chunks(self, kb_id: str, doc_id: str, chunks: list[str], embeddings: list[list[float]]) -> None:
+    async def upsert_chunks(
+        self, kb_id: str, doc_id: str, chunks: list[str], embeddings: list[list[float]]
+    ) -> None:
         await asyncio.to_thread(self._upsert_chunks_sync, kb_id, doc_id, chunks, embeddings)
 
     async def search(self, kb_id: str, query_vec: list[float], top_k: int = 3) -> list[RagChunk]:

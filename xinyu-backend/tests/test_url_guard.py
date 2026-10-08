@@ -33,8 +33,15 @@ class IpBlockedTest(unittest.TestCase):
     def test_private_and_local_ips_blocked(self) -> None:
         """私网/环回/链路本地/未指定地址全部拦截"""
         for ip in (
-            "127.0.0.1", "10.0.0.1", "192.168.1.1", "172.16.0.1",
-            "169.254.169.254", "0.0.0.0", "::1", "fe80::1", "fc00::1",
+            "127.0.0.1",
+            "10.0.0.1",
+            "192.168.1.1",
+            "172.16.0.1",
+            "169.254.169.254",
+            "0.0.0.0",
+            "::1",
+            "fe80::1",
+            "fc00::1",
         ):
             self.assertTrue(url_guard._ip_is_blocked(ipaddress.ip_address(ip)))
 

@@ -32,7 +32,9 @@ class BizException(Exception):
     code: int = ResultCode.SYSTEM_ERROR
     message: str = "系统异常，请稍后重试"
 
-    def __init__(self, code: int | ResultCode = ResultCode.SYSTEM_ERROR, message: str = "系统异常，请稍后重试"):
+    def __init__(
+        self, code: int | ResultCode = ResultCode.SYSTEM_ERROR, message: str = "系统异常，请稍后重试"
+    ):
         self.code = int(code)
         self.message = message
         super().__init__(message)

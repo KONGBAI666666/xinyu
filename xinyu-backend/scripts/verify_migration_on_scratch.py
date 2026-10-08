@@ -1,4 +1,5 @@
 """空库试跑 alembic 迁移链: 建 scratch 库 → upgrade head → 校验唯一索引 → 冲突插入测试 → 删库"""
+
 import asyncio
 import os
 import subprocess
@@ -37,15 +38,18 @@ async def main() -> bool:
     await run_sql("CREATE DATABASE xinyu_alembic_tmp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
     print("[1] scratch 库已创建")
 
-    r = subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"],
-                       capture_output=True, text=True, timeout=120)
+    r = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"], capture_output=True, text=True, timeout=120
+    )
     print("[2] alembic exit:", r.returncode)
     if r.returncode != 0:
         print(r.stdout[-600:])
         print(r.stderr[-600:])
         return False
 
-    conn = await aiomysql.connect(host="127.0.0.1", port=3306, user="root", password=PWD, db="xinyu_alembic_tmp")
+    conn = await aiomysql.connect(
+        host="127.0.0.1", port=3306, user="root", password=PWD, db="xinyu_alembic_tmp"
+    )
     cur = await conn.cursor()
     await cur.execute(
         "SELECT DISTINCT INDEX_NAME FROM information_schema.STATISTICS "
@@ -60,7 +64,9 @@ async def main() -> bool:
         return False
 
     print("[4] 冲突插入校验:", end=" ")
-    conn = await aiomysql.connect(host="127.0.0.1", port=3306, user="root", password=PWD, db="xinyu_alembic_tmp")
+    conn = await aiomysql.connect(
+        host="127.0.0.1", port=3306, user="root", password=PWD, db="xinyu_alembic_tmp"
+    )
     cur = await conn.cursor()
     await cur.execute(
         "INSERT INTO message (id, conversation_id, user_id, sequence_no, message_type, content) "

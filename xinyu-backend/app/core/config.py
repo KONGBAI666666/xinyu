@@ -110,9 +110,7 @@ _DEV_JWT_SECRET = "xinyu-dev-jwt-secret-change-me-please!!"
 def get_settings() -> Settings:
     s = Settings()
     if not s.dev_mode and s.jwt_secret == _DEV_JWT_SECRET:
-        raise RuntimeError(
-            "prod 环境禁止使用默认 JWT 密钥, 请设置 XINYU_JWT_SECRET (≥32 字符)"
-        )
+        raise RuntimeError("prod 环境禁止使用默认 JWT 密钥, 请设置 XINYU_JWT_SECRET (≥32 字符)")
     return s
 
 

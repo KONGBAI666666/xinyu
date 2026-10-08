@@ -22,7 +22,9 @@ class LorebookEntry(Base):
     # 注入优先级: 大者先注入 (预算不足时低优先级先被裁掉)
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     enabled: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )

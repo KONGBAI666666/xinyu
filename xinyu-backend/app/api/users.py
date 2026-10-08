@@ -14,7 +14,9 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 
 
 @router.get("/me")
-async def me(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)) -> Result[UserVO]:
+async def me(
+    user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
+) -> Result[UserVO]:
     """当前登录用户信息"""
     return Result.ok(await user_service.get_me(db, user_id))
 

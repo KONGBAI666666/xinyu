@@ -46,12 +46,7 @@ async def list_history(db, conversation_id: int, before: int | None, size: int) 
     conditions = [Message.conversation_id == conversation_id, Message.deleted == 0]
     if before is not None:
         conditions.append(Message.id < before)
-    result = await db.execute(
-        select(Message)
-        .where(*conditions)
-        .order_by(desc(Message.id))
-        .limit(size)
-    )
+    result = await db.execute(select(Message).where(*conditions).order_by(desc(Message.id)).limit(size))
     page = list(result.scalars())
     # 倒序取一页再翻转为升序, 前端按时间正序渲染
     return sorted(page, key=lambda m: m.sequence_no)

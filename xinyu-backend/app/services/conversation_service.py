@@ -35,7 +35,9 @@ async def list_by_user(db: AsyncSession, user_id: int) -> list[ConversationVO]:
     return [to_vo(c) for c in conversations]
 
 
-async def rename(db: AsyncSession, conversation_id: int, user_id: int, new_title: str | None) -> ConversationVO:
+async def rename(
+    db: AsyncSession, conversation_id: int, user_id: int, new_title: str | None
+) -> ConversationVO:
     """重命名会话; 空标题直接返回原会话"""
     conversation = await require_owned(db, conversation_id, user_id)
     trimmed = new_title.strip() if new_title else ""

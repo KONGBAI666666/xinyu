@@ -226,7 +226,9 @@ async def _process_into_db(
             await knowledge_repo.update_kb_counts_on_upload(session, kb_id, result.chunk_count)
             # 首次上传锁定向量化配置 (条件更新: 并发时先成功者为准)
             if result.embedding_model:
-                await knowledge_repo.try_lock_embedding(session, kb_id, result.embedding_model, result.embedding_dim)
+                await knowledge_repo.try_lock_embedding(
+                    session, kb_id, result.embedding_model, result.embedding_dim
+                )
             await session.commit()
 
             logger.info("文档上传成功: docId=%s, kbId=%s, 块数=%s", doc.id, kb_id, result.chunk_count)
@@ -286,5 +288,6 @@ async def _resolve_embedding_model_config(db: AsyncSession, user_id: int) -> Mod
     if settings.dev_mode:
         return ModelConfig(modelCode="mock", baseUrl="mock", apiKey="mock")
     raise BizException(
-        ResultCode.PARAM_ERROR, "尚未配置 AI 模型, 请先在「模型管理」添加一个模型 (Embedding 复用该模型的 API Key)"
+        ResultCode.PARAM_ERROR,
+        "尚未配置 AI 模型, 请先在「模型管理」添加一个模型 (Embedding 复用该模型的 API Key)",
     )

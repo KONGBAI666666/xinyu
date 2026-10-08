@@ -50,18 +50,24 @@ class _FakeClient:
         for seg in round.get("deltas", []):
             yield "delta", {"content": seg}
         if "tool_calls" in round:
-            yield "tool_calls", {
-                "calls": round["tool_calls"],
-                "content": round.get("content", ""),
-                "promptTokens": round.get("promptTokens", 10),
-                "completionTokens": round.get("completionTokens", 5),
-            }
+            yield (
+                "tool_calls",
+                {
+                    "calls": round["tool_calls"],
+                    "content": round.get("content", ""),
+                    "promptTokens": round.get("promptTokens", 10),
+                    "completionTokens": round.get("completionTokens", 5),
+                },
+            )
         else:
-            yield "done", {
-                "promptTokens": round.get("promptTokens", 10),
-                "completionTokens": round.get("completionTokens", 5),
-                "status": "COMPLETED",
-            }
+            yield (
+                "done",
+                {
+                    "promptTokens": round.get("promptTokens", 10),
+                    "completionTokens": round.get("completionTokens", 5),
+                    "status": "COMPLETED",
+                },
+            )
 
 
 async def _collect(agen):
@@ -71,15 +77,25 @@ async def _collect(agen):
 class _AsyncCase(unittest.IsolatedAsyncioTestCase):
     async def test_single_tool_round(self) -> None:
         """工具调用 → 回灌 → 续写; usage 累加; done 只出现一次"""
-        client = _FakeClient([
-            {"deltas": ["让我"], "tool_calls": [
-                {"id": "c1", "name": "calculate", "arguments": '{"expression": "2+3"}'}
-            ], "promptTokens": 10, "completionTokens": 2},
-            {"deltas": ["等于", "5"], "promptTokens": 20, "completionTokens": 4},
-        ])
-        events = await _collect(run_agent_stream(
-            client, [{"role": "user", "content": "2+3=?"}], TOOLS, make_executor(1),
-        ))
+        client = _FakeClient(
+            [
+                {
+                    "deltas": ["让我"],
+                    "tool_calls": [{"id": "c1", "name": "calculate", "arguments": '{"expression": "2+3"}'}],
+                    "promptTokens": 10,
+                    "completionTokens": 2,
+                },
+                {"deltas": ["等于", "5"], "promptTokens": 20, "completionTokens": 4},
+            ]
+        )
+        events = await _collect(
+            run_agent_stream(
+                client,
+                [{"role": "user", "content": "2+3=?"}],
+                TOOLS,
+                make_executor(1),
+            )
+        )
         types = [e for e, _ in events]
         self.assertEqual(types.count("done"), 1)
         self.assertIn("tool", types)
@@ -96,10 +112,19 @@ class _AsyncCase(unittest.IsolatedAsyncioTestCase):
         self.assertIn("tool", roles)
 
     async def test_no_tool_single_round(self) -> None:
-        client = _FakeClient([{"deltas": ["你好"]}, ])
-        events = await _collect(run_agent_stream(
-            client, [{"role": "user", "content": "hi"}], TOOLS, make_executor(1),
-        ))
+        client = _FakeClient(
+            [
+                {"deltas": ["你好"]},
+            ]
+        )
+        events = await _collect(
+            run_agent_stream(
+                client,
+                [{"role": "user", "content": "hi"}],
+                TOOLS,
+                make_executor(1),
+            )
+        )
         types = [e for e, _ in events]
         self.assertNotIn("tool", types)
         self.assertEqual(types.count("done"), 1)
@@ -108,33 +133,52 @@ class _AsyncCase(unittest.IsolatedAsyncioTestCase):
         """模型连续请求工具: 达到上限后强制无 tools 收敛, 流必然结束"""
         calls = [{"id": "cx", "name": "calculate", "arguments": '{"expression": "1+1"}'}]
         client = _FakeClient([{"tool_calls": calls}] * (MAX_TOOL_ROUNDS + 2))
-        events = await _collect(run_agent_stream(
-            client, [{"role": "user", "content": "loop"}], TOOLS, make_executor(1),
-        ))
+        events = await _collect(
+            run_agent_stream(
+                client,
+                [{"role": "user", "content": "loop"}],
+                TOOLS,
+                make_executor(1),
+            )
+        )
         done = [p for t, p in events if t == "done"]
         self.assertEqual(len(done), 1)
         # 末轮不应携带 tools
         self.assertIsNone(client.calls[-1]["tools"])
 
     async def test_unknown_tool_returns_error_text(self) -> None:
-        client = _FakeClient([
-            {"tool_calls": [{"id": "c9", "name": "no_such_tool", "arguments": "{}"}]},
-            {"deltas": ["好的"]},
-        ])
-        events = await _collect(run_agent_stream(
-            client, [{"role": "user", "content": "x"}], TOOLS, make_executor(1),
-        ))
+        client = _FakeClient(
+            [
+                {"tool_calls": [{"id": "c9", "name": "no_such_tool", "arguments": "{}"}]},
+                {"deltas": ["好的"]},
+            ]
+        )
+        events = await _collect(
+            run_agent_stream(
+                client,
+                [{"role": "user", "content": "x"}],
+                TOOLS,
+                make_executor(1),
+            )
+        )
         tool_payload = next(p for t, p in events if t == "tool")
         self.assertIn("未知工具", tool_payload["result"])
 
     async def test_malformed_arguments_tolerated(self) -> None:
-        client = _FakeClient([
-            {"tool_calls": [{"id": "c2", "name": "calculate", "arguments": "{bad json"}]},
-            {"deltas": ["抱歉"]},
-        ])
-        events = await _collect(run_agent_stream(
-            client, [{"role": "user", "content": "x"}], TOOLS, make_executor(1),
-        ))
+        client = _FakeClient(
+            [
+                {"tool_calls": [{"id": "c2", "name": "calculate", "arguments": "{bad json"}]},
+                {"deltas": ["抱歉"]},
+            ]
+        )
+        events = await _collect(
+            run_agent_stream(
+                client,
+                [{"role": "user", "content": "x"}],
+                TOOLS,
+                make_executor(1),
+            )
+        )
         tool_payload = next(p for t, p in events if t == "tool")
         self.assertTrue(tool_payload["result"].startswith("错误"))
 

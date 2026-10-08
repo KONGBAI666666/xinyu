@@ -22,7 +22,9 @@ class KnowledgeBase(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="ACTIVE", server_default="ACTIVE")
     embedding_model: Mapped[str | None] = mapped_column(String(64))
     embedding_dim: Mapped[int | None] = mapped_column(Integer)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )
@@ -43,9 +45,13 @@ class KnowledgeDocument(Base):
     file_type: Mapped[str] = mapped_column(String(20), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     chunk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="PROCESSING", server_default="PROCESSING")
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="PROCESSING", server_default="PROCESSING"
+    )
     error_msg: Mapped[str | None] = mapped_column(String(500))
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )

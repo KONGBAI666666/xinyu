@@ -34,6 +34,4 @@ async def update_password(db, user_id: int, new_password_hash: str) -> None:
 
 
 async def update_last_login(db, user_id: int) -> None:
-    await db.execute(
-        update(User).where(User.id == user_id).values(last_login_at=now_local())
-    )
+    await db.execute(update(User).where(User.id == user_id).values(last_login_at=now_local()))

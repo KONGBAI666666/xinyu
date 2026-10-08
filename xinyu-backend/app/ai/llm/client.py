@@ -49,8 +49,7 @@ class LlmClient:
             kwargs: dict = {
                 "model": self.config.modelCode,
                 "messages": [
-                    m if isinstance(m, dict) else {"role": m.role, "content": m.content}
-                    for m in messages
+                    m if isinstance(m, dict) else {"role": m.role, "content": m.content} for m in messages
                 ],
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -85,9 +84,7 @@ class LlmClient:
                     yield "delta", {"content": delta.content}
                 if delta and delta.tool_calls:
                     for tc in delta.tool_calls:
-                        slot = tool_calls.setdefault(
-                            tc.index, {"id": "", "name": "", "arguments": ""}
-                        )
+                        slot = tool_calls.setdefault(tc.index, {"id": "", "name": "", "arguments": ""})
                         if tc.id:
                             slot["id"] = tc.id
                         if tc.function and tc.function.name:
@@ -100,25 +97,34 @@ class LlmClient:
                     {"id": s["id"], "name": s["name"], "arguments": s["arguments"]}
                     for _, s in sorted(tool_calls.items())
                 ]
-                yield "tool_calls", {
-                    "calls": calls,
-                    "content": "".join(content_parts),
-                    "promptTokens": prompt_tokens,
-                    "completionTokens": completion_tokens,
-                }
+                yield (
+                    "tool_calls",
+                    {
+                        "calls": calls,
+                        "content": "".join(content_parts),
+                        "promptTokens": prompt_tokens,
+                        "completionTokens": completion_tokens,
+                    },
+                )
                 return
 
-            yield "done", {
-                "promptTokens": prompt_tokens,
-                "completionTokens": completion_tokens,
-                "status": "COMPLETED",
-            }
+            yield (
+                "done",
+                {
+                    "promptTokens": prompt_tokens,
+                    "completionTokens": completion_tokens,
+                    "status": "COMPLETED",
+                },
+            )
 
         except Exception as e:
             code, msg = self._map_error(e)
             logger.warning(
                 "LLM 流式调用失败: baseUrl=%s, model=%s, code=%s, error=%r",
-                self.config.baseUrl, self.config.modelCode, code, e,
+                self.config.baseUrl,
+                self.config.modelCode,
+                code,
+                e,
             )
             yield "error", {"code": code, "message": msg}
 
@@ -143,7 +149,10 @@ class LlmClient:
             code, msg = self._map_error(e)
             logger.warning(
                 "LLM 调用失败: baseUrl=%s, model=%s, code=%s, error=%r",
-                self.config.baseUrl, self.config.modelCode, code, e,
+                self.config.baseUrl,
+                self.config.modelCode,
+                code,
+                e,
             )
             raise LlmConnectError(f"[{code}] {msg}") from e
 
@@ -188,11 +197,14 @@ class MockLlmClient:
             await asyncio.sleep(0.08)
             yield "delta", {"content": seg}
         full = "".join(segments)
-        yield "done", {
-            "promptTokens": len(str(messages)) // 4,
-            "completionTokens": len(full) // 4,
-            "status": "COMPLETED",
-        }
+        yield (
+            "done",
+            {
+                "promptTokens": len(str(messages)) // 4,
+                "completionTokens": len(full) // 4,
+                "status": "COMPLETED",
+            },
+        )
 
     async def chat(
         self, messages: list[ChatMessage], temperature: float = 0.8, max_tokens: int = 1024

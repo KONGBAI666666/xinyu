@@ -49,7 +49,9 @@ async def square_detail(
     db: AsyncSession = Depends(get_db),
 ) -> Result[CharacterVO | None]:
     """广场详情: 仅 PUBLISHED 角色对所有人可见"""
-    return Result.ok(await character_service.get_square_detail(db, parse_id(character_id, "characterId"), user_id))
+    return Result.ok(
+        await character_service.get_square_detail(db, parse_id(character_id, "characterId"), user_id)
+    )
 
 
 # ---------- 管理类（需登录） ----------
@@ -70,7 +72,9 @@ async def detail(
     db: AsyncSession = Depends(get_db),
 ) -> Result[CharacterVO | None]:
     """角色详情（管理视角: 自建任意状态 + 官方 PUBLISHED）"""
-    return Result.ok(await character_service.get_by_id_for_user(db, parse_id(character_id, "characterId"), user_id))
+    return Result.ok(
+        await character_service.get_by_id_for_user(db, parse_id(character_id, "characterId"), user_id)
+    )
 
 
 @router.post("")
@@ -113,7 +117,9 @@ async def switch_status(
     db: AsyncSession = Depends(get_db),
 ) -> Result[CharacterVO]:
     """切换角色状态(DRAFT / PUBLISHED / OFFLINE)"""
-    return Result.ok(await character_service.switch_status(db, parse_id(character_id, "characterId"), user_id, status))
+    return Result.ok(
+        await character_service.switch_status(db, parse_id(character_id, "characterId"), user_id, status)
+    )
 
 
 # ---------- 收藏（需登录） ----------
@@ -151,9 +157,7 @@ async def list_lorebook(
     db: AsyncSession = Depends(get_db),
 ) -> Result[list[LorebookEntryVO]]:
     """角色的世界书条目列表 (含停用)"""
-    return Result.ok(
-        await lorebook_service.list_entries(db, parse_id(character_id, "characterId"), user_id)
-    )
+    return Result.ok(await lorebook_service.list_entries(db, parse_id(character_id, "characterId"), user_id))
 
 
 @router.post("/{character_id}/lorebook")
@@ -164,9 +168,7 @@ async def create_lorebook(
     db: AsyncSession = Depends(get_db),
 ) -> Result[LorebookEntryVO]:
     """新增世界书条目"""
-    return Result.ok(
-        await lorebook_service.create(db, parse_id(character_id, "characterId"), user_id, dto)
-    )
+    return Result.ok(await lorebook_service.create(db, parse_id(character_id, "characterId"), user_id, dto))
 
 
 @router.put("/{character_id}/lorebook/{entry_id}")
@@ -209,9 +211,7 @@ async def export_character(
     db: AsyncSession = Depends(get_db),
 ) -> Result[CharacterCardVO]:
     """导出角色卡 (仅创建者): 人设 + 参数 + 世界书"""
-    return Result.ok(
-        await character_service.export_card(db, parse_id(character_id, "characterId"), user_id)
-    )
+    return Result.ok(await character_service.export_card(db, parse_id(character_id, "characterId"), user_id))
 
 
 @router.post("/import")

@@ -85,7 +85,9 @@ async def delete(db: AsyncSession, memory_id: int, user_id: int) -> None:
     await db.commit()
 
 
-async def build_memory_block(db: AsyncSession, user_id: int, character_id: int, limit: int = INJECT_LIMIT) -> str:
+async def build_memory_block(
+    db: AsyncSession, user_id: int, character_id: int, limit: int = INJECT_LIMIT
+) -> str:
     """注入查询: 查 Top-K ACTIVE 记忆并拼成文本块; 无记忆返回空字符串"""
     memories = await memory_repo.list_active_for_inject(db, user_id, character_id, limit)
     return format_memory_injection([m.content for m in memories])

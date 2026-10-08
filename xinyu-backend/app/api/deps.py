@@ -22,7 +22,7 @@ def _parse_bearer(request: Request) -> dict | None:
     if not authorization.startswith(_BEARER_PREFIX):
         return None
     try:
-        return parse_token(authorization[len(_BEARER_PREFIX):])
+        return parse_token(authorization[len(_BEARER_PREFIX) :])
     except Exception:
         # token 无效(过期/伪造/格式错误): 视同未登录
         return None
@@ -47,7 +47,9 @@ async def get_optional_user_id(request: Request) -> int | None:
     return get_user_id_from_claims(claims)
 
 
-async def require_admin(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)) -> int:
+async def require_admin(
+    user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
+) -> int:
     """管理员依赖: role=ADMIN 且账号 ACTIVE, 其余 40300 (user.role 字段的消费点)"""
     from app.repositories import user_repo
 

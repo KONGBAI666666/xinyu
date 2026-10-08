@@ -59,18 +59,15 @@ def _evict_expired() -> None:
     """
     now = time.time() * 1000
     for key in [
-        k for k, dq in _events.items()
+        k
+        for k, dq in _events.items()
         if (not dq or dq[-1] < now - _window_ms_for(k)) and not _is_protected(k)
     ]:
         _events.pop(key, None)
 
     # 极端情况: 未过期的键仍超上限 → 优先淘汰未被保护的、最久未活动的键
     if len(_events) > MAX_TRACKED_KEYS:
-        candidates = [
-            (k, dq[-1] if dq else 0.0)
-            for k, dq in _events.items()
-            if not _is_protected(k)
-        ]
+        candidates = [(k, dq[-1] if dq else 0.0) for k, dq in _events.items() if not _is_protected(k)]
         candidates.sort(key=lambda kv: kv[1])
         overflow = len(_events) - MAX_TRACKED_KEYS
         for key, _ in candidates[:overflow]:

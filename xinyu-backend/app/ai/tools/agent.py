@@ -93,7 +93,9 @@ async def run_agent_stream(
             result = await executor(call["name"], arguments)
             logger.info(
                 "工具调用: name=%s, args=%s, result_len=%s",
-                call["name"], call["arguments"][:120], len(result),
+                call["name"],
+                call["arguments"][:120],
+                len(result),
             )
             yield "tool", {"name": call["name"], "arguments": call["arguments"], "result": result[:300]}
             working.append({"role": "tool", "tool_call_id": call["id"], "content": result})

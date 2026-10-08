@@ -21,7 +21,9 @@ class Conversation(Base):
     title: Mapped[str] = mapped_column(String(50), nullable=False)
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime)
     last_message_preview: Mapped[str | None] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=now_local, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=now_local, server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, onupdate=now_local, server_default=func.now()
     )

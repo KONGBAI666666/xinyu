@@ -51,9 +51,7 @@ class AssembleContextTest(unittest.TestCase):
             _make_message(3, 3, "ASSISTANT", "从前有座岛"),
         ]
         messages = _assemble_context(_make_character(), "", history)
-        self.assertEqual(
-            [m.content for m in messages], ["你是屿屿。", "你好呀", "讲个故事", "从前有座岛"]
-        )
+        self.assertEqual([m.content for m in messages], ["你是屿屿。", "你好呀", "讲个故事", "从前有座岛"])
         self.assertEqual(messages[0].role, "system")
 
     def test_old_regenerated_versions_excluded(self) -> None:
@@ -65,9 +63,7 @@ class AssembleContextTest(unittest.TestCase):
             _make_message(4, 4, "ASSISTANT", "版本2", parent_message_id=2, regenerate_count=1),
         ]
         messages = _assemble_context(_make_character(), "", history)
-        self.assertEqual(
-            [m.content for m in messages], ["你是屿屿。", "你好呀", "讲个故事", "版本2"]
-        )
+        self.assertEqual([m.content for m in messages], ["你是屿屿。", "你好呀", "讲个故事", "版本2"])
 
     def test_generating_and_failed_excluded(self) -> None:
         """GENERATING 占位与 FAILED 消息不进上下文"""
