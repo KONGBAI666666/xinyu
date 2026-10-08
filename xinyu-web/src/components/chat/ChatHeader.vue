@@ -47,7 +47,7 @@ watch(
       await modelsStore.load().catch(() => {})
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 /** 可切换的模型: 已停用的不在切换器中出现 (后端解析同样拒绝) */
@@ -86,6 +86,12 @@ function toggleDropdown(): void {
 
 function closeDropdown(): void {
   modelDropdownOpen.value = false
+}
+
+/** 跳转设置页并收起下拉 (多语句收敛为方法, 模板内联表达式不支持换行多语句) */
+function goToSettings(path: string): void {
+  router.push(path)
+  closeDropdown()
 }
 
 // ---------- 修改密码弹窗 ----------
@@ -193,16 +199,30 @@ async function submitEmail(): Promise<void> {
     <div class="header-left">
       <!-- 模型切换器 -->
       <div class="model-switcher">
-        <button type="button" class="model-btn" :disabled="!conversationStore.activeId" @click.stop="toggleDropdown">
+        <button
+          type="button"
+          class="model-btn"
+          :disabled="!conversationStore.activeId"
+          @click.stop="toggleDropdown"
+        >
           <span class="model-dot" :class="{ active: !!activeModel }"></span>
           <span class="model-name">{{ activeModel ? activeModel.displayName : '默认模型' }}</span>
           <svg
             v-if="conversationStore.activeId"
             class="chevron"
             :class="{ open: modelDropdownOpen }"
-            width="12" height="12" viewBox="0 0 12 12" fill="none"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
           >
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M3 4.5L6 7.5L9 4.5"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
 
@@ -220,10 +240,25 @@ async function submitEmail(): Promise<void> {
             >
               <div class="item-info">
                 <span class="item-name">用户默认</span>
-                <span class="item-desc">{{ modelsStore.defaultModel()?.displayName ?? '未设置' }}</span>
+                <span class="item-desc">{{
+                  modelsStore.defaultModel()?.displayName ?? '未设置'
+                }}</span>
               </div>
-              <svg v-if="!conversationStore.active?.modelId" class="check" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7L6 11L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg
+                v-if="!conversationStore.active?.modelId"
+                class="check"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+              >
+                <path
+                  d="M2 7L6 11L12 3"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </div>
 
@@ -241,42 +276,76 @@ async function submitEmail(): Promise<void> {
                 <span class="item-name">{{ model.displayName }}</span>
                 <span class="item-desc">{{ model.provider }} · {{ model.modelCode }}</span>
               </div>
-              <svg v-if="conversationStore.active?.modelId === model.id" class="check" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7L6 11L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg
+                v-if="conversationStore.active?.modelId === model.id"
+                class="check"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+              >
+                <path
+                  d="M2 7L6 11L12 3"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </div>
 
             <!-- 空状态 / 管理 -->
-            <div v-if="modelsStore.list.length === 0" class="dropdown-empty">
-              还没有添加模型
-            </div>
+            <div v-if="modelsStore.list.length === 0" class="dropdown-empty">还没有添加模型</div>
 
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item manage" @click="router.push('/settings/models'); closeDropdown()">
+            <div class="dropdown-item manage" @click="goToSettings('/settings/models')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <path
+                  d="M7 2V12M2 7H12"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
               </svg>
               <span>管理模型</span>
             </div>
-            <div class="dropdown-item manage" @click="router.push('/settings/memories'); closeDropdown()">
+            <div class="dropdown-item manage" @click="goToSettings('/settings/memories')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2C4 2 2 4 2 6.5C2 8 2.8 9 3.8 9.8L3.5 12L5.6 11C6 11.1 6.5 11.2 7 11.2C10 11.2 12 9.2 12 6.6C12 4 10 2 7 2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-                <circle cx="5" cy="6.5" r="0.6" fill="currentColor"/>
-                <circle cx="7" cy="6.5" r="0.6" fill="currentColor"/>
-                <circle cx="9" cy="6.5" r="0.6" fill="currentColor"/>
+                <path
+                  d="M7 2C4 2 2 4 2 6.5C2 8 2.8 9 3.8 9.8L3.5 12L5.6 11C6 11.1 6.5 11.2 7 11.2C10 11.2 12 9.2 12 6.6C12 4 10 2 7 2Z"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linejoin="round"
+                />
+                <circle cx="5" cy="6.5" r="0.6" fill="currentColor" />
+                <circle cx="7" cy="6.5" r="0.6" fill="currentColor" />
+                <circle cx="9" cy="6.5" r="0.6" fill="currentColor" />
               </svg>
               <span>长期记忆</span>
             </div>
-            <div class="dropdown-item manage" @click="router.push('/settings/knowledge-bases'); closeDropdown()">
+            <div class="dropdown-item manage" @click="goToSettings('/settings/knowledge-bases')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 3.5C2 2.7 2.7 2 3.5 2H6V12H3.5C2.7 12 2 11.3 2 10.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M8 2H10.5C11.3 2 12 2.7 12 3.5V10.5C12 11.3 11.3 12 10.5 12H8V2Z" stroke="currentColor" stroke-width="1.2"/>
+                <path
+                  d="M2 3.5C2 2.7 2.7 2 3.5 2H6V12H3.5C2.7 12 2 11.3 2 10.5V3.5Z"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <path
+                  d="M8 2H10.5C11.3 2 12 2.7 12 3.5V10.5C12 11.3 11.3 12 10.5 12H8V2Z"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
               </svg>
               <span>知识库 (RAG)</span>
             </div>
-            <div v-if="isAdmin" class="dropdown-item manage" @click="router.push('/admin'); closeDropdown()">
+            <div v-if="isAdmin" class="dropdown-item manage" @click="goToSettings('/admin')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 12V7M7 12V2M12 12V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <path
+                  d="M2 12V7M7 12V2M12 12V9"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
               </svg>
               <span>管理后台</span>
             </div>
@@ -290,12 +359,7 @@ async function submitEmail(): Promise<void> {
 
     <!-- 右侧: 统计 + 用户 -->
     <div class="flex items-center gap-3">
-      <button
-        type="button"
-        class="stats-btn"
-        title="用量统计"
-        @click="statsStore.openPanel()"
-      >
+      <button type="button" class="stats-btn" title="用量统计" @click="statsStore.openPanel()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path
             d="M2 13V3M2 13H14M5 13V8M8 13V5M11 13V10M14 13V6"
@@ -361,12 +425,7 @@ async function submitEmail(): Promise<void> {
           <button type="button" class="pw-cancel" :disabled="pwSubmitting" @click="closePwModal">
             取消
           </button>
-          <button
-            type="button"
-            class="pw-submit"
-            :disabled="pwSubmitting"
-            @click="submitPassword"
-          >
+          <button type="button" class="pw-submit" :disabled="pwSubmitting" @click="submitPassword">
             {{ pwSubmitting ? '提交中…' : '确认修改' }}
           </button>
         </div>
@@ -391,7 +450,12 @@ async function submitEmail(): Promise<void> {
         <p class="pw-hint">留空提交 = 清除绑定</p>
         <p v-if="emailError" class="pw-error">{{ emailError }}</p>
         <div class="pw-actions">
-          <button type="button" class="pw-cancel" :disabled="emailSubmitting" @click="closeEmailModal">
+          <button
+            type="button"
+            class="pw-cancel"
+            :disabled="emailSubmitting"
+            @click="closeEmailModal"
+          >
             取消
           </button>
           <button type="button" class="pw-submit" :disabled="emailSubmitting" @click="submitEmail">
@@ -683,8 +747,12 @@ async function submitEmail(): Promise<void> {
   box-sizing: border-box;
   transition: border-color var(--duration-base) var(--ease-base);
 }
-.pw-input:focus { border-color: rgba(94, 234, 212, 0.4); }
-.pw-input::placeholder { color: var(--text-muted); }
+.pw-input:focus {
+  border-color: rgba(94, 234, 212, 0.4);
+}
+.pw-input::placeholder {
+  color: var(--text-muted);
+}
 
 .pw-error {
   margin: 0 0 12px;
@@ -717,22 +785,31 @@ async function submitEmail(): Promise<void> {
   background: transparent;
   color: var(--text-secondary);
 }
-.pw-cancel:hover { background: var(--bg-hover); }
+.pw-cancel:hover {
+  background: var(--bg-hover);
+}
 .pw-submit {
   border: none;
   background: var(--brand-gradient);
   color: #fff;
   font-weight: 500;
 }
-.pw-submit:hover:not(:disabled) { filter: brightness(1.1); }
+.pw-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
 .pw-cancel:disabled,
-.pw-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+.pw-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 
 /* ---------- 动画 ---------- */
-.dropdown-enter-active, .dropdown-leave-active {
+.dropdown-enter-active,
+.dropdown-leave-active {
   transition: all var(--duration-base) var(--ease-base);
 }
-.dropdown-enter-from, .dropdown-leave-to {
+.dropdown-enter-from,
+.dropdown-leave-to {
   opacity: 0;
   transform: translateY(-4px);
 }

@@ -4,3537 +4,3537 @@
  */
 
 export interface paths {
-    "/api/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register
-         * @description 注册（注册即登录, 返回 token）
-         */
-        post: operations["register_api_auth_register_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login
-         * @description 登录
-         */
-        post: operations["login_api_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Me
-         * @description 当前登录用户信息
-         */
-        get: operations["me_api_users_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/me/password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Password
-         * @description 修改密码
-         */
-        put: operations["update_password_api_users_me_password_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/me/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Email
-         * @description 绑定/更换邮箱 (传空清除); 找回密码等邮件能力的数据基础
-         */
-        put: operations["update_email_api_users_me_email_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/users/by-username": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Find User
-         * @description 按用户名精确查找用户 (v1 用户管理: 找到后再执行封禁/解封)
-         */
-        get: operations["find_user_api_admin_users_by_username_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/users/{user_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set User Status
-         * @description 封禁/解封用户 (封禁即时生效于登录, 存量 JWT 在有效期内仍可用)
-         */
-        put: operations["set_user_status_api_admin_users__user_id__status_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/characters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Characters
-         * @description 角色审核队列分页 (id 倒序; 页满即视为可能还有更多)
-         */
-        get: operations["list_characters_api_admin_characters_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/characters/{character_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Review Character
-         * @description 审核动作: 通过发布 (PUBLISHED) / 下架 (OFFLINE)
-         */
-        put: operations["review_character_api_admin_characters__character_id__status_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Overview
-         * @description 平台概览: 全站消息量与 token 消耗
-         */
-        get: operations["overview_api_admin_overview_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/square": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Square
-         * @description 广场列表: 仅 PUBLISHED 角色, 支持搜索 + 三种排序 (RECOMMEND/HOT/LATEST)
-         */
-        get: operations["square_api_characters_square_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/favorites": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Favorites
-         * @description 收藏列表: 按收藏时间倒序, 仅 PUBLISHED
-         */
-        get: operations["favorites_api_characters_favorites_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Square Detail
-         * @description 广场详情: 仅 PUBLISHED 角色对所有人可见
-         */
-        get: operations["square_detail_api_characters__character_id__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Characters
-         * @description 列出当前用户可见的角色
-         */
-        get: operations["list_characters_api_characters_get"];
-        put?: never;
-        /**
-         * Create
-         * @description 创建角色
-         */
-        post: operations["create_api_characters_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Detail
-         * @description 角色详情（管理视角: 自建任意状态 + 官方 PUBLISHED）
-         */
-        get: operations["detail_api_characters__character_id__get"];
-        /**
-         * Update
-         * @description 编辑角色(仅自建)
-         */
-        put: operations["update_api_characters__character_id__put"];
-        post?: never;
-        /**
-         * Delete
-         * @description 删除角色(仅自建, 官方不可删)
-         */
-        delete: operations["delete_api_characters__character_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Switch Status
-         * @description 切换角色状态(DRAFT / PUBLISHED / OFFLINE)
-         */
-        put: operations["switch_status_api_characters__character_id__status_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}/favorite": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Favorite
-         * @description 收藏角色(幂等)
-         */
-        post: operations["favorite_api_characters__character_id__favorite_post"];
-        /**
-         * Unfavorite
-         * @description 取消收藏(幂等)
-         */
-        delete: operations["unfavorite_api_characters__character_id__favorite_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}/lorebook": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Lorebook
-         * @description 角色的世界书条目列表 (含停用)
-         */
-        get: operations["list_lorebook_api_characters__character_id__lorebook_get"];
-        put?: never;
-        /**
-         * Create Lorebook
-         * @description 新增世界书条目
-         */
-        post: operations["create_lorebook_api_characters__character_id__lorebook_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}/lorebook/{entry_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Lorebook
-         * @description 编辑世界书条目
-         */
-        put: operations["update_lorebook_api_characters__character_id__lorebook__entry_id__put"];
-        post?: never;
-        /**
-         * Delete Lorebook
-         * @description 删除世界书条目
-         */
-        delete: operations["delete_lorebook_api_characters__character_id__lorebook__entry_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/{character_id}/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Export Character
-         * @description 导出角色卡 (仅创建者): 人设 + 参数 + 世界书
-         */
-        get: operations["export_character_api_characters__character_id__export_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import Character
-         * @description 导入角色卡: 一律创建为 DRAFT, 世界书条目随卡带入
-         */
-        post: operations["import_character_api_characters_import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Conversations
-         * @description 会话列表: 仅当前用户的会话, 按最新消息时间倒序
-         */
-        get: operations["list_conversations_api_conversations_get"];
-        put?: never;
-        /**
-         * Create Conversation
-         * @description 创建会话（同时写入角色开场白为首条 ASSISTANT 消息）
-         */
-        post: operations["create_conversation_api_conversations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Conversation
-         * @description 删除会话: 逻辑删除会话及关联消息
-         */
-        delete: operations["delete_conversation_api_conversations__conversation_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/title": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Rename Conversation
-         * @description 重命名会话
-         */
-        put: operations["rename_conversation_api_conversations__conversation_id__title_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/model": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Switch Model
-         * @description 切换会话使用的模型（modelId 为空表示回到用户默认模型）
-         */
-        put: operations["switch_model_api_conversations__conversation_id__model_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Messages
-         * @description 消息历史（游标分页: before=游标消息ID, 缺省取最新一页）
-         */
-        get: operations["list_messages_api_conversations__conversation_id__messages_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/chat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Chat
-         * @description SSE 流式聊天: meta → delta* → done | error
-         */
-        post: operations["chat_api_conversations__conversation_id__chat_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/stop": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Stop
-         * @description 停止当前生成: 断开 AI 调用, 消息置 STOPPED 并保留已生成文本 (幂等)
-         */
-        post: operations["stop_api_conversations__conversation_id__stop_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/regenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Regenerate
-         * @description 重新生成最后一条回复 (SSE): 新版本挂靠最后一条 USER 消息, 旧版本保留可切换
-         */
-        post: operations["regenerate_api_conversations__conversation_id__regenerate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/conversations/{conversation_id}/messages/{message_id}/feedback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set Feedback
-         * @description 消息反馈 (点赞/点踩, 再点一次取消)
-         */
-        put: operations["set_feedback_api_conversations__conversation_id__messages__message_id__feedback_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/memories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Memories
-         * @description 列出当前用户的记忆, 可按角色筛选
-         */
-        get: operations["list_memories_api_memories_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/memories/{memory_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Memory
-         * @description 编辑记忆（content / importance / status）
-         */
-        put: operations["update_memory_api_memories__memory_id__put"];
-        post?: never;
-        /**
-         * Delete Memory
-         * @description 删除记忆
-         */
-        delete: operations["delete_memory_api_memories__memory_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Models
-         * @description 列出当前用户的所有模型
-         */
-        get: operations["list_models_api_models_get"];
-        put?: never;
-        /**
-         * Create Model
-         * @description 添加模型
-         */
-        post: operations["create_model_api_models_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/models/{model_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Model
-         * @description 编辑模型
-         */
-        put: operations["update_model_api_models__model_id__put"];
-        post?: never;
-        /**
-         * Delete Model
-         * @description 删除模型
-         */
-        delete: operations["delete_model_api_models__model_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/models/{model_id}/default": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set Default
-         * @description 设为默认模型
-         */
-        put: operations["set_default_api_models__model_id__default_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/models/{model_id}/enabled": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set Enabled
-         * @description 启用/停用模型 (停用后不可被会话覆盖与默认解析使用)
-         */
-        put: operations["set_enabled_api_models__model_id__enabled_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/knowledge-bases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Kbs
-         * @description 列出当前用户的知识库
-         */
-        get: operations["list_kbs_api_knowledge_bases_get"];
-        put?: never;
-        /**
-         * Create Kb
-         * @description 创建知识库
-         */
-        post: operations["create_kb_api_knowledge_bases_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/knowledge-bases/{kb_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Kb Detail
-         * @description 知识库详情 (含文档列表)
-         */
-        get: operations["kb_detail_api_knowledge_bases__kb_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Kb
-         * @description 删除知识库 (含所有文档 + Qdrant 向量)
-         */
-        delete: operations["delete_kb_api_knowledge_bases__kb_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/knowledge-bases/{kb_id}/documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Document
-         * @description 上传文档到知识库 (同步处理: 解析 → 分块 → 向量化 → 入库)
-         */
-        post: operations["upload_document_api_knowledge_bases__kb_id__documents_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/knowledge-bases/{kb_id}/documents/{doc_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Document
-         * @description 删除文档 (元数据 + Qdrant 向量)
-         */
-        delete: operations["delete_document_api_knowledge_bases__kb_id__documents__doc_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/stats/usage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Usage
-         * @description 当前用户用量统计: 今日 + 累计 调用次数 / token / 估算成本
-         */
-        get: operations["usage_api_stats_usage_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Health
-         * @description 存活探针 (docker healthcheck / nginx 探测用)
-         */
-        get: operations["health_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/api/auth/register': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Register
+     * @description 注册（注册即登录, 返回 token）
+     */
+    post: operations['register_api_auth_register_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Login
+     * @description 登录
+     */
+    post: operations['login_api_auth_login_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/users/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Me
+     * @description 当前登录用户信息
+     */
+    get: operations['me_api_users_me_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/users/me/password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Update Password
+     * @description 修改密码
+     */
+    put: operations['update_password_api_users_me_password_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/users/me/email': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Update Email
+     * @description 绑定/更换邮箱 (传空清除); 找回密码等邮件能力的数据基础
+     */
+    put: operations['update_email_api_users_me_email_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/users/by-username': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Find User
+     * @description 按用户名精确查找用户 (v1 用户管理: 找到后再执行封禁/解封)
+     */
+    get: operations['find_user_api_admin_users_by_username_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/users/{user_id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Set User Status
+     * @description 封禁/解封用户 (封禁即时生效于登录, 存量 JWT 在有效期内仍可用)
+     */
+    put: operations['set_user_status_api_admin_users__user_id__status_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/characters': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Characters
+     * @description 角色审核队列分页 (id 倒序; 页满即视为可能还有更多)
+     */
+    get: operations['list_characters_api_admin_characters_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/characters/{character_id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Review Character
+     * @description 审核动作: 通过发布 (PUBLISHED) / 下架 (OFFLINE)
+     */
+    put: operations['review_character_api_admin_characters__character_id__status_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/admin/overview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Overview
+     * @description 平台概览: 全站消息量与 token 消耗
+     */
+    get: operations['overview_api_admin_overview_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/square': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Square
+     * @description 广场列表: 仅 PUBLISHED 角色, 支持搜索 + 三种排序 (RECOMMEND/HOT/LATEST)
+     */
+    get: operations['square_api_characters_square_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/favorites': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Favorites
+     * @description 收藏列表: 按收藏时间倒序, 仅 PUBLISHED
+     */
+    get: operations['favorites_api_characters_favorites_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Square Detail
+     * @description 广场详情: 仅 PUBLISHED 角色对所有人可见
+     */
+    get: operations['square_detail_api_characters__character_id__detail_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Characters
+     * @description 列出当前用户可见的角色
+     */
+    get: operations['list_characters_api_characters_get']
+    put?: never
+    /**
+     * Create
+     * @description 创建角色
+     */
+    post: operations['create_api_characters_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Detail
+     * @description 角色详情（管理视角: 自建任意状态 + 官方 PUBLISHED）
+     */
+    get: operations['detail_api_characters__character_id__get']
+    /**
+     * Update
+     * @description 编辑角色(仅自建)
+     */
+    put: operations['update_api_characters__character_id__put']
+    post?: never
+    /**
+     * Delete
+     * @description 删除角色(仅自建, 官方不可删)
+     */
+    delete: operations['delete_api_characters__character_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Switch Status
+     * @description 切换角色状态(DRAFT / PUBLISHED / OFFLINE)
+     */
+    put: operations['switch_status_api_characters__character_id__status_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}/favorite': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Favorite
+     * @description 收藏角色(幂等)
+     */
+    post: operations['favorite_api_characters__character_id__favorite_post']
+    /**
+     * Unfavorite
+     * @description 取消收藏(幂等)
+     */
+    delete: operations['unfavorite_api_characters__character_id__favorite_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}/lorebook': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Lorebook
+     * @description 角色的世界书条目列表 (含停用)
+     */
+    get: operations['list_lorebook_api_characters__character_id__lorebook_get']
+    put?: never
+    /**
+     * Create Lorebook
+     * @description 新增世界书条目
+     */
+    post: operations['create_lorebook_api_characters__character_id__lorebook_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}/lorebook/{entry_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Update Lorebook
+     * @description 编辑世界书条目
+     */
+    put: operations['update_lorebook_api_characters__character_id__lorebook__entry_id__put']
+    post?: never
+    /**
+     * Delete Lorebook
+     * @description 删除世界书条目
+     */
+    delete: operations['delete_lorebook_api_characters__character_id__lorebook__entry_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/{character_id}/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Export Character
+     * @description 导出角色卡 (仅创建者): 人设 + 参数 + 世界书
+     */
+    get: operations['export_character_api_characters__character_id__export_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/characters/import': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Import Character
+     * @description 导入角色卡: 一律创建为 DRAFT, 世界书条目随卡带入
+     */
+    post: operations['import_character_api_characters_import_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Conversations
+     * @description 会话列表: 仅当前用户的会话, 按最新消息时间倒序
+     */
+    get: operations['list_conversations_api_conversations_get']
+    put?: never
+    /**
+     * Create Conversation
+     * @description 创建会话（同时写入角色开场白为首条 ASSISTANT 消息）
+     */
+    post: operations['create_conversation_api_conversations_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Conversation
+     * @description 删除会话: 逻辑删除会话及关联消息
+     */
+    delete: operations['delete_conversation_api_conversations__conversation_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/title': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Rename Conversation
+     * @description 重命名会话
+     */
+    put: operations['rename_conversation_api_conversations__conversation_id__title_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/model': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Switch Model
+     * @description 切换会话使用的模型（modelId 为空表示回到用户默认模型）
+     */
+    put: operations['switch_model_api_conversations__conversation_id__model_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/messages': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Messages
+     * @description 消息历史（游标分页: before=游标消息ID, 缺省取最新一页）
+     */
+    get: operations['list_messages_api_conversations__conversation_id__messages_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/chat': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Chat
+     * @description SSE 流式聊天: meta → delta* → done | error
+     */
+    post: operations['chat_api_conversations__conversation_id__chat_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/stop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Stop
+     * @description 停止当前生成: 断开 AI 调用, 消息置 STOPPED 并保留已生成文本 (幂等)
+     */
+    post: operations['stop_api_conversations__conversation_id__stop_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/regenerate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Regenerate
+     * @description 重新生成最后一条回复 (SSE): 新版本挂靠最后一条 USER 消息, 旧版本保留可切换
+     */
+    post: operations['regenerate_api_conversations__conversation_id__regenerate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/conversations/{conversation_id}/messages/{message_id}/feedback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Set Feedback
+     * @description 消息反馈 (点赞/点踩, 再点一次取消)
+     */
+    put: operations['set_feedback_api_conversations__conversation_id__messages__message_id__feedback_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/memories': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Memories
+     * @description 列出当前用户的记忆, 可按角色筛选
+     */
+    get: operations['list_memories_api_memories_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/memories/{memory_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Update Memory
+     * @description 编辑记忆（content / importance / status）
+     */
+    put: operations['update_memory_api_memories__memory_id__put']
+    post?: never
+    /**
+     * Delete Memory
+     * @description 删除记忆
+     */
+    delete: operations['delete_memory_api_memories__memory_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/models': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Models
+     * @description 列出当前用户的所有模型
+     */
+    get: operations['list_models_api_models_get']
+    put?: never
+    /**
+     * Create Model
+     * @description 添加模型
+     */
+    post: operations['create_model_api_models_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/models/{model_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Update Model
+     * @description 编辑模型
+     */
+    put: operations['update_model_api_models__model_id__put']
+    post?: never
+    /**
+     * Delete Model
+     * @description 删除模型
+     */
+    delete: operations['delete_model_api_models__model_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/models/{model_id}/default': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Set Default
+     * @description 设为默认模型
+     */
+    put: operations['set_default_api_models__model_id__default_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/models/{model_id}/enabled': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Set Enabled
+     * @description 启用/停用模型 (停用后不可被会话覆盖与默认解析使用)
+     */
+    put: operations['set_enabled_api_models__model_id__enabled_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/knowledge-bases': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Kbs
+     * @description 列出当前用户的知识库
+     */
+    get: operations['list_kbs_api_knowledge_bases_get']
+    put?: never
+    /**
+     * Create Kb
+     * @description 创建知识库
+     */
+    post: operations['create_kb_api_knowledge_bases_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/knowledge-bases/{kb_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Kb Detail
+     * @description 知识库详情 (含文档列表)
+     */
+    get: operations['kb_detail_api_knowledge_bases__kb_id__get']
+    put?: never
+    post?: never
+    /**
+     * Delete Kb
+     * @description 删除知识库 (含所有文档 + Qdrant 向量)
+     */
+    delete: operations['delete_kb_api_knowledge_bases__kb_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/knowledge-bases/{kb_id}/documents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Upload Document
+     * @description 上传文档到知识库 (同步处理: 解析 → 分块 → 向量化 → 入库)
+     */
+    post: operations['upload_document_api_knowledge_bases__kb_id__documents_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/knowledge-bases/{kb_id}/documents/{doc_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Document
+     * @description 删除文档 (元数据 + Qdrant 向量)
+     */
+    delete: operations['delete_document_api_knowledge_bases__kb_id__documents__doc_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/stats/usage': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Usage
+     * @description 当前用户用量统计: 今日 + 累计 调用次数 / token / 估算成本
+     */
+    get: operations['usage_api_stats_usage_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Health
+     * @description 存活探针 (docker healthcheck / nginx 探测用)
+     */
+    get: operations['health_health_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** AdminCharacterVO */
-        AdminCharacterVO: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Intro */
-            intro?: string | null;
-            /** Creatorid */
-            creatorId: string;
-            /** Creatortype */
-            creatorType: string;
-            /** Status */
-            status: string;
-            /** Chatcount */
-            chatCount: number;
-            /** Favoritecount */
-            favoriteCount: number;
-            /** Createdat */
-            createdAt: string;
-        };
-        /** AdminUserVO */
-        AdminUserVO: {
-            /** Id */
-            id: string;
-            /** Username */
-            username: string;
-            /** Nickname */
-            nickname: string;
-            /** Email */
-            email?: string | null;
-            /** Role */
-            role: string;
-            /** Status */
-            status: string;
-            /** Lastloginat */
-            lastLoginAt?: string | null;
-            /** Createdat */
-            createdAt: string;
-        };
-        /** AiModelSaveDTO */
-        AiModelSaveDTO: {
-            /** Provider */
-            provider: string;
-            /** Modelcode */
-            modelCode: string;
-            /** Displayname */
-            displayName: string;
-            /** Baseurl */
-            baseUrl: string;
-            /** Apikey */
-            apiKey?: string | null;
-            /** Isdefault */
-            isDefault?: boolean | null;
-            /** Enabled */
-            enabled?: boolean | null;
-        };
-        /** AiModelVO */
-        AiModelVO: {
-            /** Id */
-            id: string;
-            /** Provider */
-            provider: string;
-            /** Modelcode */
-            modelCode: string;
-            /** Displayname */
-            displayName: string;
-            /** Baseurl */
-            baseUrl: string;
-            /** Apikeymasked */
-            apiKeyMasked?: string | null;
-            /** Isdefault */
-            isDefault: number;
-            /** Enabled */
-            enabled: number;
-            /** Createdat */
-            createdAt: string;
-        };
-        /**
-         * AuthResponse
-         * @description 注册/登录共用响应: 注册即登录
-         */
-        AuthResponse: {
-            /** Token */
-            token: string;
-            user: components["schemas"]["UserVO"];
-        };
-        /** Body_upload_document_api_knowledge_bases__kb_id__documents_post */
-        Body_upload_document_api_knowledge_bases__kb_id__documents_post: {
-            /**
-             * File
-             * Format: binary
-             */
-            file: string;
-        };
-        /**
-         * CardLorebookEntry
-         * @description 角色卡内嵌的世界书条目
-         */
-        CardLorebookEntry: {
-            /** Keywords */
-            keywords: string;
-            /** Content */
-            content: string;
-            /**
-             * Priority
-             * @default 0
-             */
-            priority: number;
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
-        };
-        /**
-         * CharacterCardDTO
-         * @description 导入的角色卡 (与导出格式一致)
-         */
-        CharacterCardDTO: {
-            /** Name */
-            name: string;
-            /** Avatarurl */
-            avatarUrl?: string | null;
-            /** Intro */
-            intro?: string | null;
-            /** Systemprompt */
-            systemPrompt: string;
-            /** Greeting */
-            greeting: string;
-            /**
-             * Temperature
-             * @default 0.8
-             */
-            temperature: number;
-            /**
-             * Maxtokens
-             * @default 1024
-             */
-            maxTokens: number;
-            /**
-             * Lorebook
-             * @default []
-             */
-            lorebook: components["schemas"]["CardLorebookEntry"][];
-        };
-        /**
-         * CharacterCardVO
-         * @description 导出的角色卡 (版本号标识格式)
-         */
-        CharacterCardVO: {
-            /** Name */
-            name: string;
-            /** Avatarurl */
-            avatarUrl?: string | null;
-            /** Intro */
-            intro?: string | null;
-            /** Systemprompt */
-            systemPrompt: string;
-            /** Greeting */
-            greeting: string;
-            /**
-             * Temperature
-             * @default 0.8
-             */
-            temperature: number;
-            /**
-             * Maxtokens
-             * @default 1024
-             */
-            maxTokens: number;
-            /**
-             * Lorebook
-             * @default []
-             */
-            lorebook: components["schemas"]["CardLorebookEntry"][];
-            /**
-             * Version
-             * @default 1
-             */
-            version: number;
-        };
-        /**
-         * CharacterReviewDTO
-         * @description 审核动作: 通过发布 / 下架
-         */
-        CharacterReviewDTO: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "PUBLISHED" | "OFFLINE";
-        };
-        /** CharacterSaveDTO */
-        CharacterSaveDTO: {
-            /** Name */
-            name: string;
-            /** Avatarurl */
-            avatarUrl?: string | null;
-            /** Intro */
-            intro?: string | null;
-            /** Systemprompt */
-            systemPrompt: string;
-            /** Greeting */
-            greeting: string;
-            /** Temperature */
-            temperature: number;
-            /** Maxtokens */
-            maxTokens: number;
-            /** Status */
-            status?: ("DRAFT" | "PENDING" | "PUBLISHED" | "OFFLINE") | null;
-            /** Modelid */
-            modelId?: string | null;
-        };
-        /** CharacterVO */
-        CharacterVO: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Avatarurl */
-            avatarUrl?: string | null;
-            /** Intro */
-            intro?: string | null;
-            /** Systemprompt */
-            systemPrompt: string;
-            /** Greeting */
-            greeting: string;
-            /** Temperature */
-            temperature: number;
-            /** Maxtokens */
-            maxTokens: number;
-            /** Modelid */
-            modelId?: string | null;
-            /** Creatorid */
-            creatorId: string;
-            /**
-             * Creatortype
-             * @enum {string}
-             */
-            creatorType: "OFFICIAL" | "USER";
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "DRAFT" | "PENDING" | "PUBLISHED" | "OFFLINE";
-            /** Chatcount */
-            chatCount: number;
-            /** Favoritecount */
-            favoriteCount: number;
-            /** Createdat */
-            createdAt: string;
-            /** Updatedat */
-            updatedAt: string;
-            /**
-             * Mine
-             * @default false
-             */
-            mine: boolean;
-            /**
-             * Favorited
-             * @default false
-             */
-            favorited: boolean;
-        };
-        /** ChatRequestDTO */
-        ChatRequestDTO: {
-            /** Content */
-            content: string;
-            /** Clientmessageid */
-            clientMessageId?: string | null;
-        };
-        /** ConversationCreateDTO */
-        ConversationCreateDTO: {
-            /** Characterid */
-            characterId: string;
-            /** Kbid */
-            kbId?: string | null;
-            /** Title */
-            title?: string | null;
-        };
-        /** ConversationVO */
-        ConversationVO: {
-            /** Id */
-            id: string;
-            /** Characterid */
-            characterId: string;
-            /** Modelid */
-            modelId?: string | null;
-            /** Kbid */
-            kbId?: string | null;
-            /** Title */
-            title: string;
-            /** Lastmessageat */
-            lastMessageAt?: string | null;
-            /** Lastmessagepreview */
-            lastMessagePreview?: string | null;
-            /** Createdat */
-            createdAt: string;
-        };
-        /**
-         * FeedbackDTO
-         * @description 消息反馈请求体
-         */
-        FeedbackDTO: {
-            /**
-             * Feedback
-             * @enum {string}
-             */
-            feedback: "LIKE" | "DISLIKE" | "NONE";
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** KnowledgeBaseCreateDTO */
-        KnowledgeBaseCreateDTO: {
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
-        };
-        /** KnowledgeBaseVO */
-        KnowledgeBaseVO: {
-            /** Id */
-            id: string;
-            /** Userid */
-            userId: string;
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
-            /** Doccount */
-            docCount: number;
-            /** Chunkcount */
-            chunkCount: number;
-            /** Status */
-            status: string;
-            /** Createdat */
-            createdAt: string;
-            /** Updatedat */
-            updatedAt: string;
-            /** Documents */
-            documents?: components["schemas"]["KnowledgeDocumentVO"][] | null;
-        };
-        /** KnowledgeDocumentVO */
-        KnowledgeDocumentVO: {
-            /** Id */
-            id: string;
-            /** Kbid */
-            kbId: string;
-            /** Userid */
-            userId: string;
-            /** Filename */
-            fileName: string;
-            /** Filetype */
-            fileType: string;
-            /** Filesize */
-            fileSize: number;
-            /** Chunkcount */
-            chunkCount: number;
-            /** Status */
-            status: string;
-            /** Errormsg */
-            errorMsg?: string | null;
-            /** Createdat */
-            createdAt: string;
-            /** Updatedat */
-            updatedAt: string;
-        };
-        /** LoginDTO */
-        LoginDTO: {
-            /** Username */
-            username: string;
-            /** Password */
-            password: string;
-        };
-        /** LorebookEntryVO */
-        LorebookEntryVO: {
-            /** Id */
-            id: string;
-            /** Characterid */
-            characterId: string;
-            /** Keywords */
-            keywords: string;
-            /** Content */
-            content: string;
-            /** Priority */
-            priority: number;
-            /** Enabled */
-            enabled: number;
-            /** Createdat */
-            createdAt: string;
-        };
-        /** LorebookSaveDTO */
-        LorebookSaveDTO: {
-            /** Keywords */
-            keywords: string;
-            /** Content */
-            content: string;
-            /**
-             * Priority
-             * @default 0
-             */
-            priority: number;
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
-        };
-        /** MemoryUpdateDTO */
-        MemoryUpdateDTO: {
-            /** Content */
-            content: string;
-            /**
-             * Importance
-             * @enum {string}
-             */
-            importance: "HIGH" | "MEDIUM" | "LOW";
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ACTIVE" | "DISABLED";
-        };
-        /** MemoryVO */
-        MemoryVO: {
-            /** Id */
-            id: string;
-            /** Userid */
-            userId: string;
-            /** Characterid */
-            characterId: string;
-            /** Charactername */
-            characterName: string;
-            /** Memorykey */
-            memoryKey?: string | null;
-            /** Content */
-            content: string;
-            /**
-             * Importance
-             * @enum {string}
-             */
-            importance: "HIGH" | "MEDIUM" | "LOW";
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ACTIVE" | "DISABLED";
-            /** Sourceconversationid */
-            sourceConversationId?: string | null;
-            /** Createdat */
-            createdAt: string;
-            /** Updatedat */
-            updatedAt: string;
-        };
-        /** MessageVO */
-        MessageVO: {
-            /** Id */
-            id: string;
-            /** Conversationid */
-            conversationId: string;
-            /** Sequenceno */
-            sequenceNo: number;
-            /**
-             * Messagetype
-             * @enum {string}
-             */
-            messageType: "USER" | "ASSISTANT" | "SYSTEM";
-            /** Content */
-            content: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "GENERATING" | "COMPLETED" | "FAILED" | "STOPPED";
-            /** Prompttokens */
-            promptTokens?: number | null;
-            /** Completiontokens */
-            completionTokens?: number | null;
-            /** Modelcode */
-            modelCode?: string | null;
-            /** Parentmessageid */
-            parentMessageId?: string | null;
-            /**
-             * Regeneratecount
-             * @default 0
-             */
-            regenerateCount: number;
-            /**
-             * Feedback
-             * @default NONE
-             */
-            feedback: string;
-            /** Citations */
-            citations?: components["schemas"]["RagCitationVO"][] | null;
-            /** Createdat */
-            createdAt: string;
-        };
-        /**
-         * PlatformOverviewVO
-         * @description 平台概览 (v1: 消息/Token 维度; 用户/角色总量指标待仓库层补齐后开放)
-         */
-        PlatformOverviewVO: {
-            /** Messagecount */
-            messageCount: number;
-            /** Totalprompttokens */
-            totalPromptTokens: number;
-            /** Totalcompletiontokens */
-            totalCompletionTokens: number;
-        };
-        /**
-         * RagCitationVO
-         * @description RAG 引用卡片 (溯源到知识库文档片段)
-         */
-        RagCitationVO: {
-            /** Docid */
-            docId: string;
-            /**
-             * Filename
-             * @default
-             */
-            fileName: string;
-            /**
-             * Chunkindex
-             * @default 0
-             */
-            chunkIndex: number;
-            /** Snippet */
-            snippet: string;
-            /** Score */
-            score: number;
-        };
-        /** RegisterDTO */
-        RegisterDTO: {
-            /** Username */
-            username: string;
-            /** Password */
-            password: string;
-            /** Nickname */
-            nickname?: string | null;
-        };
-        /** RenameBody */
-        RenameBody: {
-            /** Title */
-            title: string;
-        };
-        /** Result */
-        Result: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: unknown | null;
-        };
-        /** Result[AdminCharacterVO] */
-        Result_AdminCharacterVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["AdminCharacterVO"] | null;
-        };
-        /** Result[AdminUserVO] */
-        Result_AdminUserVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["AdminUserVO"] | null;
-        };
-        /** Result[AiModelVO] */
-        Result_AiModelVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["AiModelVO"] | null;
-        };
-        /** Result[AuthResponse] */
-        Result_AuthResponse_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["AuthResponse"] | null;
-        };
-        /** Result[CharacterCardVO] */
-        Result_CharacterCardVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["CharacterCardVO"] | null;
-        };
-        /** Result[CharacterVO] */
-        Result_CharacterVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["CharacterVO"] | null;
-        };
-        /** Result[ConversationVO] */
-        Result_ConversationVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["ConversationVO"] | null;
-        };
-        /** Result[KnowledgeBaseVO] */
-        Result_KnowledgeBaseVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["KnowledgeBaseVO"] | null;
-        };
-        /** Result[KnowledgeDocumentVO] */
-        Result_KnowledgeDocumentVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["KnowledgeDocumentVO"] | null;
-        };
-        /** Result[LorebookEntryVO] */
-        Result_LorebookEntryVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["LorebookEntryVO"] | null;
-        };
-        /** Result[MemoryVO] */
-        Result_MemoryVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["MemoryVO"] | null;
-        };
-        /** Result[PlatformOverviewVO] */
-        Result_PlatformOverviewVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["PlatformOverviewVO"] | null;
-        };
-        /** Result[Union[AdminUserVO, NoneType]] */
-        Result_Union_AdminUserVO__NoneType__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["AdminUserVO"] | null;
-        };
-        /** Result[Union[CharacterVO, NoneType]] */
-        Result_Union_CharacterVO__NoneType__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["CharacterVO"] | null;
-        };
-        /** Result[UsageStatsVO] */
-        Result_UsageStatsVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["UsageStatsVO"] | null;
-        };
-        /** Result[UserVO] */
-        Result_UserVO_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            data?: components["schemas"]["UserVO"] | null;
-        };
-        /** Result[list[AdminCharacterVO]] */
-        Result_list_AdminCharacterVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["AdminCharacterVO"][] | null;
-        };
-        /** Result[list[AiModelVO]] */
-        Result_list_AiModelVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["AiModelVO"][] | null;
-        };
-        /** Result[list[CharacterVO]] */
-        Result_list_CharacterVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["CharacterVO"][] | null;
-        };
-        /** Result[list[ConversationVO]] */
-        Result_list_ConversationVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["ConversationVO"][] | null;
-        };
-        /** Result[list[KnowledgeBaseVO]] */
-        Result_list_KnowledgeBaseVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["KnowledgeBaseVO"][] | null;
-        };
-        /** Result[list[LorebookEntryVO]] */
-        Result_list_LorebookEntryVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["LorebookEntryVO"][] | null;
-        };
-        /** Result[list[MemoryVO]] */
-        Result_list_MemoryVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["MemoryVO"][] | null;
-        };
-        /** Result[list[MessageVO]] */
-        Result_list_MessageVO__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Message
-             * @default ok
-             */
-            message: string;
-            /** Data */
-            data?: components["schemas"]["MessageVO"][] | null;
-        };
-        /**
-         * UpdateEmailDTO
-         * @description 绑定/更换邮箱; 传 null 或空串清除
-         */
-        UpdateEmailDTO: {
-            /** Email */
-            email?: string | null;
-        };
-        /** UpdatePasswordDTO */
-        UpdatePasswordDTO: {
-            /** Oldpassword */
-            oldPassword: string;
-            /** Newpassword */
-            newPassword: string;
-        };
-        /** UsageStatsVO */
-        UsageStatsVO: {
-            /** Date */
-            date: string;
-            /** Todaycallcount */
-            todayCallCount: number;
-            /** Todayprompttokens */
-            todayPromptTokens: number;
-            /** Todaycompletiontokens */
-            todayCompletionTokens: number;
-            /** Todaycost */
-            todayCost: number;
-            /** Totalcallcount */
-            totalCallCount: number;
-            /** Totalprompttokens */
-            totalPromptTokens: number;
-            /** Totalcompletiontokens */
-            totalCompletionTokens: number;
-            /** Totalcost */
-            totalCost: number;
-        };
-        /** UserStatusDTO */
-        UserStatusDTO: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ACTIVE" | "BANNED";
-        };
-        /** UserVO */
-        UserVO: {
-            /** Id */
-            id: string;
-            /** Username */
-            username: string;
-            /** Nickname */
-            nickname: string;
-            /** Avatarurl */
-            avatarUrl?: string | null;
-            /** Email */
-            email?: string | null;
-            /**
-             * Role
-             * @default USER
-             */
-            role: string;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** AdminCharacterVO */
+    AdminCharacterVO: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Intro */
+      intro?: string | null
+      /** Creatorid */
+      creatorId: string
+      /** Creatortype */
+      creatorType: string
+      /** Status */
+      status: string
+      /** Chatcount */
+      chatCount: number
+      /** Favoritecount */
+      favoriteCount: number
+      /** Createdat */
+      createdAt: string
+    }
+    /** AdminUserVO */
+    AdminUserVO: {
+      /** Id */
+      id: string
+      /** Username */
+      username: string
+      /** Nickname */
+      nickname: string
+      /** Email */
+      email?: string | null
+      /** Role */
+      role: string
+      /** Status */
+      status: string
+      /** Lastloginat */
+      lastLoginAt?: string | null
+      /** Createdat */
+      createdAt: string
+    }
+    /** AiModelSaveDTO */
+    AiModelSaveDTO: {
+      /** Provider */
+      provider: string
+      /** Modelcode */
+      modelCode: string
+      /** Displayname */
+      displayName: string
+      /** Baseurl */
+      baseUrl: string
+      /** Apikey */
+      apiKey?: string | null
+      /** Isdefault */
+      isDefault?: boolean | null
+      /** Enabled */
+      enabled?: boolean | null
+    }
+    /** AiModelVO */
+    AiModelVO: {
+      /** Id */
+      id: string
+      /** Provider */
+      provider: string
+      /** Modelcode */
+      modelCode: string
+      /** Displayname */
+      displayName: string
+      /** Baseurl */
+      baseUrl: string
+      /** Apikeymasked */
+      apiKeyMasked?: string | null
+      /** Isdefault */
+      isDefault: number
+      /** Enabled */
+      enabled: number
+      /** Createdat */
+      createdAt: string
+    }
+    /**
+     * AuthResponse
+     * @description 注册/登录共用响应: 注册即登录
+     */
+    AuthResponse: {
+      /** Token */
+      token: string
+      user: components['schemas']['UserVO']
+    }
+    /** Body_upload_document_api_knowledge_bases__kb_id__documents_post */
+    Body_upload_document_api_knowledge_bases__kb_id__documents_post: {
+      /**
+       * File
+       * Format: binary
+       */
+      file: string
+    }
+    /**
+     * CardLorebookEntry
+     * @description 角色卡内嵌的世界书条目
+     */
+    CardLorebookEntry: {
+      /** Keywords */
+      keywords: string
+      /** Content */
+      content: string
+      /**
+       * Priority
+       * @default 0
+       */
+      priority: number
+      /**
+       * Enabled
+       * @default true
+       */
+      enabled: boolean
+    }
+    /**
+     * CharacterCardDTO
+     * @description 导入的角色卡 (与导出格式一致)
+     */
+    CharacterCardDTO: {
+      /** Name */
+      name: string
+      /** Avatarurl */
+      avatarUrl?: string | null
+      /** Intro */
+      intro?: string | null
+      /** Systemprompt */
+      systemPrompt: string
+      /** Greeting */
+      greeting: string
+      /**
+       * Temperature
+       * @default 0.8
+       */
+      temperature: number
+      /**
+       * Maxtokens
+       * @default 1024
+       */
+      maxTokens: number
+      /**
+       * Lorebook
+       * @default []
+       */
+      lorebook: components['schemas']['CardLorebookEntry'][]
+    }
+    /**
+     * CharacterCardVO
+     * @description 导出的角色卡 (版本号标识格式)
+     */
+    CharacterCardVO: {
+      /** Name */
+      name: string
+      /** Avatarurl */
+      avatarUrl?: string | null
+      /** Intro */
+      intro?: string | null
+      /** Systemprompt */
+      systemPrompt: string
+      /** Greeting */
+      greeting: string
+      /**
+       * Temperature
+       * @default 0.8
+       */
+      temperature: number
+      /**
+       * Maxtokens
+       * @default 1024
+       */
+      maxTokens: number
+      /**
+       * Lorebook
+       * @default []
+       */
+      lorebook: components['schemas']['CardLorebookEntry'][]
+      /**
+       * Version
+       * @default 1
+       */
+      version: number
+    }
+    /**
+     * CharacterReviewDTO
+     * @description 审核动作: 通过发布 / 下架
+     */
+    CharacterReviewDTO: {
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'PUBLISHED' | 'OFFLINE'
+    }
+    /** CharacterSaveDTO */
+    CharacterSaveDTO: {
+      /** Name */
+      name: string
+      /** Avatarurl */
+      avatarUrl?: string | null
+      /** Intro */
+      intro?: string | null
+      /** Systemprompt */
+      systemPrompt: string
+      /** Greeting */
+      greeting: string
+      /** Temperature */
+      temperature: number
+      /** Maxtokens */
+      maxTokens: number
+      /** Status */
+      status?: ('DRAFT' | 'PENDING' | 'PUBLISHED' | 'OFFLINE') | null
+      /** Modelid */
+      modelId?: string | null
+    }
+    /** CharacterVO */
+    CharacterVO: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Avatarurl */
+      avatarUrl?: string | null
+      /** Intro */
+      intro?: string | null
+      /** Systemprompt */
+      systemPrompt: string
+      /** Greeting */
+      greeting: string
+      /** Temperature */
+      temperature: number
+      /** Maxtokens */
+      maxTokens: number
+      /** Modelid */
+      modelId?: string | null
+      /** Creatorid */
+      creatorId: string
+      /**
+       * Creatortype
+       * @enum {string}
+       */
+      creatorType: 'OFFICIAL' | 'USER'
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'OFFLINE'
+      /** Chatcount */
+      chatCount: number
+      /** Favoritecount */
+      favoriteCount: number
+      /** Createdat */
+      createdAt: string
+      /** Updatedat */
+      updatedAt: string
+      /**
+       * Mine
+       * @default false
+       */
+      mine: boolean
+      /**
+       * Favorited
+       * @default false
+       */
+      favorited: boolean
+    }
+    /** ChatRequestDTO */
+    ChatRequestDTO: {
+      /** Content */
+      content: string
+      /** Clientmessageid */
+      clientMessageId?: string | null
+    }
+    /** ConversationCreateDTO */
+    ConversationCreateDTO: {
+      /** Characterid */
+      characterId: string
+      /** Kbid */
+      kbId?: string | null
+      /** Title */
+      title?: string | null
+    }
+    /** ConversationVO */
+    ConversationVO: {
+      /** Id */
+      id: string
+      /** Characterid */
+      characterId: string
+      /** Modelid */
+      modelId?: string | null
+      /** Kbid */
+      kbId?: string | null
+      /** Title */
+      title: string
+      /** Lastmessageat */
+      lastMessageAt?: string | null
+      /** Lastmessagepreview */
+      lastMessagePreview?: string | null
+      /** Createdat */
+      createdAt: string
+    }
+    /**
+     * FeedbackDTO
+     * @description 消息反馈请求体
+     */
+    FeedbackDTO: {
+      /**
+       * Feedback
+       * @enum {string}
+       */
+      feedback: 'LIKE' | 'DISLIKE' | 'NONE'
+    }
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components['schemas']['ValidationError'][]
+    }
+    /** KnowledgeBaseCreateDTO */
+    KnowledgeBaseCreateDTO: {
+      /** Name */
+      name: string
+      /** Description */
+      description?: string | null
+    }
+    /** KnowledgeBaseVO */
+    KnowledgeBaseVO: {
+      /** Id */
+      id: string
+      /** Userid */
+      userId: string
+      /** Name */
+      name: string
+      /** Description */
+      description?: string | null
+      /** Doccount */
+      docCount: number
+      /** Chunkcount */
+      chunkCount: number
+      /** Status */
+      status: string
+      /** Createdat */
+      createdAt: string
+      /** Updatedat */
+      updatedAt: string
+      /** Documents */
+      documents?: components['schemas']['KnowledgeDocumentVO'][] | null
+    }
+    /** KnowledgeDocumentVO */
+    KnowledgeDocumentVO: {
+      /** Id */
+      id: string
+      /** Kbid */
+      kbId: string
+      /** Userid */
+      userId: string
+      /** Filename */
+      fileName: string
+      /** Filetype */
+      fileType: string
+      /** Filesize */
+      fileSize: number
+      /** Chunkcount */
+      chunkCount: number
+      /** Status */
+      status: string
+      /** Errormsg */
+      errorMsg?: string | null
+      /** Createdat */
+      createdAt: string
+      /** Updatedat */
+      updatedAt: string
+    }
+    /** LoginDTO */
+    LoginDTO: {
+      /** Username */
+      username: string
+      /** Password */
+      password: string
+    }
+    /** LorebookEntryVO */
+    LorebookEntryVO: {
+      /** Id */
+      id: string
+      /** Characterid */
+      characterId: string
+      /** Keywords */
+      keywords: string
+      /** Content */
+      content: string
+      /** Priority */
+      priority: number
+      /** Enabled */
+      enabled: number
+      /** Createdat */
+      createdAt: string
+    }
+    /** LorebookSaveDTO */
+    LorebookSaveDTO: {
+      /** Keywords */
+      keywords: string
+      /** Content */
+      content: string
+      /**
+       * Priority
+       * @default 0
+       */
+      priority: number
+      /**
+       * Enabled
+       * @default true
+       */
+      enabled: boolean
+    }
+    /** MemoryUpdateDTO */
+    MemoryUpdateDTO: {
+      /** Content */
+      content: string
+      /**
+       * Importance
+       * @enum {string}
+       */
+      importance: 'HIGH' | 'MEDIUM' | 'LOW'
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'ACTIVE' | 'DISABLED'
+    }
+    /** MemoryVO */
+    MemoryVO: {
+      /** Id */
+      id: string
+      /** Userid */
+      userId: string
+      /** Characterid */
+      characterId: string
+      /** Charactername */
+      characterName: string
+      /** Memorykey */
+      memoryKey?: string | null
+      /** Content */
+      content: string
+      /**
+       * Importance
+       * @enum {string}
+       */
+      importance: 'HIGH' | 'MEDIUM' | 'LOW'
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'ACTIVE' | 'DISABLED'
+      /** Sourceconversationid */
+      sourceConversationId?: string | null
+      /** Createdat */
+      createdAt: string
+      /** Updatedat */
+      updatedAt: string
+    }
+    /** MessageVO */
+    MessageVO: {
+      /** Id */
+      id: string
+      /** Conversationid */
+      conversationId: string
+      /** Sequenceno */
+      sequenceNo: number
+      /**
+       * Messagetype
+       * @enum {string}
+       */
+      messageType: 'USER' | 'ASSISTANT' | 'SYSTEM'
+      /** Content */
+      content: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'GENERATING' | 'COMPLETED' | 'FAILED' | 'STOPPED'
+      /** Prompttokens */
+      promptTokens?: number | null
+      /** Completiontokens */
+      completionTokens?: number | null
+      /** Modelcode */
+      modelCode?: string | null
+      /** Parentmessageid */
+      parentMessageId?: string | null
+      /**
+       * Regeneratecount
+       * @default 0
+       */
+      regenerateCount: number
+      /**
+       * Feedback
+       * @default NONE
+       */
+      feedback: string
+      /** Citations */
+      citations?: components['schemas']['RagCitationVO'][] | null
+      /** Createdat */
+      createdAt: string
+    }
+    /**
+     * PlatformOverviewVO
+     * @description 平台概览 (v1: 消息/Token 维度; 用户/角色总量指标待仓库层补齐后开放)
+     */
+    PlatformOverviewVO: {
+      /** Messagecount */
+      messageCount: number
+      /** Totalprompttokens */
+      totalPromptTokens: number
+      /** Totalcompletiontokens */
+      totalCompletionTokens: number
+    }
+    /**
+     * RagCitationVO
+     * @description RAG 引用卡片 (溯源到知识库文档片段)
+     */
+    RagCitationVO: {
+      /** Docid */
+      docId: string
+      /**
+       * Filename
+       * @default
+       */
+      fileName: string
+      /**
+       * Chunkindex
+       * @default 0
+       */
+      chunkIndex: number
+      /** Snippet */
+      snippet: string
+      /** Score */
+      score: number
+    }
+    /** RegisterDTO */
+    RegisterDTO: {
+      /** Username */
+      username: string
+      /** Password */
+      password: string
+      /** Nickname */
+      nickname?: string | null
+    }
+    /** RenameBody */
+    RenameBody: {
+      /** Title */
+      title: string
+    }
+    /** Result */
+    Result: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: unknown | null
+    }
+    /** Result[AdminCharacterVO] */
+    Result_AdminCharacterVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['AdminCharacterVO'] | null
+    }
+    /** Result[AdminUserVO] */
+    Result_AdminUserVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['AdminUserVO'] | null
+    }
+    /** Result[AiModelVO] */
+    Result_AiModelVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['AiModelVO'] | null
+    }
+    /** Result[AuthResponse] */
+    Result_AuthResponse_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['AuthResponse'] | null
+    }
+    /** Result[CharacterCardVO] */
+    Result_CharacterCardVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['CharacterCardVO'] | null
+    }
+    /** Result[CharacterVO] */
+    Result_CharacterVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['CharacterVO'] | null
+    }
+    /** Result[ConversationVO] */
+    Result_ConversationVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['ConversationVO'] | null
+    }
+    /** Result[KnowledgeBaseVO] */
+    Result_KnowledgeBaseVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['KnowledgeBaseVO'] | null
+    }
+    /** Result[KnowledgeDocumentVO] */
+    Result_KnowledgeDocumentVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['KnowledgeDocumentVO'] | null
+    }
+    /** Result[LorebookEntryVO] */
+    Result_LorebookEntryVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['LorebookEntryVO'] | null
+    }
+    /** Result[MemoryVO] */
+    Result_MemoryVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['MemoryVO'] | null
+    }
+    /** Result[PlatformOverviewVO] */
+    Result_PlatformOverviewVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['PlatformOverviewVO'] | null
+    }
+    /** Result[Union[AdminUserVO, NoneType]] */
+    Result_Union_AdminUserVO__NoneType__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['AdminUserVO'] | null
+    }
+    /** Result[Union[CharacterVO, NoneType]] */
+    Result_Union_CharacterVO__NoneType__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['CharacterVO'] | null
+    }
+    /** Result[UsageStatsVO] */
+    Result_UsageStatsVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['UsageStatsVO'] | null
+    }
+    /** Result[UserVO] */
+    Result_UserVO_: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      data?: components['schemas']['UserVO'] | null
+    }
+    /** Result[list[AdminCharacterVO]] */
+    Result_list_AdminCharacterVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['AdminCharacterVO'][] | null
+    }
+    /** Result[list[AiModelVO]] */
+    Result_list_AiModelVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['AiModelVO'][] | null
+    }
+    /** Result[list[CharacterVO]] */
+    Result_list_CharacterVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['CharacterVO'][] | null
+    }
+    /** Result[list[ConversationVO]] */
+    Result_list_ConversationVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['ConversationVO'][] | null
+    }
+    /** Result[list[KnowledgeBaseVO]] */
+    Result_list_KnowledgeBaseVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['KnowledgeBaseVO'][] | null
+    }
+    /** Result[list[LorebookEntryVO]] */
+    Result_list_LorebookEntryVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['LorebookEntryVO'][] | null
+    }
+    /** Result[list[MemoryVO]] */
+    Result_list_MemoryVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['MemoryVO'][] | null
+    }
+    /** Result[list[MessageVO]] */
+    Result_list_MessageVO__: {
+      /**
+       * Code
+       * @default 0
+       */
+      code: number
+      /**
+       * Message
+       * @default ok
+       */
+      message: string
+      /** Data */
+      data?: components['schemas']['MessageVO'][] | null
+    }
+    /**
+     * UpdateEmailDTO
+     * @description 绑定/更换邮箱; 传 null 或空串清除
+     */
+    UpdateEmailDTO: {
+      /** Email */
+      email?: string | null
+    }
+    /** UpdatePasswordDTO */
+    UpdatePasswordDTO: {
+      /** Oldpassword */
+      oldPassword: string
+      /** Newpassword */
+      newPassword: string
+    }
+    /** UsageStatsVO */
+    UsageStatsVO: {
+      /** Date */
+      date: string
+      /** Todaycallcount */
+      todayCallCount: number
+      /** Todayprompttokens */
+      todayPromptTokens: number
+      /** Todaycompletiontokens */
+      todayCompletionTokens: number
+      /** Todaycost */
+      todayCost: number
+      /** Totalcallcount */
+      totalCallCount: number
+      /** Totalprompttokens */
+      totalPromptTokens: number
+      /** Totalcompletiontokens */
+      totalCompletionTokens: number
+      /** Totalcost */
+      totalCost: number
+    }
+    /** UserStatusDTO */
+    UserStatusDTO: {
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'ACTIVE' | 'BANNED'
+    }
+    /** UserVO */
+    UserVO: {
+      /** Id */
+      id: string
+      /** Username */
+      username: string
+      /** Nickname */
+      nickname: string
+      /** Avatarurl */
+      avatarUrl?: string | null
+      /** Email */
+      email?: string | null
+      /**
+       * Role
+       * @default USER
+       */
+      role: string
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    register_api_auth_register_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AuthResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    login_api_auth_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AuthResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    me_api_users_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_UserVO_"];
-                };
-            };
-        };
-    };
-    update_password_api_users_me_password_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePasswordDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_email_api_users_me_email_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateEmailDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    find_user_api_admin_users_by_username_get: {
-        parameters: {
-            query: {
-                username: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_Union_AdminUserVO__NoneType__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_user_status_api_admin_users__user_id__status_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserStatusDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AdminUserVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_characters_api_admin_characters_get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-                offset?: number;
-                size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_AdminCharacterVO__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    review_character_api_admin_characters__character_id__status_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CharacterReviewDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AdminCharacterVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    overview_api_admin_overview_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_PlatformOverviewVO_"];
-                };
-            };
-        };
-    };
-    square_api_characters_square_get: {
-        parameters: {
-            query?: {
-                keyword?: string | null;
-                sort?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_CharacterVO__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    favorites_api_characters_favorites_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_CharacterVO__"];
-                };
-            };
-        };
-    };
-    square_detail_api_characters__character_id__detail_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_Union_CharacterVO__NoneType__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_characters_api_characters_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_CharacterVO__"];
-                };
-            };
-        };
-    };
-    create_api_characters_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CharacterSaveDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_CharacterVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    detail_api_characters__character_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_Union_CharacterVO__NoneType__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_api_characters__character_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CharacterSaveDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_CharacterVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_api_characters__character_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    switch_status_api_characters__character_id__status_put: {
-        parameters: {
-            query: {
-                status: string;
-            };
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_CharacterVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    favorite_api_characters__character_id__favorite_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unfavorite_api_characters__character_id__favorite_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_lorebook_api_characters__character_id__lorebook_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_LorebookEntryVO__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_lorebook_api_characters__character_id__lorebook_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LorebookSaveDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_LorebookEntryVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_lorebook_api_characters__character_id__lorebook__entry_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-                entry_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LorebookSaveDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_LorebookEntryVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_lorebook_api_characters__character_id__lorebook__entry_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-                entry_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_character_api_characters__character_id__export_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_CharacterCardVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    import_character_api_characters_import_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CharacterCardDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_CharacterVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_conversations_api_conversations_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_ConversationVO__"];
-                };
-            };
-        };
-    };
-    create_conversation_api_conversations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConversationCreateDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ConversationVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_conversation_api_conversations__conversation_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    rename_conversation_api_conversations__conversation_id__title_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RenameBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ConversationVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    switch_model_api_conversations__conversation_id__model_put: {
-        parameters: {
-            query?: {
-                modelId?: string | null;
-            };
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_messages_api_conversations__conversation_id__messages_get: {
-        parameters: {
-            query?: {
-                before?: string | null;
-                size?: number | null;
-            };
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_MessageVO__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    chat_api_conversations__conversation_id__chat_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChatRequestDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    stop_api_conversations__conversation_id__stop_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    regenerate_api_conversations__conversation_id__regenerate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_feedback_api_conversations__conversation_id__messages__message_id__feedback_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-                message_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeedbackDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_memories_api_memories_get: {
-        parameters: {
-            query?: {
-                characterId?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_MemoryVO__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_memory_api_memories__memory_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                memory_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MemoryUpdateDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_MemoryVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_memory_api_memories__memory_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                memory_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_models_api_models_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_AiModelVO__"];
-                };
-            };
-        };
-    };
-    create_model_api_models_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiModelSaveDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AiModelVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_model_api_models__model_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                model_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiModelSaveDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AiModelVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_model_api_models__model_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                model_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_default_api_models__model_id__default_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                model_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_enabled_api_models__model_id__enabled_put: {
-        parameters: {
-            query: {
-                enabled: boolean;
-            };
-            header?: never;
-            path: {
-                model_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_kbs_api_knowledge_bases_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_list_KnowledgeBaseVO__"];
-                };
-            };
-        };
-    };
-    create_kb_api_knowledge_bases_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["KnowledgeBaseCreateDTO"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_KnowledgeBaseVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    kb_detail_api_knowledge_bases__kb_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                kb_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_KnowledgeBaseVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_kb_api_knowledge_bases__kb_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                kb_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_document_api_knowledge_bases__kb_id__documents_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                kb_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_document_api_knowledge_bases__kb_id__documents_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_KnowledgeDocumentVO_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_document_api_knowledge_bases__kb_id__documents__doc_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                kb_id: string;
-                doc_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    usage_api_stats_usage_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_UsageStatsVO_"];
-                };
-            };
-        };
-    };
-    health_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result"];
-                };
-            };
-        };
-    };
+  register_api_auth_register_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_AuthResponse_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  login_api_auth_login_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_AuthResponse_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  me_api_users_me_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_UserVO_']
+        }
+      }
+    }
+  }
+  update_password_api_users_me_password_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePasswordDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_email_api_users_me_email_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateEmailDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  find_user_api_admin_users_by_username_get: {
+    parameters: {
+      query: {
+        username: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_Union_AdminUserVO__NoneType__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  set_user_status_api_admin_users__user_id__status_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        user_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserStatusDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_AdminUserVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_characters_api_admin_characters_get: {
+    parameters: {
+      query?: {
+        status?: string | null
+        offset?: number
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_AdminCharacterVO__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  review_character_api_admin_characters__character_id__status_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CharacterReviewDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_AdminCharacterVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  overview_api_admin_overview_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_PlatformOverviewVO_']
+        }
+      }
+    }
+  }
+  square_api_characters_square_get: {
+    parameters: {
+      query?: {
+        keyword?: string | null
+        sort?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_CharacterVO__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  favorites_api_characters_favorites_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_CharacterVO__']
+        }
+      }
+    }
+  }
+  square_detail_api_characters__character_id__detail_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_Union_CharacterVO__NoneType__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_characters_api_characters_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_CharacterVO__']
+        }
+      }
+    }
+  }
+  create_api_characters_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CharacterSaveDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_CharacterVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  detail_api_characters__character_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_Union_CharacterVO__NoneType__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_api_characters__character_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CharacterSaveDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_CharacterVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_api_characters__character_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  switch_status_api_characters__character_id__status_put: {
+    parameters: {
+      query: {
+        status: string
+      }
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_CharacterVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  favorite_api_characters__character_id__favorite_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  unfavorite_api_characters__character_id__favorite_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_lorebook_api_characters__character_id__lorebook_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_LorebookEntryVO__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_lorebook_api_characters__character_id__lorebook_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LorebookSaveDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_LorebookEntryVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_lorebook_api_characters__character_id__lorebook__entry_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+        entry_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LorebookSaveDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_LorebookEntryVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_lorebook_api_characters__character_id__lorebook__entry_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+        entry_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  export_character_api_characters__character_id__export_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        character_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_CharacterCardVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  import_character_api_characters_import_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CharacterCardDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_CharacterVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_conversations_api_conversations_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_ConversationVO__']
+        }
+      }
+    }
+  }
+  create_conversation_api_conversations_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConversationCreateDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_ConversationVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_conversation_api_conversations__conversation_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  rename_conversation_api_conversations__conversation_id__title_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RenameBody']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_ConversationVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  switch_model_api_conversations__conversation_id__model_put: {
+    parameters: {
+      query?: {
+        modelId?: string | null
+      }
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_messages_api_conversations__conversation_id__messages_get: {
+    parameters: {
+      query?: {
+        before?: string | null
+        size?: number | null
+      }
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_MessageVO__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  chat_api_conversations__conversation_id__chat_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChatRequestDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  stop_api_conversations__conversation_id__stop_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  regenerate_api_conversations__conversation_id__regenerate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        conversation_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  set_feedback_api_conversations__conversation_id__messages__message_id__feedback_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        conversation_id: string
+        message_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FeedbackDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_memories_api_memories_get: {
+    parameters: {
+      query?: {
+        characterId?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_MemoryVO__']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_memory_api_memories__memory_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        memory_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MemoryUpdateDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_MemoryVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_memory_api_memories__memory_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        memory_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_models_api_models_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_AiModelVO__']
+        }
+      }
+    }
+  }
+  create_model_api_models_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiModelSaveDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_AiModelVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_model_api_models__model_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiModelSaveDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_AiModelVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_model_api_models__model_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  set_default_api_models__model_id__default_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  set_enabled_api_models__model_id__enabled_put: {
+    parameters: {
+      query: {
+        enabled: boolean
+      }
+      header?: never
+      path: {
+        model_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_kbs_api_knowledge_bases_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_list_KnowledgeBaseVO__']
+        }
+      }
+    }
+  }
+  create_kb_api_knowledge_bases_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['KnowledgeBaseCreateDTO']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_KnowledgeBaseVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  kb_detail_api_knowledge_bases__kb_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        kb_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_KnowledgeBaseVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_kb_api_knowledge_bases__kb_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        kb_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  upload_document_api_knowledge_bases__kb_id__documents_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        kb_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_upload_document_api_knowledge_bases__kb_id__documents_post']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_KnowledgeDocumentVO_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_document_api_knowledge_bases__kb_id__documents__doc_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        kb_id: string
+        doc_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  usage_api_stats_usage_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result_UsageStatsVO_']
+        }
+      }
+    }
+  }
+  health_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Result']
+        }
+      }
+    }
+  }
 }

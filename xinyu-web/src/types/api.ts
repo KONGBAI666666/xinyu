@@ -401,4 +401,3 @@ export interface KnowledgeDocumentVO {
   createdAt: string
   updatedAt: string
 }
-

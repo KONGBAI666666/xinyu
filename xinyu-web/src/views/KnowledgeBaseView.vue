@@ -14,10 +14,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { knowledgeApi } from '@/api/modules/knowledge'
 import { BizError } from '@/utils/BizError'
-import type {
-  KnowledgeBaseVO,
-  KnowledgeBaseCreateDTO,
-} from '@/types/api'
+import type { KnowledgeBaseVO, KnowledgeBaseCreateDTO } from '@/types/api'
 
 const router = useRouter()
 
@@ -179,12 +176,14 @@ function statusText(status: string): string {
 }
 
 function statusClass(status: string): string {
-  return {
-    READY: 'status-ready',
-    ACTIVE: 'status-ready',
-    PROCESSING: 'status-processing',
-    ERROR: 'status-error',
-  }[status] || ''
+  return (
+    {
+      READY: 'status-ready',
+      ACTIVE: 'status-ready',
+      PROCESSING: 'status-processing',
+      ERROR: 'status-error',
+    }[status] || ''
+  )
 }
 </script>
 
@@ -240,7 +239,12 @@ function statusClass(status: string): string {
           </div>
           <div class="form-item">
             <label>简介 (可选)</label>
-            <textarea v-model="createForm.description" placeholder="知识库用途描述" maxlength="200" rows="3" />
+            <textarea
+              v-model="createForm.description"
+              placeholder="知识库用途描述"
+              maxlength="200"
+              rows="3"
+            />
           </div>
           <button class="primary-btn" :disabled="creating" @click="submitCreate">
             {{ creating ? '创建中...' : '创建' }}
@@ -266,8 +270,17 @@ function statusClass(status: string): string {
           <!-- 上传区域 -->
           <div class="upload-section">
             <label class="upload-btn" :class="{ uploading }">
-              <input type="file" accept=".pdf,.md,.markdown,.txt" @change="onFileSelected" :disabled="uploading" />
-              {{ uploading ? '处理中 (解析→分块→向量化)...' : '+ 上传文档 (PDF / Markdown / TXT, ≤5MB)' }}
+              <input
+                type="file"
+                accept=".pdf,.md,.markdown,.txt"
+                @change="onFileSelected"
+                :disabled="uploading"
+              />
+              {{
+                uploading
+                  ? '处理中 (解析→分块→向量化)...'
+                  : '+ 上传文档 (PDF / Markdown / TXT, ≤5MB)'
+              }}
             </label>
             <p v-if="uploadError" class="upload-error">{{ uploadError }}</p>
           </div>
@@ -286,7 +299,9 @@ function statusClass(status: string): string {
                   <span>{{ doc.fileType }}</span>
                   <span>{{ formatSize(doc.fileSize) }}</span>
                   <span>{{ doc.chunkCount }} 块</span>
-                  <span class="doc-status" :class="statusClass(doc.status)">{{ statusText(doc.status) }}</span>
+                  <span class="doc-status" :class="statusClass(doc.status)">{{
+                    statusText(doc.status)
+                  }}</span>
                 </div>
                 <div v-if="doc.status === 'ERROR' && doc.errorMsg" class="doc-error">
                   失败原因: {{ doc.errorMsg }}

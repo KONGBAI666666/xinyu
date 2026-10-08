@@ -27,7 +27,10 @@ export const conversationApi = {
   },
 
   /** 历史消息: 游标分页, 返回升序（旧→新）; before 缺省取最新一页 */
-  fetchMessages(conversationId: string, params?: { before?: string; size?: number }): Promise<MessageVO[]> {
+  fetchMessages(
+    conversationId: string,
+    params?: { before?: string; size?: number },
+  ): Promise<MessageVO[]> {
     return get(`/conversations/${conversationId}/messages`, { params })
   },
 

@@ -42,13 +42,12 @@ function toolDisplayName(name: string): string {
 }
 /** 终态才允许反馈/重发 (生成中/失败中不可点) */
 const actionable = computed(
-  () => !isUser.value && (props.message.status === 'COMPLETED' || props.message.status === 'STOPPED'),
+  () =>
+    !isUser.value && (props.message.status === 'COMPLETED' || props.message.status === 'STOPPED'),
 )
 
 /** ASSISTANT 消息的安全 HTML（已消毒, 流式期间随 content 增长重算） */
-const renderedContent = computed(() =>
-  isUser.value ? '' : renderMarkdown(props.message.content),
-)
+const renderedContent = computed(() => (isUser.value ? '' : renderMarkdown(props.message.content)))
 </script>
 
 <template>
@@ -88,7 +87,9 @@ const renderedContent = computed(() =>
         <ul v-if="citationsOpen" class="cite-list">
           <li v-for="(cite, i) in message.citations" :key="i" class="cite-item">
             <p class="cite-head">
-              <span class="cite-name">{{ cite.fileName || '知识库片段' }} · 第{{ cite.chunkIndex + 1 }}块</span>
+              <span class="cite-name"
+                >{{ cite.fileName || '知识库片段' }} · 第{{ cite.chunkIndex + 1 }}块</span
+              >
               <span class="cite-score">{{ Math.round(cite.score * 100) }}%</span>
             </p>
             <p class="cite-snippet">{{ cite.snippet }}</p>
@@ -105,7 +106,9 @@ const renderedContent = computed(() =>
             :disabled="versionIndex === 0"
             title="上一版本"
             @click="emit('version', -1)"
-          >‹</button>
+          >
+            ‹
+          </button>
           <span class="ver-indicator">{{ (versionIndex ?? 0) + 1 }}/{{ versionTotal }}</span>
           <button
             type="button"
@@ -113,7 +116,9 @@ const renderedContent = computed(() =>
             :disabled="versionIndex === (versionTotal ?? 1) - 1"
             title="下一版本"
             @click="emit('version', 1)"
-          >›</button>
+          >
+            ›
+          </button>
         </template>
         <template v-if="actionable">
           <button
@@ -122,14 +127,18 @@ const renderedContent = computed(() =>
             :class="{ active: message.feedback === 'LIKE' }"
             title="有用"
             @click="emit('feedback', 'LIKE')"
-          >👍</button>
+          >
+            👍
+          </button>
           <button
             type="button"
             class="act-btn"
             :class="{ active: message.feedback === 'DISLIKE' }"
             title="没帮助"
             @click="emit('feedback', 'DISLIKE')"
-          >👎</button>
+          >
+            👎
+          </button>
         </template>
         <button
           v-if="canRegenerate"
@@ -137,7 +146,9 @@ const renderedContent = computed(() =>
           class="act-btn regenerate"
           title="重新生成回复"
           @click="emit('regenerate')"
-        >↻ 重新生成</button>
+        >
+          ↻ 重新生成
+        </button>
       </div>
     </div>
   </div>
@@ -281,7 +292,8 @@ const renderedContent = computed(() =>
   overflow: hidden;
 }
 
-/* ---------- 操作行 ---------- */.msg-actions {
+/* ---------- 操作行 ---------- */
+.msg-actions {
   display: flex;
   align-items: center;
   gap: 2px;

@@ -8,15 +8,15 @@
 :root,
 html.dark {
   /* ---------- 背景 ---------- */
-  --bg-base: #0c1020;                       /* 深海夜蓝, 页面基底 */
+  --bg-base: #0c1020; /* 深海夜蓝, 页面基底 */
   --bg-elevated: rgba(255, 255, 255, 0.06); /* 毛玻璃浮层 */
-  --bg-hover: rgba(255, 255, 255, 0.1);     /* 悬停态 */
+  --bg-hover: rgba(255, 255, 255, 0.1); /* 悬停态 */
 
   /* ---------- 品牌 ---------- */
-  --brand-from: #8b7cf6;                    /* 暮紫 */
-  --brand-to: #5eead4;                      /* 屿青 */
+  --brand-from: #8b7cf6; /* 暮紫 */
+  --brand-to: #5eead4; /* 屿青 */
   --brand-gradient: linear-gradient(135deg, var(--brand-from), var(--brand-to));
-  --accent-warm: #ffb86b;                   /* 暖橘: 收藏/情感元素专用 */
+  --accent-warm: #ffb86b; /* 暖橘: 收藏/情感元素专用 */
 
   /* ---------- 文字三级灰阶 ---------- */
   --text-primary: #eaecf5;
@@ -28,16 +28,16 @@ html.dark {
   --color-success: #4ade80;
 
   /* ---------- 边框 / 承载面 (M3 知识库等管理页使用) ---------- */
-  --border: rgba(255, 255, 255, 0.08);       /* 通用细边框 */
-  --bg-card: rgba(255, 255, 255, 0.04);      /* 卡片 / 列表项底 */
-  --bg-input: rgba(255, 255, 255, 0.06);     /* 输入框底 */
-  --accent: var(--brand-to);                  /* 强调色: 屿青 */
-  --color-primary: var(--brand-to);           /* 主交互色 (强调别名) */
+  --border: rgba(255, 255, 255, 0.08); /* 通用细边框 */
+  --bg-card: rgba(255, 255, 255, 0.04); /* 卡片 / 列表项底 */
+  --bg-input: rgba(255, 255, 255, 0.06); /* 输入框底 */
+  --accent: var(--brand-to); /* 强调色: 屿青 */
+  --color-primary: var(--brand-to); /* 主交互色 (强调别名) */
 
   /* ---------- 圆角 ---------- */
   --radius-card: 16px;
   --radius-bubble: 18px;
-  --radius-bubble-tail: 4px;                /* 气泡发送方向角 */
+  --radius-bubble-tail: 4px; /* 气泡发送方向角 */
   --radius-btn: 12px;
 
   /* ---------- 动效 ---------- */

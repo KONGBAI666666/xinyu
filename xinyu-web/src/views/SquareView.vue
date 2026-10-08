@@ -80,7 +80,7 @@ const displayList = computed<CharacterVO[]>(() => {
   const kw = keyword.value.trim().toLowerCase()
   if (!kw) return list.value
   return list.value.filter(
-    (c) => c.name.toLowerCase().includes(kw) || (c.intro ?? '').toLowerCase().includes(kw)
+    (c) => c.name.toLowerCase().includes(kw) || (c.intro ?? '').toLowerCase().includes(kw),
   )
 })
 
@@ -131,19 +131,24 @@ function redirectToLogin(): void {
 
       <div class="search-box">
         <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M9.5 9.5L12 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4" />
+          <path
+            d="M9.5 9.5L12 12"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+          />
         </svg>
-        <input
-          v-model="keyword"
-          class="search-input"
-          type="text"
-          placeholder="搜索角色名或介绍"
-        />
+        <input v-model="keyword" class="search-input" type="text" placeholder="搜索角色名或介绍" />
       </div>
 
       <div class="top-actions">
-        <button v-if="!authStore.isLoggedIn" class="ghost-btn" type="button" @click="redirectToLogin">
+        <button
+          v-if="!authStore.isLoggedIn"
+          class="ghost-btn"
+          type="button"
+          @click="redirectToLogin"
+        >
           登录
         </button>
         <button v-else class="ghost-btn" type="button" @click="router.push('/chat')">
@@ -175,8 +180,20 @@ function redirectToLogin(): void {
       <div v-else-if="displayList.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <path d="M16 24H32M24 16V32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle
+              cx="24"
+              cy="24"
+              r="20"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <path
+              d="M16 24H32M24 16V32"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
           </svg>
         </div>
         <p v-if="sort === 'FAVORITES'" class="empty-text">还没有收藏的角色</p>
@@ -210,14 +227,28 @@ function redirectToLogin(): void {
           <div class="card-meta">
             <span class="meta-item">
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M2 3.5H9V8C9 8.5 8.5 9 8 9H3C2.5 9 2 8.5 2 8V3.5Z" stroke="currentColor" stroke-width="0.9"/>
-                <path d="M2 4L5.5 6.5L9 4" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round"/>
+                <path
+                  d="M2 3.5H9V8C9 8.5 8.5 9 8 9H3C2.5 9 2 8.5 2 8V3.5Z"
+                  stroke="currentColor"
+                  stroke-width="0.9"
+                />
+                <path
+                  d="M2 4L5.5 6.5L9 4"
+                  stroke="currentColor"
+                  stroke-width="0.9"
+                  stroke-linejoin="round"
+                />
               </svg>
               {{ c.chatCount }}
             </span>
             <span class="meta-item">
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M5.5 9.5L1.8 6C0.5 4.8 0.5 3 1.8 1.8C3 0.7 4.7 1 5.5 2.2C6.3 1 8 0.7 9.2 1.8C10.5 3 10.5 4.8 9.2 6L5.5 9.5Z" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round"/>
+                <path
+                  d="M5.5 9.5L1.8 6C0.5 4.8 0.5 3 1.8 1.8C3 0.7 4.7 1 5.5 2.2C6.3 1 8 0.7 9.2 1.8C10.5 3 10.5 4.8 9.2 6L5.5 9.5Z"
+                  stroke="currentColor"
+                  stroke-width="0.9"
+                  stroke-linejoin="round"
+                />
               </svg>
               {{ c.favoriteCount }}
             </span>
@@ -231,13 +262,21 @@ function redirectToLogin(): void {
               :title="c.favorited ? '取消收藏' : '收藏'"
               @click="toggleFavorite(c)"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" :fill="c.favorited ? 'currentColor' : 'none'">
-                <path d="M7 12L2.2 7.5C0.9 6.2 0.9 4.2 2.2 3C3.4 1.9 5.2 2.1 6 3.3L7 4.7L8 3.3C8.8 2.1 10.6 1.9 11.8 3C13.1 4.2 13.1 6.2 11.8 7.5L7 12Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                :fill="c.favorited ? 'currentColor' : 'none'"
+              >
+                <path
+                  d="M7 12L2.2 7.5C0.9 6.2 0.9 4.2 2.2 3C3.4 1.9 5.2 2.1 6 3.3L7 4.7L8 3.3C8.8 2.1 10.6 1.9 11.8 3C13.1 4.2 13.1 6.2 11.8 7.5L7 12Z"
+                  stroke="currentColor"
+                  stroke-width="1.3"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
-            <button class="chat-btn" type="button" @click="startChat(c)">
-              开聊
-            </button>
+            <button class="chat-btn" type="button" @click="startChat(c)">开聊</button>
           </div>
         </div>
       </div>
@@ -304,10 +343,17 @@ function redirectToLogin(): void {
   box-sizing: border-box;
   transition: border-color var(--duration-base) var(--ease-base);
 }
-.search-input:focus { border-color: rgba(94, 234, 212, 0.4); }
-.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus {
+  border-color: rgba(94, 234, 212, 0.4);
+}
+.search-input::placeholder {
+  color: var(--text-muted);
+}
 
-.top-actions { display: flex; gap: 8px; }
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
 .ghost-btn {
   padding: 6px 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -342,7 +388,9 @@ function redirectToLogin(): void {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.sort-tab:hover { color: var(--text-secondary); }
+.sort-tab:hover {
+  color: var(--text-secondary);
+}
 .sort-tab.active {
   background: rgba(94, 234, 212, 0.1);
   color: var(--brand-to);
@@ -371,9 +419,19 @@ function redirectToLogin(): void {
   padding: 80px 24px;
   color: var(--text-muted);
 }
-.empty-icon { color: rgba(139, 124, 246, 0.3); margin-bottom: 16px; }
-.empty-text { margin: 0 0 4px; font-size: 15px; color: var(--text-secondary); }
-.empty-hint { margin: 0; font-size: 12px; }
+.empty-icon {
+  color: rgba(139, 124, 246, 0.3);
+  margin-bottom: 16px;
+}
+.empty-text {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+.empty-hint {
+  margin: 0;
+  font-size: 12px;
+}
 
 /* ---------- 卡片网格 ---------- */
 .card-grid {
@@ -416,7 +474,10 @@ function redirectToLogin(): void {
   font-weight: 600;
   flex-shrink: 0;
 }
-.head-info { flex: 1; min-width: 0; }
+.head-info {
+  flex: 1;
+  min-width: 0;
+}
 .name-row {
   display: flex;
   align-items: center;
@@ -481,8 +542,14 @@ function redirectToLogin(): void {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.fav-btn:hover { background: var(--bg-hover); color: #ff8a65; }
-.fav-btn.active { color: #ff8a65; border-color: rgba(255, 138, 101, 0.3); }
+.fav-btn:hover {
+  background: var(--bg-hover);
+  color: #ff8a65;
+}
+.fav-btn.active {
+  color: #ff8a65;
+  border-color: rgba(255, 138, 101, 0.3);
+}
 
 .chat-btn {
   flex: 1;
@@ -495,7 +562,9 @@ function redirectToLogin(): void {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.chat-btn:hover { filter: brightness(1.1); }
+.chat-btn:hover {
+  filter: brightness(1.1);
+}
 
 /* ---------- Toast ---------- */
 .toast {

@@ -96,7 +96,13 @@ function redirectToLogin(): void {
       <!-- 返回 -->
       <button class="back-btn" type="button" @click="router.push('/square')">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path
+            d="M10 12L6 8L10 4"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
         <span>广场</span>
       </button>
@@ -104,7 +110,10 @@ function redirectToLogin(): void {
       <!-- 主内容 -->
       <div class="main">
         <div class="hero">
-          <div class="avatar" :style="character.avatarUrl ? `background-image:url(${character.avatarUrl})` : ''">
+          <div
+            class="avatar"
+            :style="character.avatarUrl ? `background-image:url(${character.avatarUrl})` : ''"
+          >
             <span v-if="!character.avatarUrl">{{ character.name.charAt(0) }}</span>
           </div>
 
@@ -118,14 +127,28 @@ function redirectToLogin(): void {
           <div class="stats">
             <span class="stat-item">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M2 4H10V9C10 9.5 9.5 10 9 10H3C2.5 10 2 9.5 2 9V4Z" stroke="currentColor" stroke-width="1"/>
-                <path d="M2 4.5L6 7L10 4.5" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>
+                <path
+                  d="M2 4H10V9C10 9.5 9.5 10 9 10H3C2.5 10 2 9.5 2 9V4Z"
+                  stroke="currentColor"
+                  stroke-width="1"
+                />
+                <path
+                  d="M2 4.5L6 7L10 4.5"
+                  stroke="currentColor"
+                  stroke-width="1"
+                  stroke-linejoin="round"
+                />
               </svg>
               {{ character.chatCount }} 对话
             </span>
             <span class="stat-item">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M6 10.5L1.8 6.8C0.5 5.6 0.5 3.7 1.8 2.6C3 1.6 4.7 1.9 5.5 3L6 3.7L6.5 3C7.3 1.9 9 1.6 10.2 2.6C11.5 3.7 11.5 5.6 10.2 6.8L6 10.5Z" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>
+                <path
+                  d="M6 10.5L1.8 6.8C0.5 5.6 0.5 3.7 1.8 2.6C3 1.6 4.7 1.9 5.5 3L6 3.7L6.5 3C7.3 1.9 9 1.6 10.2 2.6C11.5 3.7 11.5 5.6 10.2 6.8L6 10.5Z"
+                  stroke="currentColor"
+                  stroke-width="1"
+                  stroke-linejoin="round"
+                />
               </svg>
               {{ character.favoriteCount }} 收藏
             </span>
@@ -148,14 +171,29 @@ function redirectToLogin(): void {
             :class="{ active: character.favorited }"
             @click="toggleFavorite"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" :fill="character.favorited ? 'currentColor' : 'none'">
-              <path d="M8 13.5L2.5 8.5C1 7 1 4.8 2.5 3.5C3.9 2.2 6 2.5 7 4L8 5.3L9 4C10 2.5 12.1 2.2 13.5 3.5C15 4.8 15 7 13.5 8.5L8 13.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              :fill="character.favorited ? 'currentColor' : 'none'"
+            >
+              <path
+                d="M8 13.5L2.5 8.5C1 7 1 4.8 2.5 3.5C3.9 2.2 6 2.5 7 4L8 5.3L9 4C10 2.5 12.1 2.2 13.5 3.5C15 4.8 15 7 13.5 8.5L8 13.5Z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linejoin="round"
+              />
             </svg>
             <span>{{ character.favorited ? '已收藏' : '收藏' }}</span>
           </button>
           <button class="chat-action" type="button" @click="startChat">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4C2 3 3 2 4 2H12C13 2 14 3 14 4V10C14 11 13 12 12 12H7L4 14V12H4C3 12 2 11 2 10V4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+              <path
+                d="M2 4C2 3 3 2 4 2H12C13 2 14 3 14 4V10C14 11 13 12 12 12H7L4 14V12H4C3 12 2 11 2 10V4Z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linejoin="round"
+              />
             </svg>
             <span>开始聊天</span>
           </button>
@@ -227,7 +265,10 @@ function redirectToLogin(): void {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.back-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 
 /* ---------- 主内容 ---------- */
 .main {
@@ -348,7 +389,8 @@ function redirectToLogin(): void {
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
-.fav-action, .chat-action {
+.fav-action,
+.chat-action {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -364,13 +406,19 @@ function redirectToLogin(): void {
   background: rgba(255, 138, 101, 0.1);
   color: #ff8a65;
 }
-.fav-action:hover { background: rgba(255, 138, 101, 0.2); }
-.fav-action.active { background: rgba(255, 138, 101, 0.25); }
+.fav-action:hover {
+  background: rgba(255, 138, 101, 0.2);
+}
+.fav-action.active {
+  background: rgba(255, 138, 101, 0.25);
+}
 .chat-action {
   background: var(--brand-gradient);
   color: white;
 }
-.chat-action:hover { filter: brightness(1.1); }
+.chat-action:hover {
+  filter: brightness(1.1);
+}
 
 /* ---------- Toast ---------- */
 .toast {

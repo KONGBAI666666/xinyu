@@ -34,9 +34,7 @@ export const useMessageStore = defineStore('message', () => {
       const page = await conversationApi.fetchMessages(conversationId, { size: PAGE_SIZE })
       if (seq !== loadSeq) return // 期间又切换了会话, 丢弃过期响应
       // 刷新时残留的 GENERATING（连接已不在）按 STOPPED 展示, 不恢复连接（契约二 2.3）
-      items.value = page.map((m) =>
-        m.status === 'GENERATING' ? { ...m, status: 'STOPPED' } : m,
-      )
+      items.value = page.map((m) => (m.status === 'GENERATING' ? { ...m, status: 'STOPPED' } : m))
       hasMore.value = page.length >= PAGE_SIZE
     } finally {
       if (seq === loadSeq) loadingHistory.value = false

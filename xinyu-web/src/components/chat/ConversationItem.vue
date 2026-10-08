@@ -101,14 +101,15 @@ const timeText = computed(() => {
       </div>
       <div class="flex items-center gap-1 shrink-0">
         <span class="time text-xs">{{ timeText }}</span>
-        <span
-          v-if="!editing"
-          class="edit-btn"
-          title="重命名"
-          @click.stop="startEdit"
-        >
+        <span v-if="!editing" class="edit-btn" title="重命名" @click.stop="startEdit">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M9.5 2L12 4.5L5.5 11H3V8.5L9.5 2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M9.5 2L12 4.5L5.5 11H3V8.5L9.5 2Z"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </span>
         <span
@@ -118,7 +119,13 @@ const timeText = computed(() => {
           @click.stop="$emit('delete', conversation.id)"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M3 3.5H11M5.5 3.5V2.5C5.5 2.2 5.7 2 6 2H8C8.3 2 8.5 2.2 8.5 2.5V3.5M4.5 3.5L4.8 11C4.8 11.3 5.1 11.5 5.4 11.5H8.6C8.9 11.5 9.2 11.3 9.2 11L9.5 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M3 3.5H11M5.5 3.5V2.5C5.5 2.2 5.7 2 6 2H8C8.3 2 8.5 2.2 8.5 2.5V3.5M4.5 3.5L4.8 11C4.8 11.3 5.1 11.5 5.4 11.5H8.6C8.9 11.5 9.2 11.3 9.2 11L9.5 3.5"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </span>
       </div>

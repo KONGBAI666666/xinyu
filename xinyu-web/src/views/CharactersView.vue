@@ -157,7 +157,10 @@ function closeDrawer(): void {
   errorText.value = ''
 }
 
-async function switchStatus(c: CharacterVO, status: 'DRAFT' | 'PUBLISHED' | 'OFFLINE'): Promise<void> {
+async function switchStatus(
+  c: CharacterVO,
+  status: 'DRAFT' | 'PUBLISHED' | 'OFFLINE',
+): Promise<void> {
   try {
     const updated = await charactersApi.switchStatus(c.id, status)
     const idx = store.list.findIndex((x) => x.id === updated.id)
@@ -337,7 +340,10 @@ function showToast(msg: string): void {
 }
 
 const statusLabel: Record<string, string> = {
-  DRAFT: '草稿', PENDING: '审核中', PUBLISHED: '已发布', OFFLINE: '已下架',
+  DRAFT: '草稿',
+  PENDING: '审核中',
+  PUBLISHED: '已发布',
+  OFFLINE: '已下架',
 }
 </script>
 
@@ -347,7 +353,13 @@ const statusLabel: Record<string, string> = {
     <header class="topbar">
       <button class="back-btn" type="button" @click="router.push('/chat')">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path
+            d="M10 12L6 8L10 4"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
       <h1 class="page-title">角色管理</h1>
@@ -360,13 +372,24 @@ const statusLabel: Record<string, string> = {
       />
       <button class="new-btn ghost" type="button" @click="pickImportFile">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M7 9V2M7 2L4 5M7 2L10 5M2 9V11C2 11.6 2.4 12 3 12H11C11.6 12 12 11.6 12 11V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path
+            d="M7 9V2M7 2L4 5M7 2L10 5M2 9V11C2 11.6 2.4 12 3 12H11C11.6 12 12 11.6 12 11V9"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
         <span>导入角色</span>
       </button>
       <button class="new-btn" type="button" @click="openCreate">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <path
+            d="M7 2V12M2 7H12"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
         </svg>
         <span>新建角色</span>
       </button>
@@ -383,7 +406,10 @@ const statusLabel: Record<string, string> = {
           <div class="card-grid">
             <div v-for="c in officialList" :key="c.id" class="char-card official">
               <div class="card-head">
-                <div class="avatar" :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''">
+                <div
+                  class="avatar"
+                  :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''"
+                >
                   <span v-if="!c.avatarUrl">{{ c.name.charAt(0) }}</span>
                 </div>
                 <div class="head-info">
@@ -411,7 +437,12 @@ const statusLabel: Record<string, string> = {
           <div v-if="mineList.length === 0" class="empty-card" @click="openCreate">
             <div class="empty-icon">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <path d="M16 6V26M6 16H26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path
+                  d="M16 6V26M6 16H26"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
             <p class="empty-text">创建你的第一个角色</p>
@@ -421,13 +452,18 @@ const statusLabel: Record<string, string> = {
           <div v-else class="card-grid">
             <div v-for="c in mineList" :key="c.id" class="char-card">
               <div class="card-head">
-                <div class="avatar" :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''">
+                <div
+                  class="avatar"
+                  :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''"
+                >
                   <span v-if="!c.avatarUrl">{{ c.name.charAt(0) }}</span>
                 </div>
                 <div class="head-info">
                   <div class="name-row">
                     <span class="name">{{ c.name }}</span>
-                    <span class="status-badge" :class="`st-${c.status.toLowerCase()}`">{{ statusLabel[c.status] }}</span>
+                    <span class="status-badge" :class="`st-${c.status.toLowerCase()}`">{{
+                      statusLabel[c.status]
+                    }}</span>
                   </div>
                   <span class="intro">{{ c.intro || '暂无介绍' }}</span>
                 </div>
@@ -449,18 +485,38 @@ const statusLabel: Record<string, string> = {
                   type="button"
                   title="发布到广场"
                   @click="switchStatus(c, 'PUBLISHED')"
-                >发布</button>
+                >
+                  发布
+                </button>
                 <button
                   v-else
                   class="action-btn"
                   type="button"
                   title="下架回草稿"
                   @click="switchStatus(c, 'DRAFT')"
-                >下架</button>
-                <button class="action-btn" type="button" title="关键词触发设定" @click="openLorebook(c)">世界书</button>
-                <button class="action-btn" type="button" title="下载角色卡 JSON" @click="exportCard(c)">导出</button>
+                >
+                  下架
+                </button>
+                <button
+                  class="action-btn"
+                  type="button"
+                  title="关键词触发设定"
+                  @click="openLorebook(c)"
+                >
+                  世界书
+                </button>
+                <button
+                  class="action-btn"
+                  type="button"
+                  title="下载角色卡 JSON"
+                  @click="exportCard(c)"
+                >
+                  导出
+                </button>
                 <button class="action-btn" type="button" @click="openEdit(c)">编辑</button>
-                <button class="action-btn danger" type="button" @click="deletingId = c.id">删除</button>
+                <button class="action-btn danger" type="button" @click="deletingId = c.id">
+                  删除
+                </button>
               </div>
             </div>
           </div>
@@ -482,7 +538,12 @@ const statusLabel: Record<string, string> = {
             <h2 class="drawer-title">{{ creating ? '新建角色' : '编辑角色' }}</h2>
             <button class="close-btn" type="button" @click="closeDrawer">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path
+                  d="M1 1L13 13M13 1L1 13"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </header>
@@ -494,7 +555,12 @@ const statusLabel: Record<string, string> = {
 
               <div class="form-group">
                 <label class="form-label">角色名 *</label>
-                <input v-model="form.name" class="form-input" maxlength="32" placeholder="如: 屿屿" />
+                <input
+                  v-model="form.name"
+                  class="form-input"
+                  maxlength="32"
+                  placeholder="如: 屿屿"
+                />
               </div>
 
               <div class="form-group">
@@ -504,12 +570,23 @@ const statusLabel: Record<string, string> = {
 
               <div class="form-group">
                 <label class="form-label">一句话介绍</label>
-                <input v-model="form.intro" class="form-input" maxlength="200" placeholder="广场卡片展示, 30 字以内" />
+                <input
+                  v-model="form.intro"
+                  class="form-input"
+                  maxlength="200"
+                  placeholder="广场卡片展示, 30 字以内"
+                />
               </div>
 
               <div class="form-group">
                 <label class="form-label">开场白 *</label>
-                <textarea v-model="form.greeting" class="form-textarea" rows="2" maxlength="500" placeholder="新会话首条 AI 消息, 如: 你好呀, 我是…" />
+                <textarea
+                  v-model="form.greeting"
+                  class="form-textarea"
+                  rows="2"
+                  maxlength="500"
+                  placeholder="新会话首条 AI 消息, 如: 你好呀, 我是…"
+                />
               </div>
             </div>
 
@@ -553,7 +630,13 @@ const statusLabel: Record<string, string> = {
 
               <div class="form-group">
                 <label class="form-label">maxTokens</label>
-                <input v-model.number="form.maxTokens" type="number" min="1" max="8192" class="form-input" />
+                <input
+                  v-model.number="form.maxTokens"
+                  type="number"
+                  min="1"
+                  max="8192"
+                  class="form-input"
+                />
               </div>
 
               <div class="form-group">
@@ -575,7 +658,7 @@ const statusLabel: Record<string, string> = {
               <h3 class="form-section-title">状态</h3>
               <div class="radio-group">
                 <label
-                  v-for="s in (['DRAFT','PUBLISHED','OFFLINE'] as CharacterStatus[])"
+                  v-for="s in ['DRAFT', 'PUBLISHED', 'OFFLINE'] as CharacterStatus[]"
                   :key="s"
                   class="radio-pill"
                   :class="{ active: form.status === s }"
@@ -593,7 +676,7 @@ const statusLabel: Record<string, string> = {
           <footer class="drawer-footer">
             <button class="cancel-btn" type="button" @click="closeDrawer">取消</button>
             <button class="submit-btn" type="button" :disabled="submitting" @click="submit">
-              {{ submitting ? '保存中…' : (creating ? '创建' : '保存') }}
+              {{ submitting ? '保存中…' : creating ? '创建' : '保存' }}
             </button>
           </footer>
         </aside>
@@ -608,7 +691,9 @@ const statusLabel: Record<string, string> = {
       <Transition name="pop">
         <div v-if="deletingId" class="confirm-dialog">
           <h3 class="confirm-title">删除角色</h3>
-          <p class="confirm-text">删除后角色不可恢复, 已有会话仍可继续但无法再新建。此操作不可撤销。</p>
+          <p class="confirm-text">
+            删除后角色不可恢复, 已有会话仍可继续但无法再新建。此操作不可撤销。
+          </p>
           <div class="confirm-actions">
             <button class="cancel-btn" type="button" @click="deletingId = null">取消</button>
             <button class="delete-confirm-btn" type="button" @click="confirmDelete">删除</button>
@@ -628,13 +713,16 @@ const statusLabel: Record<string, string> = {
             <h2 class="drawer-title">世界书 · {{ lorebookCharacter?.name ?? '' }}</h2>
             <button class="close-btn" type="button" @click="lorebookDrawerOpen = false">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path
+                  d="M1 1L13 13M13 1L1 13"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </header>
-          <p class="drawer-subtitle">
-            聊天时用户消息命中关键词, 对应设定自动注入 AI 的上下文。
-          </p>
+          <p class="drawer-subtitle">聊天时用户消息命中关键词, 对应设定自动注入 AI 的上下文。</p>
 
           <div class="drawer-body">
             <!-- 条目表单 (新增/编辑共用) -->
@@ -644,44 +732,91 @@ const statusLabel: Record<string, string> = {
                   触发关键词
                   <span class="form-hint">逗号分隔, 命中任一即注入</span>
                 </label>
-                <input v-model="lorebookForm.keywords" class="form-input" maxlength="500" placeholder="如: 魔法, 法术, mana" />
+                <input
+                  v-model="lorebookForm.keywords"
+                  class="form-input"
+                  maxlength="500"
+                  placeholder="如: 魔法, 法术, mana"
+                />
               </div>
               <div class="form-group">
                 <label class="form-label">
                   设定内容
                   <span class="form-hint">{{ lorebookForm.content.length }}/2000</span>
                 </label>
-                <textarea v-model="lorebookForm.content" class="form-textarea" rows="4" maxlength="2000" placeholder="命中后注入 AI 上下文的设定文本" />
+                <textarea
+                  v-model="lorebookForm.content"
+                  class="form-textarea"
+                  rows="4"
+                  maxlength="2000"
+                  placeholder="命中后注入 AI 上下文的设定文本"
+                />
               </div>
               <div class="lore-form-row">
                 <label class="form-label">
                   优先级
-                  <input v-model.number="lorebookForm.priority" type="number" min="0" max="100" class="form-input priority-input" />
+                  <input
+                    v-model.number="lorebookForm.priority"
+                    type="number"
+                    min="0"
+                    max="100"
+                    class="form-input priority-input"
+                  />
                 </label>
                 <label class="lore-enabled">
                   <input v-model="lorebookForm.enabled" type="checkbox" class="checkbox" />
                   <span>启用</span>
                 </label>
-                <button class="primary-btn" type="button" :disabled="lorebookSaving" @click="saveLorebookEntry">
+                <button
+                  class="primary-btn"
+                  type="button"
+                  :disabled="lorebookSaving"
+                  @click="saveLorebookEntry"
+                >
                   {{ lorebookSaving ? '保存中…' : lorebookEditingId ? '保存修改' : '添加条目' }}
                 </button>
-                <button v-if="lorebookEditingId" class="cancel-btn" type="button" @click="resetLorebookForm">取消编辑</button>
+                <button
+                  v-if="lorebookEditingId"
+                  class="cancel-btn"
+                  type="button"
+                  @click="resetLorebookForm"
+                >
+                  取消编辑
+                </button>
               </div>
             </div>
 
             <!-- 条目列表 -->
             <div v-if="lorebookLoading" class="state-hint">加载中…</div>
-            <p v-else-if="lorebookList.length === 0" class="state-hint">还没有条目, 用上面的表单添加第一条</p>
+            <p v-else-if="lorebookList.length === 0" class="state-hint">
+              还没有条目, 用上面的表单添加第一条
+            </p>
             <div v-else class="lore-list">
-              <div v-for="entry in lorebookList" :key="entry.id" class="lore-item" :class="{ disabled: entry.enabled !== 1 }">
+              <div
+                v-for="entry in lorebookList"
+                :key="entry.id"
+                class="lore-item"
+                :class="{ disabled: entry.enabled !== 1 }"
+              >
                 <div class="lore-info">
                   <p class="lore-keywords">{{ entry.keywords }}</p>
                   <p class="lore-content">{{ entry.content }}</p>
-                  <p class="lore-meta">优先级 {{ entry.priority }}<template v-if="entry.enabled !== 1"> · 已停用</template></p>
+                  <p class="lore-meta">
+                    优先级 {{ entry.priority
+                    }}<template v-if="entry.enabled !== 1"> · 已停用</template>
+                  </p>
                 </div>
                 <div class="lore-actions">
-                  <button class="action-btn" type="button" @click="editLorebookEntry(entry)">编辑</button>
-                  <button class="action-btn danger" type="button" @click="removeLorebookEntry(entry)">删除</button>
+                  <button class="action-btn" type="button" @click="editLorebookEntry(entry)">
+                    编辑
+                  </button>
+                  <button
+                    class="action-btn danger"
+                    type="button"
+                    @click="removeLorebookEntry(entry)"
+                  >
+                    删除
+                  </button>
                 </div>
               </div>
             </div>
@@ -730,7 +865,10 @@ const statusLabel: Record<string, string> = {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.back-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 .page-title {
   flex: 1;
   margin: 0;
@@ -751,7 +889,9 @@ const statusLabel: Record<string, string> = {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.new-btn:hover { filter: brightness(1.1); }
+.new-btn:hover {
+  filter: brightness(1.1);
+}
 
 /* ---------- 内容区 ---------- */
 .content {
@@ -770,7 +910,9 @@ const statusLabel: Record<string, string> = {
 }
 
 /* ---------- 分区 ---------- */
-.section { margin-bottom: 32px; }
+.section {
+  margin-bottom: 32px;
+}
 .section-head {
   display: flex;
   align-items: center;
@@ -864,10 +1006,22 @@ const statusLabel: Record<string, string> = {
   font-weight: 600;
   flex-shrink: 0;
 }
-.status-badge.st-draft { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
-.status-badge.st-published { background: rgba(94, 234, 212, 0.15); color: var(--brand-to); }
-.status-badge.st-offline { background: rgba(248, 113, 113, 0.12); color: #fca5a5; }
-.status-badge.st-pending { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+.status-badge.st-draft {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+.status-badge.st-published {
+  background: rgba(94, 234, 212, 0.15);
+  color: var(--brand-to);
+}
+.status-badge.st-offline {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+.status-badge.st-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+}
 
 .intro {
   font-size: 12px;
@@ -903,15 +1057,25 @@ const statusLabel: Record<string, string> = {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.action-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
 .action-btn.primary {
   background: var(--brand-gradient);
   border-color: transparent;
   color: white;
 }
-.action-btn.primary:hover { filter: brightness(1.1); }
-.action-btn.danger { color: #f87171; }
-.action-btn.danger:hover { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); }
+.action-btn.primary:hover {
+  filter: brightness(1.1);
+}
+.action-btn.danger {
+  color: #f87171;
+}
+.action-btn.danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+}
 
 /* ---------- 空卡片 ---------- */
 .empty-card {
@@ -930,41 +1094,82 @@ const statusLabel: Record<string, string> = {
   border-color: rgba(94, 234, 212, 0.3);
   background: rgba(94, 234, 212, 0.03);
 }
-.empty-icon { color: rgba(139, 124, 246, 0.4); margin-bottom: 10px; }
-.empty-text { margin: 0 0 4px; font-size: 14px; color: var(--text-secondary); }
-.empty-hint { margin: 0; font-size: 12px; }
+.empty-icon {
+  color: rgba(139, 124, 246, 0.4);
+  margin-bottom: 10px;
+}
+.empty-text {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.empty-hint {
+  margin: 0;
+  font-size: 12px;
+}
 
 /* ---------- 抽屉（复用 ModelsView 样式） ---------- */
 .mask {
-  position: fixed; inset: 0; z-index: 40;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
 }
 .drawer {
-  position: fixed; top: 0; right: 0; bottom: 0; z-index: 50;
-  width: 480px; max-width: 90vw;
-  display: flex; flex-direction: column;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  width: 480px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
   background: rgba(12, 16, 32, 0.92);
   backdrop-filter: blur(var(--blur-glass));
   border-left: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
 }
 .drawer-header {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 20px 24px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-.drawer-title { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.drawer-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
 .close-btn {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border: none; border-radius: 8px;
-  background: transparent; color: var(--text-muted); cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
 
-.form-section { margin-bottom: 24px; }
+.form-section {
+  margin-bottom: 24px;
+}
 .form-section-title {
   margin: 0 0 12px;
   font-size: 12px;
@@ -982,7 +1187,9 @@ const statusLabel: Record<string, string> = {
   letter-spacing: 0;
 }
 
-.form-group { margin-bottom: 14px; }
+.form-group {
+  margin-bottom: 14px;
+}
 .form-label {
   display: flex;
   align-items: center;
@@ -1003,8 +1210,12 @@ const statusLabel: Record<string, string> = {
   box-sizing: border-box;
   transition: border-color var(--duration-base) var(--ease-base);
 }
-.form-input:focus { border-color: rgba(94, 234, 212, 0.4); }
-.form-input::placeholder { color: var(--text-muted); }
+.form-input:focus {
+  border-color: rgba(94, 234, 212, 0.4);
+}
+.form-input::placeholder {
+  color: var(--text-muted);
+}
 
 .form-textarea {
   width: 100%;
@@ -1020,8 +1231,12 @@ const statusLabel: Record<string, string> = {
   box-sizing: border-box;
   transition: border-color var(--duration-base) var(--ease-base);
 }
-.form-textarea:focus { border-color: rgba(94, 234, 212, 0.4); }
-.form-textarea::placeholder { color: var(--text-muted); }
+.form-textarea:focus {
+  border-color: rgba(94, 234, 212, 0.4);
+}
+.form-textarea::placeholder {
+  color: var(--text-muted);
+}
 .prompt-area {
   font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
   font-size: 12px;
@@ -1038,8 +1253,13 @@ const statusLabel: Record<string, string> = {
   display: flex;
   gap: 6px;
 }
-.tip-label { color: #c4b5fd; font-weight: 600; }
-.tip-text { color: var(--text-secondary); }
+.tip-label {
+  color: #c4b5fd;
+  font-weight: 600;
+}
+.tip-text {
+  color: var(--text-secondary);
+}
 
 .form-slider {
   width: 100%;
@@ -1053,84 +1273,171 @@ const statusLabel: Record<string, string> = {
   color: var(--text-muted);
 }
 
-.radio-group { display: flex; gap: 8px; }
+.radio-group {
+  display: flex;
+  gap: 8px;
+}
 .radio-pill {
-  display: flex; align-items: center; gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px;
-  background: transparent; color: var(--text-secondary);
-  font-size: 12px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.radio-pill:hover { background: var(--bg-hover); }
+.radio-pill:hover {
+  background: var(--bg-hover);
+}
 .radio-pill.active {
   background: rgba(94, 234, 212, 0.1);
   border-color: rgba(94, 234, 212, 0.3);
   color: var(--brand-to);
 }
-.radio-input { display: none; }
+.radio-input {
+  display: none;
+}
 
 .form-error {
-  margin: 12px 0 0; padding: 8px 12px; border-radius: 6px;
-  background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2);
-  font-size: 12px; color: #fca5a5;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  font-size: 12px;
+  color: #fca5a5;
 }
 
-.drawer-footer { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.drawer-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
 .cancel-btn {
-  flex: 1; padding: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;
-  background: transparent; color: var(--text-secondary);
-  font-size: 13px; cursor: pointer;
+  flex: 1;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.cancel-btn:hover { background: var(--bg-hover); }
+.cancel-btn:hover {
+  background: var(--bg-hover);
+}
 .submit-btn {
-  flex: 1; padding: 9px;
-  border: none; border-radius: 8px;
-  background: var(--brand-gradient); color: white;
-  font-size: 13px; font-weight: 500; cursor: pointer;
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: var(--brand-gradient);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.submit-btn:hover:not(:disabled) { filter: brightness(1.1); }
-.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* ---------- 删除确认 ---------- */
 .confirm-dialog {
-  position: fixed; top: 50%; left: 50%;
-  transform: translate(-50%, -50%); z-index: 50;
-  width: 320px; padding: 24px; border-radius: 14px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  width: 320px;
+  padding: 24px;
+  border-radius: 14px;
   background: rgba(20, 24, 40, 0.95);
   backdrop-filter: blur(var(--blur-glass));
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
-.confirm-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; color: var(--text-primary); }
-.confirm-text { margin: 0 0 18px; font-size: 13px; color: var(--text-secondary); }
-.confirm-actions { display: flex; gap: 10px; }
-.delete-confirm-btn {
-  flex: 1; padding: 9px; border: none; border-radius: 8px;
-  background: #ef4444; color: white;
-  font-size: 13px; font-weight: 500; cursor: pointer;
+.confirm-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
-.delete-confirm-btn:hover { background: #dc2626; }
+.confirm-text {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+.delete-confirm-btn {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.delete-confirm-btn:hover {
+  background: #dc2626;
+}
 
 /* ---------- Toast ---------- */
 .toast {
-  position: fixed; bottom: 30px; left: 50%;
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
   transform: translateX(-50%);
-  padding: 10px 20px; border-radius: 8px;
-  background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5; font-size: 13px; z-index: 60;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  font-size: 13px;
+  z-index: 60;
 }
 
 /* ---------- 动画 ---------- */
-.fade-enter-active, .fade-leave-active { transition: opacity var(--duration-base) var(--ease-base); }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-.slide-enter-active, .slide-leave-active { transition: transform var(--duration-base) var(--ease-base); }
-.slide-enter-from, .slide-leave-to { transform: translateX(100%); }
-.pop-enter-active, .pop-leave-active { transition: all var(--duration-base) var(--ease-base); }
-.pop-enter-from, .pop-leave-to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--duration-base) var(--ease-base);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform var(--duration-base) var(--ease-base);
+}
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
+}
+.pop-enter-active,
+.pop-leave-active {
+  transition: all var(--duration-base) var(--ease-base);
+}
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.95);
+}
 
 /* ---------- 导入 / 世界书 ---------- */
 .import-input {

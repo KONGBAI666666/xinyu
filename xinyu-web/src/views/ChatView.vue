@@ -125,7 +125,10 @@ async function handleRegenerate(): Promise<void> {
   }
 }
 
-async function handleFeedback(messageId: string, value: 'LIKE' | 'DISLIKE' | 'NONE'): Promise<void> {
+async function handleFeedback(
+  messageId: string,
+  value: 'LIKE' | 'DISLIKE' | 'NONE',
+): Promise<void> {
   const conversationId = conversationStore.activeId
   if (!conversationId) return
   try {

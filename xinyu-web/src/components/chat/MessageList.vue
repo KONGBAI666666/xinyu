@@ -48,7 +48,11 @@ const rendered = computed<RenderItem[]>(() => {
     if (m.messageType === 'ASSISTANT' && m.parentMessageId) {
       const parent = m.parentMessageId
       const versions: MessageVO[] = []
-      while (i < items.length && items[i].messageType === 'ASSISTANT' && items[i].parentMessageId === parent) {
+      while (
+        i < items.length &&
+        items[i].messageType === 'ASSISTANT' &&
+        items[i].parentMessageId === parent
+      ) {
         versions.push(items[i])
         i++
       }
@@ -128,9 +132,7 @@ async function handleScroll(): Promise<void> {
 
 <template>
   <div ref="scrollRef" class="flex-1 overflow-y-auto px-6 py-4" @scroll.passive="handleScroll">
-    <p v-if="!hasActive" class="hint text-center text-sm">
-      选择左侧会话，或点「+ 新聊天」开始
-    </p>
+    <p v-if="!hasActive" class="hint text-center text-sm">选择左侧会话，或点「+ 新聊天」开始</p>
     <p v-else-if="messageStore.loadingHistory" class="hint text-center text-sm">加载消息中…</p>
     <template v-else>
       <div class="mx-auto flex max-w-3xl flex-col gap-3">
@@ -148,7 +150,11 @@ async function handleScroll(): Promise<void> {
           :version-index="item.versionTotal > 1 ? item.versionIndex : undefined"
           :version-total="item.versionTotal"
           :can-regenerate="item.canRegenerate"
-          @version="(dir) => item.message.parentMessageId && switchVersion(item.message.parentMessageId, dir, item.versionTotal)"
+          @version="
+            (dir) =>
+              item.message.parentMessageId &&
+              switchVersion(item.message.parentMessageId, dir, item.versionTotal)
+          "
           @feedback="(value) => onFeedback(item, value)"
           @regenerate="emit('regenerate')"
         />

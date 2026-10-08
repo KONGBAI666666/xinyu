@@ -37,9 +37,7 @@ marked.use({
     /** 代码块: 语言可识别时用 hljs 高亮, 否则仅转义展示 */
     code({ text, lang }) {
       const language = lang && hljs.getLanguage(lang) ? lang : ''
-      const body = language
-        ? hljs.highlight(text, { language }).value
-        : escapeHtml(text)
+      const body = language ? hljs.highlight(text, { language }).value : escapeHtml(text)
       const langLabel = language ? `<span class="md-code-lang">${language}</span>` : ''
       return `<div class="md-code-block">${langLabel}<pre><code class="hljs">${body}</code></pre></div>`
     },

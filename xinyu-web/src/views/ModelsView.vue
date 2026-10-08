@@ -32,7 +32,14 @@ const form = ref<AiModelSaveDTO>(emptyForm())
 const deletingId = ref<string | null>(null)
 
 function emptyForm(): AiModelSaveDTO {
-  return { provider: 'QWEN', modelCode: '', displayName: '', baseUrl: '', apiKey: '', isDefault: false }
+  return {
+    provider: 'QWEN',
+    modelCode: '',
+    displayName: '',
+    baseUrl: '',
+    apiKey: '',
+    isDefault: false,
+  }
 }
 
 onMounted(async () => {
@@ -124,12 +131,42 @@ async function confirmDelete(): Promise<void> {
 /** 预设: 点一下自动填好常见模型配置 */
 function applyPreset(preset: string): void {
   const presets: Record<string, Partial<AiModelSaveDTO>> = {
-    qwen: { provider: 'QWEN', modelCode: 'qwen-plus', displayName: '通义千问 Plus', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
-    deepseek: { provider: 'DEEPSEEK', modelCode: 'deepseek-chat', displayName: 'DeepSeek Chat', baseUrl: 'https://api.deepseek.com/v1' },
-    gpt: { provider: 'OPENAI', modelCode: 'gpt-4o', displayName: 'GPT-4o', baseUrl: 'https://api.openai.com/v1' },
-    kimi: { provider: 'MOONSHOT', modelCode: 'moonshot-v1-8k', displayName: 'Kimi 8K', baseUrl: 'https://api.moonshot.cn/v1' },
-    glm: { provider: 'GLM', modelCode: 'glm-4-flash', displayName: 'GLM-4 Flash', baseUrl: 'https://open.bigmodel.cn/api/paas/v4' },
-    ollama: { provider: 'OLLAMA', modelCode: 'qwen2.5:7b', displayName: 'Ollama 本地', baseUrl: 'http://localhost:11434/v1' },
+    qwen: {
+      provider: 'QWEN',
+      modelCode: 'qwen-plus',
+      displayName: '通义千问 Plus',
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    },
+    deepseek: {
+      provider: 'DEEPSEEK',
+      modelCode: 'deepseek-chat',
+      displayName: 'DeepSeek Chat',
+      baseUrl: 'https://api.deepseek.com/v1',
+    },
+    gpt: {
+      provider: 'OPENAI',
+      modelCode: 'gpt-4o',
+      displayName: 'GPT-4o',
+      baseUrl: 'https://api.openai.com/v1',
+    },
+    kimi: {
+      provider: 'MOONSHOT',
+      modelCode: 'moonshot-v1-8k',
+      displayName: 'Kimi 8K',
+      baseUrl: 'https://api.moonshot.cn/v1',
+    },
+    glm: {
+      provider: 'GLM',
+      modelCode: 'glm-4-flash',
+      displayName: 'GLM-4 Flash',
+      baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    },
+    ollama: {
+      provider: 'OLLAMA',
+      modelCode: 'qwen2.5:7b',
+      displayName: 'Ollama 本地',
+      baseUrl: 'http://localhost:11434/v1',
+    },
   }
   const p = presets[preset]
   if (p) {
@@ -144,7 +181,13 @@ function applyPreset(preset: string): void {
     <header class="topbar">
       <button class="back-btn" type="button" @click="router.push('/chat')">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path
+            d="M10 12L6 8L10 4"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
       <h1 class="page-title">模型管理</h1>
@@ -158,8 +201,13 @@ function applyPreset(preset: string): void {
     <div v-else-if="modelsStore.list.length === 0" class="empty-state">
       <div class="empty-icon">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" stroke-width="2"/>
-          <path d="M14 22h8M14 28h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" stroke-width="2" />
+          <path
+            d="M14 22h8M14 28h14"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
       <p class="empty-text">还没有添加任何模型</p>
@@ -198,14 +246,21 @@ function applyPreset(preset: string): void {
           </div>
         </div>
         <div class="card-actions">
-          <button v-if="model.isDefault !== 1" class="action-btn" type="button" @click="setDefault(model.id)">
+          <button
+            v-if="model.isDefault !== 1"
+            class="action-btn"
+            type="button"
+            @click="setDefault(model.id)"
+          >
             设为默认
           </button>
           <button class="action-btn" type="button" @click="toggleEnabled(model)">
             {{ model.enabled === 1 ? '停用' : '启用' }}
           </button>
           <button class="action-btn" type="button" @click="openEdit(model)">编辑</button>
-          <button class="action-btn danger" type="button" @click="deletingId = model.id">删除</button>
+          <button class="action-btn danger" type="button" @click="deletingId = model.id">
+            删除
+          </button>
         </div>
       </div>
     </div>
@@ -224,7 +279,12 @@ function applyPreset(preset: string): void {
             <h2 class="drawer-title">{{ editingId ? '编辑模型' : '添加模型' }}</h2>
             <button class="close-btn" type="button" @click="drawerOpen = false">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path
+                  d="M1 1L13 13M13 1L1 13"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
               </svg>
             </button>
           </header>
@@ -234,12 +294,18 @@ function applyPreset(preset: string): void {
             <div v-if="!editingId" class="presets">
               <span class="presets-label">快捷预设</span>
               <div class="presets-grid">
-                <button type="button" class="preset-btn" @click="applyPreset('qwen')">通义千问</button>
-                <button type="button" class="preset-btn" @click="applyPreset('deepseek')">DeepSeek</button>
+                <button type="button" class="preset-btn" @click="applyPreset('qwen')">
+                  通义千问
+                </button>
+                <button type="button" class="preset-btn" @click="applyPreset('deepseek')">
+                  DeepSeek
+                </button>
                 <button type="button" class="preset-btn" @click="applyPreset('gpt')">GPT</button>
                 <button type="button" class="preset-btn" @click="applyPreset('kimi')">Kimi</button>
                 <button type="button" class="preset-btn" @click="applyPreset('glm')">GLM</button>
-                <button type="button" class="preset-btn" @click="applyPreset('ollama')">Ollama</button>
+                <button type="button" class="preset-btn" @click="applyPreset('ollama')">
+                  Ollama
+                </button>
               </div>
             </div>
 
@@ -250,7 +316,11 @@ function applyPreset(preset: string): void {
 
             <div class="form-group">
               <label class="form-label">供应商</label>
-              <input v-model="form.provider" class="form-input" placeholder="QWEN / OPENAI / DEEPSEEK..." />
+              <input
+                v-model="form.provider"
+                class="form-input"
+                placeholder="QWEN / OPENAI / DEEPSEEK..."
+              />
             </div>
 
             <div class="form-group">
@@ -804,10 +874,29 @@ function applyPreset(preset: string): void {
 }
 
 /* ---------- 动画 ---------- */
-.fade-enter-active, .fade-leave-active { transition: opacity var(--duration-base) var(--ease-base); }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-.slide-enter-active, .slide-leave-active { transition: transform var(--duration-base) var(--ease-base); }
-.slide-enter-from, .slide-leave-to { transform: translateX(100%); }
-.pop-enter-active, .pop-leave-active { transition: all var(--duration-base) var(--ease-base); }
-.pop-enter-from, .pop-leave-to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--duration-base) var(--ease-base);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform var(--duration-base) var(--ease-base);
+}
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
+}
+.pop-enter-active,
+.pop-leave-active {
+  transition: all var(--duration-base) var(--ease-base);
+}
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.95);
+}
 </style>

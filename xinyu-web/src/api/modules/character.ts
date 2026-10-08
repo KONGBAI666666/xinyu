@@ -92,7 +92,11 @@ export const charactersApi = {
   },
 
   /** 编辑世界书条目 */
-  lorebookUpdate(characterId: string, entryId: string, data: LorebookSaveDTO): Promise<LorebookEntryVO> {
+  lorebookUpdate(
+    characterId: string,
+    entryId: string,
+    data: LorebookSaveDTO,
+  ): Promise<LorebookEntryVO> {
     return put(`/characters/${characterId}/lorebook/${entryId}`, data)
   },
 
@@ -113,4 +117,3 @@ export const charactersApi = {
     return post('/characters/import', card)
   },
 }
-

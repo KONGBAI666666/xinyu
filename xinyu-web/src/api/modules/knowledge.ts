@@ -1,9 +1,5 @@
 import { get, post, del, instance } from '@/api/request'
-import type {
-  KnowledgeBaseVO,
-  KnowledgeBaseCreateDTO,
-  KnowledgeDocumentVO,
-} from '@/types/api'
+import type { KnowledgeBaseVO, KnowledgeBaseCreateDTO, KnowledgeDocumentVO } from '@/types/api'
 
 /**
  * 知识库接口 (M3 RAG)

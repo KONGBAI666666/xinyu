@@ -7,9 +7,7 @@
   "paths": {
     "/api/auth/register": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Register",
         "description": "注册（注册即登录, 返回 token）",
         "operationId": "register_api_auth_register_post",
@@ -49,9 +47,7 @@
     },
     "/api/auth/login": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Login",
         "description": "登录",
         "operationId": "login_api_auth_login_post",
@@ -91,9 +87,7 @@
     },
     "/api/users/me": {
       "get": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Me",
         "description": "当前登录用户信息",
         "operationId": "me_api_users_me_get",
@@ -113,9 +107,7 @@
     },
     "/api/users/me/password": {
       "put": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Update Password",
         "description": "修改密码",
         "operationId": "update_password_api_users_me_password_put",
@@ -155,9 +147,7 @@
     },
     "/api/users/me/email": {
       "put": {
-        "tags": [
-          "users"
-        ],
+        "tags": ["users"],
         "summary": "Update Email",
         "description": "绑定/更换邮箱 (传空清除); 找回密码等邮件能力的数据基础",
         "operationId": "update_email_api_users_me_email_put",
@@ -197,9 +187,7 @@
     },
     "/api/admin/users/by-username": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Find User",
         "description": "按用户名精确查找用户 (v1 用户管理: 找到后再执行封禁/解封)",
         "operationId": "find_user_api_admin_users_by_username_get",
@@ -242,9 +230,7 @@
     },
     "/api/admin/users/{user_id}/status": {
       "put": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Set User Status",
         "description": "封禁/解封用户 (封禁即时生效于登录, 存量 JWT 在有效期内仍可用)",
         "operationId": "set_user_status_api_admin_users__user_id__status_put",
@@ -295,9 +281,7 @@
     },
     "/api/admin/characters": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "List Characters",
         "description": "角色审核队列分页 (id 倒序; 页满即视为可能还有更多)",
         "operationId": "list_characters_api_admin_characters_get",
@@ -368,9 +352,7 @@
     },
     "/api/admin/characters/{character_id}/status": {
       "put": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Review Character",
         "description": "审核动作: 通过发布 (PUBLISHED) / 下架 (OFFLINE)",
         "operationId": "review_character_api_admin_characters__character_id__status_put",
@@ -421,9 +403,7 @@
     },
     "/api/admin/overview": {
       "get": {
-        "tags": [
-          "admin"
-        ],
+        "tags": ["admin"],
         "summary": "Overview",
         "description": "平台概览: 全站消息量与 token 消耗",
         "operationId": "overview_api_admin_overview_get",
@@ -443,9 +423,7 @@
     },
     "/api/characters/square": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Square",
         "description": "广场列表: 仅 PUBLISHED 角色, 支持搜索 + 三种排序 (RECOMMEND/HOT/LATEST)",
         "operationId": "square_api_characters_square_get",
@@ -509,9 +487,7 @@
     },
     "/api/characters/favorites": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Favorites",
         "description": "收藏列表: 按收藏时间倒序, 仅 PUBLISHED",
         "operationId": "favorites_api_characters_favorites_get",
@@ -531,9 +507,7 @@
     },
     "/api/characters/{character_id}/detail": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Square Detail",
         "description": "广场详情: 仅 PUBLISHED 角色对所有人可见",
         "operationId": "square_detail_api_characters__character_id__detail_get",
@@ -574,9 +548,7 @@
     },
     "/api/characters": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "List Characters",
         "description": "列出当前用户可见的角色",
         "operationId": "list_characters_api_characters_get",
@@ -594,9 +566,7 @@
         }
       },
       "post": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Create",
         "description": "创建角色",
         "operationId": "create_api_characters_post",
@@ -636,9 +606,7 @@
     },
     "/api/characters/{character_id}": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Detail",
         "description": "角色详情（管理视角: 自建任意状态 + 官方 PUBLISHED）",
         "operationId": "detail_api_characters__character_id__get",
@@ -677,9 +645,7 @@
         }
       },
       "put": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Update",
         "description": "编辑角色(仅自建)",
         "operationId": "update_api_characters__character_id__put",
@@ -728,9 +694,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Delete",
         "description": "删除角色(仅自建, 官方不可删)",
         "operationId": "delete_api_characters__character_id__delete",
@@ -771,9 +735,7 @@
     },
     "/api/characters/{character_id}/status": {
       "put": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Switch Status",
         "description": "切换角色状态(DRAFT / PUBLISHED / OFFLINE)",
         "operationId": "switch_status_api_characters__character_id__status_put",
@@ -823,9 +785,7 @@
     },
     "/api/characters/{character_id}/favorite": {
       "post": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Favorite",
         "description": "收藏角色(幂等)",
         "operationId": "favorite_api_characters__character_id__favorite_post",
@@ -864,9 +824,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Unfavorite",
         "description": "取消收藏(幂等)",
         "operationId": "unfavorite_api_characters__character_id__favorite_delete",
@@ -907,9 +865,7 @@
     },
     "/api/characters/{character_id}/lorebook": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "List Lorebook",
         "description": "角色的世界书条目列表 (含停用)",
         "operationId": "list_lorebook_api_characters__character_id__lorebook_get",
@@ -948,9 +904,7 @@
         }
       },
       "post": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Create Lorebook",
         "description": "新增世界书条目",
         "operationId": "create_lorebook_api_characters__character_id__lorebook_post",
@@ -1001,9 +955,7 @@
     },
     "/api/characters/{character_id}/lorebook/{entry_id}": {
       "put": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Update Lorebook",
         "description": "编辑世界书条目",
         "operationId": "update_lorebook_api_characters__character_id__lorebook__entry_id__put",
@@ -1061,9 +1013,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Delete Lorebook",
         "description": "删除世界书条目",
         "operationId": "delete_lorebook_api_characters__character_id__lorebook__entry_id__delete",
@@ -1113,9 +1063,7 @@
     },
     "/api/characters/{character_id}/export": {
       "get": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Export Character",
         "description": "导出角色卡 (仅创建者): 人设 + 参数 + 世界书",
         "operationId": "export_character_api_characters__character_id__export_get",
@@ -1156,9 +1104,7 @@
     },
     "/api/characters/import": {
       "post": {
-        "tags": [
-          "characters"
-        ],
+        "tags": ["characters"],
         "summary": "Import Character",
         "description": "导入角色卡: 一律创建为 DRAFT, 世界书条目随卡带入",
         "operationId": "import_character_api_characters_import_post",
@@ -1198,9 +1144,7 @@
     },
     "/api/conversations": {
       "get": {
-        "tags": [
-          "conversations"
-        ],
+        "tags": ["conversations"],
         "summary": "List Conversations",
         "description": "会话列表: 仅当前用户的会话, 按最新消息时间倒序",
         "operationId": "list_conversations_api_conversations_get",
@@ -1218,9 +1162,7 @@
         }
       },
       "post": {
-        "tags": [
-          "conversations"
-        ],
+        "tags": ["conversations"],
         "summary": "Create Conversation",
         "description": "创建会话（同时写入角色开场白为首条 ASSISTANT 消息）",
         "operationId": "create_conversation_api_conversations_post",
@@ -1260,9 +1202,7 @@
     },
     "/api/conversations/{conversation_id}": {
       "delete": {
-        "tags": [
-          "conversations"
-        ],
+        "tags": ["conversations"],
         "summary": "Delete Conversation",
         "description": "删除会话: 逻辑删除会话及关联消息",
         "operationId": "delete_conversation_api_conversations__conversation_id__delete",
@@ -1303,9 +1243,7 @@
     },
     "/api/conversations/{conversation_id}/title": {
       "put": {
-        "tags": [
-          "conversations"
-        ],
+        "tags": ["conversations"],
         "summary": "Rename Conversation",
         "description": "重命名会话",
         "operationId": "rename_conversation_api_conversations__conversation_id__title_put",
@@ -1356,9 +1294,7 @@
     },
     "/api/conversations/{conversation_id}/model": {
       "put": {
-        "tags": [
-          "conversations"
-        ],
+        "tags": ["conversations"],
         "summary": "Switch Model",
         "description": "切换会话使用的模型（modelId 为空表示回到用户默认模型）",
         "operationId": "switch_model_api_conversations__conversation_id__model_put",
@@ -1415,9 +1351,7 @@
     },
     "/api/conversations/{conversation_id}/messages": {
       "get": {
-        "tags": [
-          "chat"
-        ],
+        "tags": ["chat"],
         "summary": "List Messages",
         "description": "消息历史（游标分页: before=游标消息ID, 缺省取最新一页）",
         "operationId": "list_messages_api_conversations__conversation_id__messages_get",
@@ -1490,9 +1424,7 @@
     },
     "/api/conversations/{conversation_id}/chat": {
       "post": {
-        "tags": [
-          "chat"
-        ],
+        "tags": ["chat"],
         "summary": "Chat",
         "description": "SSE 流式聊天: meta → delta* → done | error",
         "operationId": "chat_api_conversations__conversation_id__chat_post",
@@ -1541,9 +1473,7 @@
     },
     "/api/conversations/{conversation_id}/stop": {
       "post": {
-        "tags": [
-          "chat"
-        ],
+        "tags": ["chat"],
         "summary": "Stop",
         "description": "停止当前生成: 断开 AI 调用, 消息置 STOPPED 并保留已生成文本 (幂等)",
         "operationId": "stop_api_conversations__conversation_id__stop_post",
@@ -1584,9 +1514,7 @@
     },
     "/api/conversations/{conversation_id}/regenerate": {
       "post": {
-        "tags": [
-          "chat"
-        ],
+        "tags": ["chat"],
         "summary": "Regenerate",
         "description": "重新生成最后一条回复 (SSE): 新版本挂靠最后一条 USER 消息, 旧版本保留可切换",
         "operationId": "regenerate_api_conversations__conversation_id__regenerate_post",
@@ -1625,9 +1553,7 @@
     },
     "/api/conversations/{conversation_id}/messages/{message_id}/feedback": {
       "put": {
-        "tags": [
-          "chat"
-        ],
+        "tags": ["chat"],
         "summary": "Set Feedback",
         "description": "消息反馈 (点赞/点踩, 再点一次取消)",
         "operationId": "set_feedback_api_conversations__conversation_id__messages__message_id__feedback_put",
@@ -1687,9 +1613,7 @@
     },
     "/api/memories": {
       "get": {
-        "tags": [
-          "memories"
-        ],
+        "tags": ["memories"],
         "summary": "List Memories",
         "description": "列出当前用户的记忆, 可按角色筛选",
         "operationId": "list_memories_api_memories_get",
@@ -1737,9 +1661,7 @@
     },
     "/api/memories/{memory_id}": {
       "put": {
-        "tags": [
-          "memories"
-        ],
+        "tags": ["memories"],
         "summary": "Update Memory",
         "description": "编辑记忆（content / importance / status）",
         "operationId": "update_memory_api_memories__memory_id__put",
@@ -1788,9 +1710,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "memories"
-        ],
+        "tags": ["memories"],
         "summary": "Delete Memory",
         "description": "删除记忆",
         "operationId": "delete_memory_api_memories__memory_id__delete",
@@ -1831,9 +1751,7 @@
     },
     "/api/models": {
       "get": {
-        "tags": [
-          "models"
-        ],
+        "tags": ["models"],
         "summary": "List Models",
         "description": "列出当前用户的所有模型",
         "operationId": "list_models_api_models_get",
@@ -1851,9 +1769,7 @@
         }
       },
       "post": {
-        "tags": [
-          "models"
-        ],
+        "tags": ["models"],
         "summary": "Create Model",
         "description": "添加模型",
         "operationId": "create_model_api_models_post",
@@ -1893,9 +1809,7 @@
     },
     "/api/models/{model_id}": {
       "put": {
-        "tags": [
-          "models"
-        ],
+        "tags": ["models"],
         "summary": "Update Model",
         "description": "编辑模型",
         "operationId": "update_model_api_models__model_id__put",
@@ -1944,9 +1858,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "models"
-        ],
+        "tags": ["models"],
         "summary": "Delete Model",
         "description": "删除模型",
         "operationId": "delete_model_api_models__model_id__delete",
@@ -1987,9 +1899,7 @@
     },
     "/api/models/{model_id}/default": {
       "put": {
-        "tags": [
-          "models"
-        ],
+        "tags": ["models"],
         "summary": "Set Default",
         "description": "设为默认模型",
         "operationId": "set_default_api_models__model_id__default_put",
@@ -2030,9 +1940,7 @@
     },
     "/api/models/{model_id}/enabled": {
       "put": {
-        "tags": [
-          "models"
-        ],
+        "tags": ["models"],
         "summary": "Set Enabled",
         "description": "启用/停用模型 (停用后不可被会话覆盖与默认解析使用)",
         "operationId": "set_enabled_api_models__model_id__enabled_put",
@@ -2082,9 +1990,7 @@
     },
     "/api/knowledge-bases": {
       "get": {
-        "tags": [
-          "knowledge"
-        ],
+        "tags": ["knowledge"],
         "summary": "List Kbs",
         "description": "列出当前用户的知识库",
         "operationId": "list_kbs_api_knowledge_bases_get",
@@ -2102,9 +2008,7 @@
         }
       },
       "post": {
-        "tags": [
-          "knowledge"
-        ],
+        "tags": ["knowledge"],
         "summary": "Create Kb",
         "description": "创建知识库",
         "operationId": "create_kb_api_knowledge_bases_post",
@@ -2144,9 +2048,7 @@
     },
     "/api/knowledge-bases/{kb_id}": {
       "get": {
-        "tags": [
-          "knowledge"
-        ],
+        "tags": ["knowledge"],
         "summary": "Kb Detail",
         "description": "知识库详情 (含文档列表)",
         "operationId": "kb_detail_api_knowledge_bases__kb_id__get",
@@ -2185,9 +2087,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "knowledge"
-        ],
+        "tags": ["knowledge"],
         "summary": "Delete Kb",
         "description": "删除知识库 (含所有文档 + Qdrant 向量)",
         "operationId": "delete_kb_api_knowledge_bases__kb_id__delete",
@@ -2228,9 +2128,7 @@
     },
     "/api/knowledge-bases/{kb_id}/documents": {
       "post": {
-        "tags": [
-          "knowledge"
-        ],
+        "tags": ["knowledge"],
         "summary": "Upload Document",
         "description": "上传文档到知识库 (同步处理: 解析 → 分块 → 向量化 → 入库)",
         "operationId": "upload_document_api_knowledge_bases__kb_id__documents_post",
@@ -2281,9 +2179,7 @@
     },
     "/api/knowledge-bases/{kb_id}/documents/{doc_id}": {
       "delete": {
-        "tags": [
-          "knowledge"
-        ],
+        "tags": ["knowledge"],
         "summary": "Delete Document",
         "description": "删除文档 (元数据 + Qdrant 向量)",
         "operationId": "delete_document_api_knowledge_bases__kb_id__documents__doc_id__delete",
@@ -2333,9 +2229,7 @@
     },
     "/api/stats/usage": {
       "get": {
-        "tags": [
-          "stats"
-        ],
+        "tags": ["stats"],
         "summary": "Usage",
         "description": "当前用户用量统计: 今日 + 累计 调用次数 / token / 估算成本",
         "operationId": "usage_api_stats_usage_get",
@@ -2484,14 +2378,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "username",
-          "nickname",
-          "role",
-          "status",
-          "createdAt"
-        ],
+        "required": ["id", "username", "nickname", "role", "status", "createdAt"],
         "title": "AdminUserVO"
       },
       "AiModelSaveDTO": {
@@ -2547,12 +2434,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "provider",
-          "modelCode",
-          "displayName",
-          "baseUrl"
-        ],
+        "required": ["provider", "modelCode", "displayName", "baseUrl"],
         "title": "AiModelSaveDTO"
       },
       "AiModelVO": {
@@ -2625,10 +2507,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "token",
-          "user"
-        ],
+        "required": ["token", "user"],
         "title": "AuthResponse",
         "description": "注册/登录共用响应: 注册即登录"
       },
@@ -2641,9 +2520,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "file"
-        ],
+        "required": ["file"],
         "title": "Body_upload_document_api_knowledge_bases__kb_id__documents_post"
       },
       "CardLorebookEntry": {
@@ -2668,10 +2545,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "keywords",
-          "content"
-        ],
+        "required": ["keywords", "content"],
         "title": "CardLorebookEntry",
         "description": "角色卡内嵌的世界书条目"
       },
@@ -2731,11 +2605,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "systemPrompt",
-          "greeting"
-        ],
+        "required": ["name", "systemPrompt", "greeting"],
         "title": "CharacterCardDTO",
         "description": "导入的角色卡 (与导出格式一致)"
       },
@@ -2800,11 +2670,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "systemPrompt",
-          "greeting"
-        ],
+        "required": ["name", "systemPrompt", "greeting"],
         "title": "CharacterCardVO",
         "description": "导出的角色卡 (版本号标识格式)"
       },
@@ -2812,17 +2678,12 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "PUBLISHED",
-              "OFFLINE"
-            ],
+            "enum": ["PUBLISHED", "OFFLINE"],
             "title": "Status"
           }
         },
         "type": "object",
-        "required": [
-          "status"
-        ],
+        "required": ["status"],
         "title": "CharacterReviewDTO",
         "description": "审核动作: 通过发布 / 下架"
       },
@@ -2874,12 +2735,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "DRAFT",
-                  "PENDING",
-                  "PUBLISHED",
-                  "OFFLINE"
-                ]
+                "enum": ["DRAFT", "PENDING", "PUBLISHED", "OFFLINE"]
               },
               {
                 "type": "null"
@@ -2900,13 +2756,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "systemPrompt",
-          "greeting",
-          "temperature",
-          "maxTokens"
-        ],
+        "required": ["name", "systemPrompt", "greeting", "temperature", "maxTokens"],
         "title": "CharacterSaveDTO"
       },
       "CharacterVO": {
@@ -2974,20 +2824,12 @@
           },
           "creatorType": {
             "type": "string",
-            "enum": [
-              "OFFICIAL",
-              "USER"
-            ],
+            "enum": ["OFFICIAL", "USER"],
             "title": "Creatortype"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "DRAFT",
-              "PENDING",
-              "PUBLISHED",
-              "OFFLINE"
-            ],
+            "enum": ["DRAFT", "PENDING", "PUBLISHED", "OFFLINE"],
             "title": "Status"
           },
           "chatCount": {
@@ -3054,9 +2896,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "content"
-        ],
+        "required": ["content"],
         "title": "ChatRequestDTO"
       },
       "ConversationCreateDTO": {
@@ -3089,9 +2929,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "characterId"
-        ],
+        "required": ["characterId"],
         "title": "ConversationCreateDTO"
       },
       "ConversationVO": {
@@ -3158,30 +2996,19 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "characterId",
-          "title",
-          "createdAt"
-        ],
+        "required": ["id", "characterId", "title", "createdAt"],
         "title": "ConversationVO"
       },
       "FeedbackDTO": {
         "properties": {
           "feedback": {
             "type": "string",
-            "enum": [
-              "LIKE",
-              "DISLIKE",
-              "NONE"
-            ],
+            "enum": ["LIKE", "DISLIKE", "NONE"],
             "title": "Feedback"
           }
         },
         "type": "object",
-        "required": [
-          "feedback"
-        ],
+        "required": ["feedback"],
         "title": "FeedbackDTO",
         "description": "消息反馈请求体"
       },
@@ -3217,9 +3044,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "title": "KnowledgeBaseCreateDTO"
       },
       "KnowledgeBaseVO": {
@@ -3376,10 +3201,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
+        "required": ["username", "password"],
         "title": "LoginDTO"
       },
       "LorebookEntryVO": {
@@ -3447,10 +3269,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "keywords",
-          "content"
-        ],
+        "required": ["keywords", "content"],
         "title": "LorebookSaveDTO"
       },
       "MemoryUpdateDTO": {
@@ -3461,28 +3280,17 @@
           },
           "importance": {
             "type": "string",
-            "enum": [
-              "HIGH",
-              "MEDIUM",
-              "LOW"
-            ],
+            "enum": ["HIGH", "MEDIUM", "LOW"],
             "title": "Importance"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "DISABLED"
-            ],
+            "enum": ["ACTIVE", "DISABLED"],
             "title": "Status"
           }
         },
         "type": "object",
-        "required": [
-          "content",
-          "importance",
-          "status"
-        ],
+        "required": ["content", "importance", "status"],
         "title": "MemoryUpdateDTO"
       },
       "MemoryVO": {
@@ -3520,19 +3328,12 @@
           },
           "importance": {
             "type": "string",
-            "enum": [
-              "HIGH",
-              "MEDIUM",
-              "LOW"
-            ],
+            "enum": ["HIGH", "MEDIUM", "LOW"],
             "title": "Importance"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "DISABLED"
-            ],
+            "enum": ["ACTIVE", "DISABLED"],
             "title": "Status"
           },
           "sourceConversationId": {
@@ -3585,11 +3386,7 @@
           },
           "messageType": {
             "type": "string",
-            "enum": [
-              "USER",
-              "ASSISTANT",
-              "SYSTEM"
-            ],
+            "enum": ["USER", "ASSISTANT", "SYSTEM"],
             "title": "Messagetype"
           },
           "content": {
@@ -3598,12 +3395,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "GENERATING",
-              "COMPLETED",
-              "FAILED",
-              "STOPPED"
-            ],
+            "enum": ["GENERATING", "COMPLETED", "FAILED", "STOPPED"],
             "title": "Status"
           },
           "promptTokens": {
@@ -3707,11 +3499,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "messageCount",
-          "totalPromptTokens",
-          "totalCompletionTokens"
-        ],
+        "required": ["messageCount", "totalPromptTokens", "totalCompletionTokens"],
         "title": "PlatformOverviewVO",
         "description": "平台概览 (v1: 消息/Token 维度; 用户/角色总量指标待仓库层补齐后开放)"
       },
@@ -3741,11 +3529,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "docId",
-          "snippet",
-          "score"
-        ],
+        "required": ["docId", "snippet", "score"],
         "title": "RagCitationVO",
         "description": "RAG 引用卡片 (溯源到知识库文档片段)"
       },
@@ -3772,10 +3556,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
+        "required": ["username", "password"],
         "title": "RegisterDTO"
       },
       "RenameBody": {
@@ -3786,9 +3567,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "RenameBody"
       },
       "Result": {
@@ -4502,10 +4281,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "oldPassword",
-          "newPassword"
-        ],
+        "required": ["oldPassword", "newPassword"],
         "title": "UpdatePasswordDTO"
       },
       "UsageStatsVO": {
@@ -4565,17 +4341,12 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "BANNED"
-            ],
+            "enum": ["ACTIVE", "BANNED"],
             "title": "Status"
           }
         },
         "type": "object",
-        "required": [
-          "status"
-        ],
+        "required": ["status"],
         "title": "UserStatusDTO"
       },
       "UserVO": {
@@ -4621,11 +4392,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "username",
-          "nickname"
-        ],
+        "required": ["id", "username", "nickname"],
         "title": "UserVO"
       },
       "ValidationError": {
@@ -4654,11 +4421,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       }
     }

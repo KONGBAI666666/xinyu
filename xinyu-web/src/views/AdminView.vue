@@ -83,6 +83,12 @@ const reviewHasMore = ref(false)
 /** 每个状态过滤条件独立的翻页游标 */
 const reviewOffsets: Record<string, number> = {}
 
+/** 切换审核状态筛选并重新加载 (多语句收敛为方法, 模板内联表达式不支持换行多语句) */
+function pickReviewStatus(s: 'ALL' | 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'OFFLINE'): void {
+  reviewStatusFilter.value = s
+  loadReviews(true)
+}
+
 async function loadReviews(reset: boolean): Promise<void> {
   if (reviewLoading.value) return
   reviewLoading.value = true
@@ -138,7 +144,7 @@ const statusLabel: Record<string, string> = {
       <h1 class="admin-title">管理后台</h1>
       <div class="tabs">
         <button
-          v-for="t in (['overview', 'users', 'characters'] as const)"
+          v-for="t in ['overview', 'users', 'characters'] as const"
           :key="t"
           type="button"
           class="tab-btn"
@@ -187,7 +193,9 @@ const statusLabel: Record<string, string> = {
       </div>
       <div v-if="foundUser" class="user-card">
         <div class="user-info">
-          <p class="user-name">{{ foundUser.nickname }} <span class="user-username">@{{ foundUser.username }}</span></p>
+          <p class="user-name">
+            {{ foundUser.nickname }} <span class="user-username">@{{ foundUser.username }}</span>
+          </p>
           <p class="user-meta">
             {{ foundUser.role }} · {{ foundUser.status === 'BANNED' ? '已封禁' : '正常' }}
             <template v-if="foundUser.email"> · {{ foundUser.email }}</template>
@@ -208,12 +216,12 @@ const statusLabel: Record<string, string> = {
     <section v-else class="panel">
       <div class="filter-row">
         <button
-          v-for="s in (['ALL', 'DRAFT', 'PENDING', 'PUBLISHED', 'OFFLINE'] as const)"
+          v-for="s in ['ALL', 'DRAFT', 'PENDING', 'PUBLISHED', 'OFFLINE'] as const"
           :key="s"
           type="button"
           class="filter-btn"
           :class="{ active: reviewStatusFilter === s }"
-          @click="reviewStatusFilter = s; loadReviews(true)"
+          @click="pickReviewStatus(s)"
         >
           {{ s === 'ALL' ? '全部' : statusLabel[s] }}
         </button>
@@ -223,10 +231,15 @@ const statusLabel: Record<string, string> = {
           <div class="review-info">
             <p class="review-name">
               {{ c.name }}
-              <span class="status-badge" :class="`st-${c.status}`">{{ statusLabel[c.status] ?? c.status }}</span>
+              <span class="status-badge" :class="`st-${c.status}`">{{
+                statusLabel[c.status] ?? c.status
+              }}</span>
             </p>
             <p class="review-meta">{{ c.intro || '（无介绍）' }}</p>
-            <p class="review-meta">创作者 {{ c.creatorType === 'OFFICIAL' ? '官方' : c.creatorId }} · 对话 {{ c.chatCount }} · 收藏 {{ c.favoriteCount }}</p>
+            <p class="review-meta">
+              创作者 {{ c.creatorType === 'OFFICIAL' ? '官方' : c.creatorId }} · 对话
+              {{ c.chatCount }} · 收藏 {{ c.favoriteCount }}
+            </p>
           </div>
           <div class="review-actions">
             <button
@@ -234,13 +247,17 @@ const statusLabel: Record<string, string> = {
               type="button"
               class="primary-btn"
               @click="review(c, 'PUBLISHED')"
-            >通过发布</button>
+            >
+              通过发布
+            </button>
             <button
               v-if="c.status !== 'OFFLINE'"
               type="button"
               class="primary-btn danger"
               @click="review(c, 'OFFLINE')"
-            >下架</button>
+            >
+              下架
+            </button>
           </div>
         </div>
         <p v-if="!reviewLoading && reviewList.length === 0" class="hint">暂无角色</p>

@@ -51,7 +51,9 @@ async function confirmDelete(): Promise<void> {
     deletingId.value = null
   } catch (e) {
     deleteError.value = e instanceof BizError ? e.message : '删除失败，请稍后重试'
-    window.setTimeout(() => { deleteError.value = '' }, 3000)
+    window.setTimeout(() => {
+      deleteError.value = ''
+    }, 3000)
   } finally {
     deleting.value = false
   }
@@ -91,6 +93,12 @@ function togglePicker(): void {
   }
 }
 
+/** 跳转角色设置并收起选择器 (多语句收敛为方法) */
+function goToCharacterSettings(): void {
+  router.push('/settings/characters')
+  closePicker()
+}
+
 function closePicker(): void {
   pickerOpen.value = false
   selectedKbId.value = null
@@ -121,7 +129,9 @@ async function handleRename(id: string, title: string): Promise<void> {
     await conversationStore.updateTitle(id, title)
   } catch (e) {
     renameError.value = e instanceof BizError ? e.message : '重命名失败，请稍后重试'
-    window.setTimeout(() => { renameError.value = '' }, 3000)
+    window.setTimeout(() => {
+      renameError.value = ''
+    }, 3000)
   }
 }
 </script>
@@ -155,13 +165,36 @@ async function handleRename(id: string, title: string): Promise<void> {
           <div v-if="kbList.length > 0" class="kb-section">
             <button type="button" class="kb-btn" @click="toggleKbDropdown">
               <svg class="kb-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 3.5C2 2.7 2.7 2 3.5 2H6V12H3.5C2.7 12 2 11.3 2 10.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M8 2H10.5C11.3 2 12 2.7 12 3.5V10.5C12 11.3 11.3 12 10.5 12H8V2Z" stroke="currentColor" stroke-width="1.2"/>
+                <path
+                  d="M2 3.5C2 2.7 2.7 2 3.5 2H6V12H3.5C2.7 12 2 11.3 2 10.5V3.5Z"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
+                <path
+                  d="M8 2H10.5C11.3 2 12 2.7 12 3.5V10.5C12 11.3 11.3 12 10.5 12H8V2Z"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                />
               </svg>
               <span class="kb-label">知识库</span>
-              <span class="kb-value" :class="{ active: !!selectedKbId }">{{ selectedKbName() }}</span>
-              <svg class="kb-chevron" :class="{ open: kbDropdownOpen }" width="10" height="10" viewBox="0 0 12 12" fill="none">
-                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <span class="kb-value" :class="{ active: !!selectedKbId }">{{
+                selectedKbName()
+              }}</span>
+              <svg
+                class="kb-chevron"
+                :class="{ open: kbDropdownOpen }"
+                width="10"
+                height="10"
+                viewBox="0 0 12 12"
+                fill="none"
+              >
+                <path
+                  d="M3 4.5L6 7.5L9 4.5"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
 
@@ -175,8 +208,21 @@ async function handleRename(id: string, title: string): Promise<void> {
                   @click="selectKb(null)"
                 >
                   <span class="kb-option-name">不绑定</span>
-                  <svg v-if="!selectedKbId" class="check" width="12" height="12" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 7L6 11L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    v-if="!selectedKbId"
+                    class="check"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                  >
+                    <path
+                      d="M2 7L6 11L12 3"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </button>
                 <button
@@ -189,10 +235,25 @@ async function handleRename(id: string, title: string): Promise<void> {
                 >
                   <div class="kb-option-info">
                     <span class="kb-option-name">{{ kb.name }}</span>
-                    <span class="kb-option-meta">{{ kb.docCount }} 文档 · {{ kb.chunkCount }} 切片</span>
+                    <span class="kb-option-meta"
+                      >{{ kb.docCount }} 文档 · {{ kb.chunkCount }} 切片</span
+                    >
                   </div>
-                  <svg v-if="selectedKbId === kb.id" class="check" width="12" height="12" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 7L6 11L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    v-if="selectedKbId === kb.id"
+                    class="check"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                  >
+                    <path
+                      d="M2 7L6 11L12 3"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -207,7 +268,10 @@ async function handleRename(id: string, title: string): Promise<void> {
             class="picker-item"
             @click="pickCharacter(c.id)"
           >
-            <div class="pi-avatar" :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''">
+            <div
+              class="pi-avatar"
+              :style="c.avatarUrl ? `background-image:url(${c.avatarUrl})` : ''"
+            >
               <span v-if="!c.avatarUrl">{{ c.name.charAt(0) }}</span>
             </div>
             <div class="pi-info">
@@ -218,9 +282,14 @@ async function handleRename(id: string, title: string): Promise<void> {
           </button>
 
           <div class="picker-divider"></div>
-          <button class="picker-manage" type="button" @click="router.push('/settings/characters'); closePicker()">
+          <button class="picker-manage" type="button" @click="goToCharacterSettings()">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <path
+                d="M7 2V12M2 7H12"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
             </svg>
             <span>管理角色</span>
           </button>
@@ -230,7 +299,12 @@ async function handleRename(id: string, title: string): Promise<void> {
 
     <nav class="mt-3 flex-1 overflow-y-auto px-3 pb-4">
       <!-- 仅首次加载(列表为空)显示加载中; SSE 完成后的后台刷新保留列表原地更新, 不闪烁 -->
-      <p v-if="conversationStore.loading && conversationStore.list.length === 0" class="hint text-center text-xs">加载中…</p>
+      <p
+        v-if="conversationStore.loading && conversationStore.list.length === 0"
+        class="hint text-center text-xs"
+      >
+        加载中…
+      </p>
       <p v-else-if="conversationStore.list.length === 0" class="hint text-center text-xs">
         还没有会话，点上方开始聊天
       </p>
@@ -415,8 +489,12 @@ async function handleRename(id: string, title: string): Promise<void> {
   transition: background var(--duration-base) var(--ease-base);
   text-align: left;
 }
-.kb-option:hover { background: var(--bg-hover); }
-.kb-option.selected { background: rgba(94, 234, 212, 0.08); }
+.kb-option:hover {
+  background: var(--bg-hover);
+}
+.kb-option.selected {
+  background: rgba(94, 234, 212, 0.08);
+}
 
 .kb-option-info {
   display: flex;
@@ -453,7 +531,9 @@ async function handleRename(id: string, title: string): Promise<void> {
   transition: background var(--duration-base) var(--ease-base);
   text-align: left;
 }
-.picker-item:hover { background: var(--bg-hover); }
+.picker-item:hover {
+  background: var(--bg-hover);
+}
 
 .pi-avatar {
   width: 32px;
@@ -523,13 +603,18 @@ async function handleRename(id: string, title: string): Promise<void> {
   cursor: pointer;
   transition: all var(--duration-base) var(--ease-base);
 }
-.picker-manage:hover { background: var(--bg-hover); color: var(--brand-to); }
+.picker-manage:hover {
+  background: var(--bg-hover);
+  color: var(--brand-to);
+}
 
 /* ---------- 动画 ---------- */
-.picker-enter-active, .picker-leave-active {
+.picker-enter-active,
+.picker-leave-active {
   transition: all var(--duration-base) var(--ease-base);
 }
-.picker-enter-from, .picker-leave-to {
+.picker-enter-from,
+.picker-leave-to {
   opacity: 0;
   transform: translateY(-4px);
 }
@@ -621,10 +706,12 @@ async function handleRename(id: string, title: string): Promise<void> {
   cursor: not-allowed;
 }
 
-.confirm-enter-active, .confirm-leave-active {
+.confirm-enter-active,
+.confirm-leave-active {
   transition: opacity var(--duration-base) var(--ease-base);
 }
-.confirm-enter-from, .confirm-leave-to {
+.confirm-enter-from,
+.confirm-leave-to {
   opacity: 0;
 }
 </style>

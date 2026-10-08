@@ -4,7 +4,15 @@ import { conversationApi } from '@/api/modules/conversation'
 import { useMessageStore } from '@/stores/message'
 import { tokenStorage } from '@/utils/storage'
 import { BizError } from '@/utils/BizError'
-import type { RagCitation, SseDeltaEvent, SseDoneEvent, SseErrorEvent, SseMetaEvent, SseToolEvent, ToolCallInfo } from '@/types/api'
+import type {
+  RagCitation,
+  SseDeltaEvent,
+  SseDoneEvent,
+  SseErrorEvent,
+  SseMetaEvent,
+  SseToolEvent,
+  ToolCallInfo,
+} from '@/types/api'
 
 /** delta 渲染节流间隔: 先入缓冲, 批量 flush, 避免每个 token 都触发 DOM 更新 */
 const FLUSH_INTERVAL_MS = 50
