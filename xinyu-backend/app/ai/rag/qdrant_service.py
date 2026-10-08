@@ -42,7 +42,7 @@ class QdrantService:
                 vector=vec,
                 payload={"doc_id": doc_id, "chunk_index": i, "text": text},
             )
-            for i, (text, vec) in enumerate(zip(chunks, embeddings))
+            for i, (text, vec) in enumerate(zip(chunks, embeddings, strict=True))
         ]
         self._client.upsert(collection_name=name, points=points)
 

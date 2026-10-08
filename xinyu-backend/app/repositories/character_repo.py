@@ -1,6 +1,6 @@
 """角色/收藏数据访问"""
 
-from sqlalchemy import delete, func, or_, select, text, update
+from sqlalchemy import delete, or_, select, text, update
 
 from app.core.security import now_local
 from app.models import AiCharacter, CharacterFavorite

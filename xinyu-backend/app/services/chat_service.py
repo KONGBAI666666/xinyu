@@ -27,7 +27,14 @@ from app.core.database import SessionFactory
 from app.core.exceptions import BizException, ResultCode
 from app.core.security import now_local
 from app.models import AiCharacter, Conversation, Message
-from app.repositories import character_repo, conversation_repo, knowledge_repo, lorebook_repo, message_repo, model_repo
+from app.repositories import (
+    character_repo,
+    conversation_repo,
+    knowledge_repo,
+    lorebook_repo,
+    message_repo,
+    model_repo,
+)
 from app.schemas.conversation import ChatRequestDTO, ConversationCreateDTO, ConversationVO
 from app.schemas.message import MessageVO, RagCitationVO
 from app.services import conversation_service, lorebook_service, memory_service, model_service

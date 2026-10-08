@@ -6,10 +6,9 @@
 """
 
 from datetime import date, datetime
-from typing import Generic, TypeVar
+from typing import Annotated, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, PlainSerializer
-from typing_extensions import Annotated
 
 T = TypeVar("T")
 
@@ -23,7 +22,7 @@ DateStr = Annotated[
 ]
 
 
-class Result(BaseModel, Generic[T]):
+class Result(BaseModel, Generic[T]):  # noqa: UP046 — pydantic 泛型兼容性优先, 不改 PEP 695
     model_config = ConfigDict(serialize_by_alias=True)
 
     code: int = 0

@@ -128,7 +128,7 @@ async def upload_document(
     解析 + 分块 + Embedding + 入 Qdrant 可能耗时数分钟, 同步执行会打爆前端超时;
     前端通过知识库详情轮询文档状态 (PROCESSING → READY / ERROR)。
     """
-    kb = await _get_owned_kb(db, kb_id, user_id)
+    await _get_owned_kb(db, kb_id, user_id)
     if not file_content:
         raise BizException(ResultCode.PARAM_ERROR, "文件为空")
 

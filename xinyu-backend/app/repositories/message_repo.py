@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from sqlalchemy import delete, desc, func, select, update
+from sqlalchemy import desc, func, select, update
 
 from app.core.security import now_local
 from app.models import Conversation, Message

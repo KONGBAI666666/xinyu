@@ -13,6 +13,7 @@
 import unittest
 
 import jwt
+from cryptography.exceptions import InvalidTag
 
 from app.core.config import settings
 from app.core.security import (
@@ -113,7 +114,7 @@ class SecurityCompatTest(unittest.TestCase):
         """GCM 完整性: 密文被篡改时解密失败而非返回错乱明文"""
         cipher = aes_encrypt("sk-original")
         tampered = cipher[:-4] + ("AAAA" if not cipher.endswith("AAAA") else "BBBB")
-        with self.assertRaises(Exception):
+        with self.assertRaises(InvalidTag):
             aes_decrypt(tampered)
 
     # ---------- BCrypt ----------

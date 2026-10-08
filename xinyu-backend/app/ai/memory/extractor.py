@@ -33,20 +33,19 @@ class MemoryExtractor:
         except AiError:
             raise
         except Exception as e:
-            raise AiError(f"记忆提取失败: {e}", code=50000)
+            raise AiError(f"记忆提取失败: {e}", code=50000) from e
         finally:
             await client.aclose()
 
     @staticmethod
     def _parse_response(content: str) -> list[ExtractedMemory]:
         """解析 LLM 返回的 JSON 数组 (容忍代码块包裹与前后多余文字)"""
-        import json
 
         # 去除可能的 markdown 代码块包裹
         text = content.strip()
         if text.startswith("```"):
             lines = text.split("\n")
-            lines = [l for l in lines if not l.startswith("```")]
+            lines = [ln for ln in lines if not ln.startswith("```")]
             text = "\n".join(lines).strip()
 
         data = MemoryExtractor._try_load_array(text)

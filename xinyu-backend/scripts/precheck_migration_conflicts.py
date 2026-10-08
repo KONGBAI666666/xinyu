@@ -1,7 +1,6 @@
 """迁移前存量数据体检: 检查 xinyu 库是否已有 uk_conv_seq / uk_email 冲突数据"""
 import asyncio
 import os
-import sys
 
 for line in open(r"E:/虚拟C盘/git/AI聊天项目（python)（W）/.env", encoding="utf-8"):
     line = line.strip()

@@ -145,7 +145,7 @@ class LlmClient:
                 "LLM 调用失败: baseUrl=%s, model=%s, code=%s, error=%r",
                 self.config.baseUrl, self.config.modelCode, code, e,
             )
-            raise LlmConnectError(f"[{code}] {msg}")
+            raise LlmConnectError(f"[{code}] {msg}") from e
 
     @staticmethod
     def _map_error(e: Exception) -> tuple[int, str]:
