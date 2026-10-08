@@ -195,6 +195,48 @@
         }
       }
     },
+    "/api/users/me/avatar": {
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update Avatar",
+        "description": "上传头像 (M5): 魔数嗅验 JPG/PNG/WEBP, ≤2MB; 旧头像文件保留 (不级联清理)",
+        "operationId": "update_avatar_api_users_me_avatar_put",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_avatar_api_users_me_avatar_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result_UserVO_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/by-username": {
       "get": {
         "tags": [
@@ -752,6 +794,59 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{character_id}/avatar": {
+      "put": {
+        "tags": [
+          "characters"
+        ],
+        "summary": "Update Avatar",
+        "description": "上传角色头像 (M5, 仅创建者): 魔数嗅验 JPG/PNG/WEBP, ≤2MB",
+        "operationId": "update_avatar_api_characters__character_id__avatar_put",
+        "parameters": [
+          {
+            "name": "character_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Character Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_avatar_api_characters__character_id__avatar_put"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result_CharacterVO_"
                 }
               }
             }
@@ -2684,6 +2779,34 @@
         ],
         "title": "AuthResponse",
         "description": "注册/登录共用响应: 注册即登录"
+      },
+      "Body_update_avatar_api_characters__character_id__avatar_put": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_update_avatar_api_characters__character_id__avatar_put"
+      },
+      "Body_update_avatar_api_users_me_avatar_put": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_update_avatar_api_users_me_avatar_put"
       },
       "Body_upload_document_api_knowledge_bases__kb_id__documents_post": {
         "properties": {

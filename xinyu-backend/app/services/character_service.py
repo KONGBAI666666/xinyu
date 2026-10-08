@@ -16,6 +16,7 @@ from app.core.exceptions import BizException, ResultCode
 from app.models import AiCharacter, CharacterFavorite, LorebookEntry
 from app.repositories import character_repo, conversation_repo, lorebook_repo, message_repo, model_repo
 from app.schemas.character import CharacterCardDTO, CharacterCardVO, CharacterSaveDTO, CharacterVO
+from app.services import file_service
 
 logger = logging.getLogger("xinyu.character")
 
@@ -309,3 +310,15 @@ async def import_card(db: AsyncSession, user_id: int, card: CharacterCardDTO) ->
     )
     favorited = await character_repo.favorited_ids(db, user_id)
     return _to_vo(character, user_id, favorited)
+
+
+async def update_avatar(
+    db: AsyncSession, character_id: int, user_id: int, original_name: str, data: bytes
+) -> CharacterVO:
+    """上传角色头像 (M5): 落盘 + file 表留痕 + character.avatar_url 指向新地址"""
+    character = await _require_owned(db, character_id, user_id)
+    record = await file_service.save_image(user_id, "CHARACTER_AVATAR", original_name, data)
+    db.add(record)
+    character.avatar_url = record.url
+    await db.commit()
+    return _to_vo(character, user_id, set())

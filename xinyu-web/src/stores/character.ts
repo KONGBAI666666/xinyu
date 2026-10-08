@@ -25,6 +25,12 @@ export const useCharactersStore = defineStore('characters', () => {
     }
   }
 
+  /** 单项替换 (M5 头像上传后局部刷新, 免整表重拉) */
+  function replaceOne(updated: CharacterVO): void {
+    const idx = list.value.findIndex((c) => c.id === updated.id)
+    if (idx !== -1) list.value[idx] = updated
+  }
+
   /** 官方角色 */
   function official(): CharacterVO[] {
     return list.value.filter((c) => c.creatorType === 'OFFICIAL')
@@ -41,5 +47,5 @@ export const useCharactersStore = defineStore('characters', () => {
     return list.value.find((c) => c.id === id) ?? null
   }
 
-  return { list, loaded, loading, load, official, mine, getById }
+  return { list, loaded, loading, load, official, mine, getById, replaceOne }
 })

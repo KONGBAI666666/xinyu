@@ -1,6 +1,6 @@
 """用户接口（均需登录）— 对应 Java UserController"""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user_id
@@ -37,3 +37,14 @@ async def update_email(
     """绑定/更换邮箱 (传空清除); 找回密码等邮件能力的数据基础"""
     await user_service.update_email(db, user_id, dto.email)
     return Result.ok()
+
+
+@router.put("/me/avatar")
+async def update_avatar(
+    file: UploadFile,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[UserVO]:
+    """上传头像 (M5): 魔数嗅验 JPG/PNG/WEBP, ≤2MB; 旧头像文件保留 (不级联清理)"""
+    data = await file.read()
+    return Result.ok(await user_service.update_avatar(db, user_id, file.filename or "avatar", data))

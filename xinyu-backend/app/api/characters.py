@@ -7,7 +7,7 @@
 注意路由注册顺序: /square、/favorites 等固定路径必须先于 /{id} 注册。
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user_id, get_optional_user_id, parse_id
@@ -96,6 +96,22 @@ async def update(
 ) -> Result[CharacterVO]:
     """编辑角色(仅自建)"""
     return Result.ok(await character_service.update(db, parse_id(character_id, "characterId"), user_id, req))
+
+
+@router.put("/{character_id}/avatar")
+async def update_avatar(
+    character_id: str,
+    file: UploadFile,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[CharacterVO]:
+    """上传角色头像 (M5, 仅创建者): 魔数嗅验 JPG/PNG/WEBP, ≤2MB"""
+    data = await file.read()
+    return Result.ok(
+        await character_service.update_avatar(
+            db, parse_id(character_id, "characterId"), user_id, file.filename or "avatar", data
+        )
+    )
 
 
 @router.delete("/{character_id}")

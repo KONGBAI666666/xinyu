@@ -7,6 +7,7 @@ from app.core.security import hash_password, verify_password
 from app.repositories import user_repo
 from app.schemas.auth import UserVO
 from app.schemas.user import UpdatePasswordDTO
+from app.services import file_service
 from app.services.auth_service import to_user_vo
 
 
@@ -48,3 +49,16 @@ async def update_email(db: AsyncSession, user_id: int, email: str | None) -> Non
             raise BizException(ResultCode.PARAM_ERROR, "该邮箱已被其他账号绑定")
     user.email = email
     await db.commit()
+
+
+async def update_avatar(db: AsyncSession, user_id: int, original_name: str, data: bytes) -> UserVO:
+    """上传头像 (M5): 落盘 + file 表留痕 + user.avatar_url 指向新地址"""
+    user = await user_repo.get_by_id(db, user_id)
+    if user is None:
+        raise BizException(ResultCode.NOT_FOUND, "用户不存在")
+
+    record = await file_service.save_image(user_id, "USER_AVATAR", original_name, data)
+    db.add(record)
+    user_repo.update_avatar_fields(user, record.url)
+    await db.commit()
+    return to_user_vo(user)

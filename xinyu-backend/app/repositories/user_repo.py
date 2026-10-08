@@ -35,3 +35,8 @@ async def update_password(db, user_id: int, new_password_hash: str) -> None:
 
 async def update_last_login(db, user_id: int) -> None:
     await db.execute(update(User).where(User.id == user_id).values(last_login_at=now_local()))
+
+
+def update_avatar_fields(user: User, avatar_url: str) -> None:
+    """ORM 实体方式更新头像 (service 层 commit)"""
+    user.avatar_url = avatar_url

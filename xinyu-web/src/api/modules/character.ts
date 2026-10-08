@@ -52,6 +52,13 @@ export const charactersApi = {
     return put(`/characters/${id}`, data)
   },
 
+  /** 上传角色头像 (M5, 仅创建者): JPG/PNG/WEBP ≤2MB */
+  updateAvatar(id: string, file: File): Promise<CharacterVO> {
+    const fd = new FormData()
+    fd.append('file', file)
+    return put(`/characters/${id}/avatar`, fd)
+  },
+
   /** 删除角色(仅自建, 官方不可删) */
   remove(id: string): Promise<void> {
     return del(`/characters/${id}`)

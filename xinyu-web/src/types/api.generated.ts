@@ -104,6 +104,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Avatar
+         * @description 上传头像 (M5): 魔数嗅验 JPG/PNG/WEBP, ≤2MB; 旧头像文件保留 (不级联清理)
+         */
+        put: operations["update_avatar_api_users_me_avatar_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users/by-username": {
         parameters: {
             query?: never;
@@ -311,6 +331,26 @@ export interface paths {
          * @description 删除角色(仅自建, 官方不可删)
          */
         delete: operations["delete_api_characters__character_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{character_id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Avatar
+         * @description 上传角色头像 (M5, 仅创建者): 魔数嗅验 JPG/PNG/WEBP, ≤2MB
+         */
+        put: operations["update_avatar_api_characters__character_id__avatar_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1002,6 +1042,22 @@ export interface components {
             /** Token */
             token: string;
             user: components["schemas"]["UserVO"];
+        };
+        /** Body_update_avatar_api_characters__character_id__avatar_put */
+        Body_update_avatar_api_characters__character_id__avatar_put: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+        };
+        /** Body_update_avatar_api_users_me_avatar_put */
+        Body_update_avatar_api_users_me_avatar_put: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
         };
         /** Body_upload_document_api_knowledge_bases__kb_id__documents_post */
         Body_upload_document_api_knowledge_bases__kb_id__documents_post: {
@@ -2066,6 +2122,39 @@ export interface operations {
             };
         };
     };
+    update_avatar_api_users_me_avatar_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_update_avatar_api_users_me_avatar_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_UserVO_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     find_user_api_admin_users_by_username_get: {
         parameters: {
             query: {
@@ -2440,6 +2529,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_avatar_api_characters__character_id__avatar_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                character_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_update_avatar_api_characters__character_id__avatar_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_CharacterVO_"];
                 };
             };
             /** @description Validation Error */

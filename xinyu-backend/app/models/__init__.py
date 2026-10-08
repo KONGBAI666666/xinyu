@@ -7,6 +7,7 @@
 from app.models.ai_model import AiModel
 from app.models.character import AiCharacter, CharacterFavorite
 from app.models.conversation import Conversation
+from app.models.file import File
 from app.models.knowledge import KnowledgeBase, KnowledgeDocument
 from app.models.lorebook import LorebookEntry
 from app.models.memory import Memory
@@ -18,6 +19,7 @@ __all__ = [
     "AiCharacter",
     "CharacterFavorite",
     "Conversation",
+    "File",
     "Message",
     "Memory",
     "AiModel",

@@ -100,6 +100,32 @@ function openEdit(c: CharacterVO): void {
   }
 }
 
+// ——— 角色头像上传 (M5): 仅编辑已有角色时可用, 新建角色先保存再传 ———
+const charAvatarInput = ref<HTMLInputElement | null>(null)
+const avatarUploading = ref(false)
+
+async function onCharAvatarPicked(e: Event): Promise<void> {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || avatarUploading.value) return
+  if (!editing.value) {
+    errorText.value = '请先保存角色, 再上传头像'
+    return
+  }
+  avatarUploading.value = true
+  try {
+    const updated = await charactersApi.updateAvatar(editing.value.id, file)
+    form.value.avatarUrl = updated.avatarUrl
+    editing.value = updated
+    store.replaceOne(updated)
+  } catch (err) {
+    errorText.value = err instanceof BizError ? err.message : '头像上传失败，请稍后重试'
+  } finally {
+    avatarUploading.value = false
+  }
+}
+
 async function submit(): Promise<void> {
   errorText.value = ''
   if (!form.value.name.trim()) {
@@ -565,7 +591,29 @@ const statusLabel: Record<string, string> = {
 
               <div class="form-group">
                 <label class="form-label">头像 URL</label>
-                <input v-model="form.avatarUrl" class="form-input" placeholder="留空用首字母兜底" />
+                <div class="flex gap-2">
+                  <input
+                    v-model="form.avatarUrl"
+                    class="form-input"
+                    placeholder="留空用首字母兜底"
+                  />
+                  <input
+                    ref="charAvatarInput"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="hidden"
+                    @change="onCharAvatarPicked"
+                  />
+                  <button
+                    type="button"
+                    class="cancel-btn shrink-0"
+                    :disabled="avatarUploading || creating"
+                    :title="creating ? '请先保存角色' : '上传图片 (JPG/PNG/WEBP ≤2MB)'"
+                    @click="charAvatarInput?.click()"
+                  >
+                    {{ avatarUploading ? '上传中…' : '上传' }}
+                  </button>
+                </div>
               </div>
 
               <div class="form-group">

@@ -98,6 +98,14 @@ app.include_router(messages.router)
 app.include_router(memories.router)
 app.include_router(models.router)
 app.include_router(knowledge_bases.router)
+
+# M5 头像等上传文件的静态服务 (uploads/ 与仓库根对齐; nginx 生产环境 alias 同路径)
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+from app.services.file_service import UPLOAD_ROOT  # noqa: E402
+
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+app.mount("/api/static/uploads", StaticFiles(directory=str(UPLOAD_ROOT)), name="uploads")
 app.include_router(stats.router)
 
 

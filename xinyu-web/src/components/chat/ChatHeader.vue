@@ -11,6 +11,7 @@ import { useConversationStore } from '@/stores/conversation'
 import { modelsApi } from '@/api/modules/models'
 import { authApi } from '@/api/modules/auth'
 import { BizError } from '@/utils/BizError'
+import { userStorage } from '@/utils/storage'
 import type { AiModelVO } from '@/types/api'
 
 const router = useRouter()
@@ -18,6 +19,29 @@ const authStore = useAuthStore()
 const statsStore = useStatsStore()
 const modelsStore = useModelsStore()
 const conversationStore = useConversationStore()
+
+// ——— 头像上传 (M5) ———
+const avatarInput = ref<HTMLInputElement | null>(null)
+const avatarUploading = ref(false)
+
+async function onAvatarPicked(e: Event): Promise<void> {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // 允许连续选择同一文件
+  if (!file || avatarUploading.value) return
+  avatarUploading.value = true
+  try {
+    const updated = await authApi.updateAvatar(file)
+    authStore.user = updated
+    userStorage.set(updated)
+  } catch (err) {
+    // BizError 已带后端文案 (类型/大小不符); 其余兜底
+    if (!(err instanceof BizError)) throw err
+    alert(err.message)
+  } finally {
+    avatarUploading.value = false
+  }
+}
 
 defineProps<{
   title: string
@@ -369,6 +393,27 @@ async function submitEmail(): Promise<void> {
             stroke-linejoin="round"
           />
         </svg>
+      </button>
+      <input
+        ref="avatarInput"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        class="hidden"
+        @change="onAvatarPicked"
+      />
+      <button
+        type="button"
+        class="avatar-btn"
+        :title="avatarUploading ? '上传中…' : '更换头像'"
+        :disabled="avatarUploading"
+        @click="avatarInput?.click()"
+      >
+        <span
+          v-if="authStore.user?.avatarUrl"
+          class="avatar-img"
+          :style="`background-image:url(${authStore.user.avatarUrl})`"
+        ></span>
+        <span v-else class="avatar-fallback">{{ authStore.user?.nickname?.charAt(0) ?? '?' }}</span>
       </button>
       <span class="nickname text-sm">{{ authStore.user?.nickname }}</span>
       <button type="button" class="pw-btn text-xs" @click="openEmailModal">绑定邮箱</button>
@@ -812,5 +857,42 @@ async function submitEmail(): Promise<void> {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* ---------- 用户头像 (M5) ---------- */
+.avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-base);
+}
+
+.avatar-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.avatar-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.avatar-fallback {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 </style>

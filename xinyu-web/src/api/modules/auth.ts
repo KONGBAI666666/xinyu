@@ -30,4 +30,11 @@ export const authApi = {
   updateEmail(email: string | null): Promise<void> {
     return put('/users/me/email', { email })
   },
+
+  /** 上传头像 (M5): JPG/PNG/WEBP ≤2MB, 返回更新后的用户信息 */
+  updateAvatar(file: File): Promise<UserVO> {
+    const fd = new FormData()
+    fd.append('file', file)
+    return put('/users/me/avatar', fd)
+  },
 }
