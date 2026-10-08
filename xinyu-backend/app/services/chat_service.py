@@ -19,6 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.llm.client import LlmClient, MockLlmClient
 from app.ai.memory.extractor import MemoryExtractor
 from app.ai.rag.rag_service import get_rag_service
+from app.ai.tools.agent import run_agent_stream
+from app.ai.tools.registry import TOOL_GUIDE, TOOLS, make_executor
 from app.ai.types import ChatMessage, ModelConfig, RagChunk
 from app.core.config import settings
 from app.core.database import SessionFactory
@@ -533,17 +535,30 @@ async def _event_stream(
         else:
             client = LlmClient(model_config)
 
-        # 4. 流式调用 (整体超时兜底: 超时视作停止, 保留已生成文本)
+        # 3.5 工具使用说明追加到 system 末尾 (context 保持原样, 不影响记忆提取)
+        if messages and messages[0].role == "system":
+            first = messages[0]
+            messages[0] = first.model_copy(update={"content": first.content + "\n\n" + TOOL_GUIDE})
+
+        # 4. 流式调用 (agent 循环: 模型请求工具时执行→回灌→续写, 上层仍是 delta/done/error)
         try:
             async with asyncio.timeout(SSE_TIMEOUT_SECONDS):
-                async for event_type, payload in client.stream_chat(
-                    messages=messages, temperature=temperature, max_tokens=max_tokens
+                async for event_type, payload in run_agent_stream(
+                    client,
+                    messages,
+                    tools=TOOLS,
+                    executor=make_executor(user_id),
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 ):
                     if cancel.is_set():
                         break
                     if event_type == "delta":
                         generated.append(payload["content"])
                         yield _sse_event("delta", payload)
+                    elif event_type == "tool":
+                        # 工具执行回执 (前端气泡展示调用过程, 不落库)
+                        yield _sse_event("tool", payload)
                     elif event_type == "done":
                         content = "".join(generated)
                         await _finalize(

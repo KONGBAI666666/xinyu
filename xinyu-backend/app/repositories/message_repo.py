@@ -194,3 +194,23 @@ async def summarize_usage(db, user_id: int | None = None, since=None) -> UsageSu
     row = result.one()
     # SUM() 经 aiomysql 返回 Decimal, 统一转 int (count 本身是 int, 转换无害)
     return UsageSummary(call_count=int(row[0]), prompt_tokens=int(row[1]), completion_tokens=int(row[2]))
+
+
+async def search_user_messages(db, user_id: int, keyword: str, limit: int = 5) -> list[Message]:
+    """按关键词检索该用户的历史消息 (工具 search_history 的数据面, 强制 user_id 过滤)"""
+    keyword = keyword.strip()
+    if not keyword:
+        return []
+    keyword = keyword[:50]  # 防超长 LIKE 拖垮查询
+    result = await db.execute(
+        select(Message)
+        .where(
+            Message.user_id == user_id,
+            Message.deleted == 0,
+            Message.status == "COMPLETED",
+            Message.content.like(f"%{keyword}%"),
+        )
+        .order_by(desc(Message.id))
+        .limit(limit)
+    )
+    return list(result.scalars().all())
