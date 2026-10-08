@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { conversationApi } from '@/api/modules/conversation'
-import type { MessageVO, RagCitation, SseDoneEvent } from '@/types/api'
+import type { MessageVO, RagCitation, SseDoneEvent, ToolCallInfo } from '@/types/api'
 
 /** 历史消息每页条数（后端缺省 20, 上限 100） */
 export const PAGE_SIZE = 20
@@ -150,6 +150,15 @@ export const useMessageStore = defineStore('message', () => {
     }
   }
 
+  /** 工具调用回执: 追加到 ASSISTANT 消息的工具轨迹 (仅本地态, 不落库) */
+  function attachToolCall(messageId: string, info: ToolCallInfo): void {
+    const target = items.value.find((m) => m.id === messageId)
+    if (target) {
+      if (!target.toolCalls) target.toolCalls = []
+      target.toolCalls.push(info)
+    }
+  }
+
   /** delta: 追加增量文本（useSseChat 已做 50ms 节流, 这里直接写入） */
   function appendDelta(text: string): void {
     const generating = findGenerating()
@@ -234,6 +243,7 @@ export const useMessageStore = defineStore('message', () => {
     confirmRegenerateMeta,
     setFeedback,
     setCitations,
+    attachToolCall,
     appendDelta,
     finishAssistant,
     failAssistant,

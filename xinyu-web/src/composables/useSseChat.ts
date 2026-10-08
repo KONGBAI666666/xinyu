@@ -4,7 +4,7 @@ import { conversationApi } from '@/api/modules/conversation'
 import { useMessageStore } from '@/stores/message'
 import { tokenStorage } from '@/utils/storage'
 import { BizError } from '@/utils/BizError'
-import type { RagCitation, SseDeltaEvent, SseDoneEvent, SseErrorEvent, SseMetaEvent } from '@/types/api'
+import type { RagCitation, SseDeltaEvent, SseDoneEvent, SseErrorEvent, SseMetaEvent, SseToolEvent, ToolCallInfo } from '@/types/api'
 
 /** delta 渲染节流间隔: 先入缓冲, 批量 flush, 避免每个 token 都触发 DOM 更新 */
 const FLUSH_INTERVAL_MS = 50
@@ -59,13 +59,14 @@ export function useSseChat() {
   /**
    * SSE 连接的公共骨架: 建连 → 事件分发 → 节流写入 store
    * meta 事件由调用方决定落库方式 (send 换 USER id, regenerate 换占位 id);
-   * citations 由调用方挂到当前 ASSISTANT 消息 (meta 已到, id 为真实 id)
+   * citations/tool 由调用方挂到当前 ASSISTANT 消息 (meta 已到, id 为真实 id)
    */
   async function runStream(
     url: string,
     body: string | undefined,
     onMeta: (meta: SseMetaEvent) => void,
     onCitations: (citations: RagCitation[]) => void,
+    onTool?: (info: ToolCallInfo) => void,
   ): Promise<void> {
     const signal = controller!.signal
     try {
@@ -103,6 +104,12 @@ export function useSseChat() {
               // RAG 命中片段 (meta 之后、delta 之前), 挂到当前 ASSISTANT 消息
               const payload = JSON.parse(event.data) as { citations: RagCitation[] }
               onCitations(payload.citations ?? [])
+              break
+            }
+            case 'tool': {
+              // agent 工具执行回执 (流中可出现多次), 记录到 ASSISTANT 气泡的工具轨迹
+              const info = JSON.parse(event.data) as SseToolEvent
+              onTool?.({ name: info.name, arguments: info.arguments, result: info.result })
               break
             }
             case 'delta': {
@@ -172,6 +179,7 @@ export function useSseChat() {
         messageStore.confirmMeta(meta.userMessageId, meta.assistantMessageId)
       },
       (citations) => messageStore.setCitations(assistantId, citations),
+      (info) => messageStore.attachToolCall(assistantId, info),
     )
   }
 
@@ -196,6 +204,7 @@ export function useSseChat() {
         messageStore.confirmRegenerateMeta(meta.userMessageId, meta.assistantMessageId)
       },
       (citations) => messageStore.setCitations(assistantId, citations),
+      (info) => messageStore.attachToolCall(assistantId, info),
     )
   }
 

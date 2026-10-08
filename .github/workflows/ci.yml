@@ -35,6 +35,12 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
 
+      - name: Dump OpenAPI contract
+        run: python scripts/dump_openapi.py
+
+      - name: Contract drift check (openapi.json 与代码同步)
+        run: git diff --exit-code -- xinyu-web/openapi.json
+
   frontend:
     name: Frontend tests / typecheck / build
     runs-on: ubuntu-latest
@@ -59,6 +65,9 @@ jobs:
 
       - name: Type check (vue-tsc)
         run: npm run typecheck
+
+      - name: Contract freshness (codegen diff)
+        run: npm run codegen:check
 
       - name: Build (vite)
         run: npm run build

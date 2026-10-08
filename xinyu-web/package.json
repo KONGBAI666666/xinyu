@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "vue-tsc -b"
+    "typecheck": "vue-tsc -b",
+    "codegen": "openapi-typescript openapi.json -o src/types/api.generated.ts",
+    "codegen:check": "npm run codegen && git diff --exit-code -- openapi.json src/types/api.generated.ts"
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
@@ -30,6 +32,7 @@
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/tsconfig": "^0.9.1",
     "happy-dom": "^20.14.5",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",

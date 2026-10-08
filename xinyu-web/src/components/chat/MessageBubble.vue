@@ -30,6 +30,16 @@ const isUser = computed(() => props.message.messageType === 'USER')
 const generating = computed(() => props.message.status === 'GENERATING')
 /** 引用列表展开态 (默认收起) */
 const citationsOpen = ref(false)
+
+/** 工具名 → 中文展示名 */
+const TOOL_NAMES: Record<string, string> = {
+  get_current_datetime: '查询当前时间',
+  calculate: '计算',
+  search_history: '检索历史消息',
+}
+function toolDisplayName(name: string): string {
+  return TOOL_NAMES[name] ?? name
+}
 /** 终态才允许反馈/重发 (生成中/失败中不可点) */
 const actionable = computed(
   () => !isUser.value && (props.message.status === 'COMPLETED' || props.message.status === 'STOPPED'),
@@ -60,6 +70,14 @@ const renderedContent = computed(() =>
         </p>
         <p v-else-if="message.status === 'STOPPED'" class="status-note stopped">已停止生成</p>
       </div>
+
+      <!-- 工具调用轨迹: agent 执行过程回执 (仅流式本地态) -->
+      <ul v-if="!isUser && message.toolCalls?.length" class="tool-trace">
+        <li v-for="(tool, i) in message.toolCalls" :key="i" class="tool-item">
+          <span class="tool-name">🔧 {{ toolDisplayName(tool.name) }}</span>
+          <span class="tool-result">{{ tool.result }}</span>
+        </li>
+      </ul>
 
       <!-- RAG 引用溯源: 可折叠的命中片段列表 -->
       <div v-if="!isUser && message.citations?.length" class="citations">
@@ -162,6 +180,39 @@ const renderedContent = computed(() =>
   background: var(--bg-elevated);
   color: var(--text-primary);
   border-bottom-left-radius: var(--radius-bubble-tail);
+}
+
+/* ---------- 工具调用轨迹 ---------- */
+.tool-trace {
+  margin-top: 4px;
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tool-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+}
+
+.tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tool-result {
+  font-size: 12px;
+  color: var(--text-muted);
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 /* ---------- RAG 引用溯源 ---------- */

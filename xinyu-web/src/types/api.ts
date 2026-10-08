@@ -97,6 +97,8 @@ export interface MessageVO {
   feedback?: 'NONE' | 'LIKE' | 'DISLIKE'
   /** RAG 引用溯源 (仅绑知识库会话的 ASSISTANT 消息) */
   citations?: RagCitation[] | null
+  /** 工具调用过程 (仅流式本地态, 后端不落库, 刷新后消失) */
+  toolCalls?: ToolCallInfo[]
 }
 
 /** RAG 引用卡片 */
@@ -106,6 +108,16 @@ export interface RagCitation {
   chunkIndex: number
   snippet: string
   score: number
+}
+
+/** 工具调用回执 (event:tool, 流式过程态) */
+export interface ToolCallInfo {
+  /** 工具名: get_current_datetime / calculate / search_history */
+  name: string
+  /** 原始 JSON 参数串 */
+  arguments: string
+  /** 执行结果文本 (已截断) */
+  result: string
 }
 
 /** PUT /conversations/{id}/messages/{messageId}/feedback 请求体 */
@@ -143,6 +155,13 @@ export interface SseErrorEvent {
 /** event:citations — RAG 命中片段回执 (meta 之后、delta 之前) */
 export interface SseCitationsEvent {
   citations: RagCitation[]
+}
+
+/** event:tool — 工具执行回执 (agent 循环内, 可能出现多次) */
+export interface SseToolEvent {
+  name: string
+  arguments: string
+  result: string
 }
 
 // ---------- 用量统计（M2 Token 统计） ----------
