@@ -1,0 +1,3 @@
+# codegen 产物不参与格式化 (生成器自有风格, prettier 重排会破坏 codegen:check)
+openapi.json
+src/types/api.generated.ts
