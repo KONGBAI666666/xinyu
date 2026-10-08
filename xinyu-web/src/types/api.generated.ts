@@ -3538,10 +3538,3 @@ export interface operations {
         };
     };
 }
-
-// ---------- 桥接导出: 业务代码经由这里取后端真源类型 ----------
-// 用法: import type { components } from './api.generated'
-//      type MessageVO = components['schemas']['MessageVO']
-// 注意: 本文件由 `npm run codegen` 生成, 禁止手改; 契约漂移由 CI codegen:check 拦截
-export type ApiSchemas = components['schemas']
-export type ApiOperations = operations
