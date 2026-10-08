@@ -15,6 +15,7 @@ def to_vo(c: Conversation) -> ConversationVO:
         modelId=str(c.model_id) if c.model_id is not None else None,
         kbId=str(c.kb_id) if c.kb_id is not None else None,
         title=c.title,
+        pinned=bool(c.pinned),
         lastMessageAt=c.last_message_at,
         lastMessagePreview=c.last_message_preview,
         createdAt=c.created_at,
@@ -45,6 +46,14 @@ async def rename(
         return to_vo(conversation)
     # 标题长度限制 50 字符
     await conversation_repo.rename(db, conversation, trimmed[:50])
+    await db.commit()
+    return to_vo(conversation)
+
+
+async def set_pinned(db: AsyncSession, conversation_id: int, user_id: int, pinned: bool) -> ConversationVO:
+    """置顶/取消置顶会话"""
+    conversation = await require_owned(db, conversation_id, user_id)
+    await conversation_repo.set_pinned(db, conversation, pinned)
     await db.commit()
     return to_vo(conversation)
 

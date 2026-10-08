@@ -55,6 +55,8 @@ export interface ConversationVO {
   /** 会话绑定的知识库ID (M3 RAG), null=普通聊天 */
   kbId: string | null
   title: string
+  /** 置顶 (M5): 置顶组在列表最前 */
+  pinned?: boolean
   lastMessageAt: string | null
   lastMessagePreview: string | null
   createdAt: string

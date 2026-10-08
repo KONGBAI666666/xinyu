@@ -26,6 +26,11 @@ export const conversationApi = {
     return put(`/conversations/${conversationId}/title`, { title })
   },
 
+  /** 置顶/取消置顶会话 (M5) */
+  setPinned(conversationId: string, pinned: boolean): Promise<ConversationVO> {
+    return put(`/conversations/${conversationId}/pinned`, { pinned })
+  },
+
   /** 历史消息: 游标分页, 返回升序（旧→新）; before 缺省取最新一页 */
   fetchMessages(
     conversationId: string,

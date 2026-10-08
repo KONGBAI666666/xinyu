@@ -512,6 +512,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/conversations/{conversation_id}/pinned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Pinned
+         * @description 置顶/取消置顶会话 (置顶组在列表最前)
+         */
+        put: operations["set_pinned_api_conversations__conversation_id__pinned_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/conversations/{conversation_id}/model": {
         parameters: {
             query?: never;
@@ -1189,6 +1209,11 @@ export interface components {
             kbId?: string | null;
             /** Title */
             title: string;
+            /**
+             * Pinned
+             * @default false
+             */
+            pinned: boolean;
             /** Lastmessageat */
             lastMessageAt?: string | null;
             /** Lastmessagepreview */
@@ -1396,6 +1421,11 @@ export interface components {
             citations?: components["schemas"]["RagCitationVO"][] | null;
             /** Createdat */
             createdAt: string;
+        };
+        /** PinBody */
+        PinBody: {
+            /** Pinned */
+            pinned: boolean;
         };
         /**
          * PlatformOverviewVO
@@ -2812,6 +2842,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RenameBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ConversationVO_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_pinned_api_conversations__conversation_id__pinned_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PinBody"];
             };
         };
         responses: {

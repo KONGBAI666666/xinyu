@@ -31,6 +31,10 @@ class RenameBody(BaseModel):
         return v
 
 
+class PinBody(BaseModel):
+    pinned: bool
+
+
 @router.get("")
 async def list_conversations(
     user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
@@ -71,6 +75,21 @@ async def rename_conversation(
     return Result.ok(
         await conversation_service.rename(
             db, parse_id(conversation_id, "conversationId"), user_id, body.title
+        )
+    )
+
+
+@router.put("/{conversation_id}/pinned")
+async def set_pinned(
+    conversation_id: str,
+    body: PinBody,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> Result[ConversationVO]:
+    """置顶/取消置顶会话 (置顶组在列表最前)"""
+    return Result.ok(
+        await conversation_service.set_pinned(
+            db, parse_id(conversation_id, "conversationId"), user_id, body.pinned
         )
     )
 

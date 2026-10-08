@@ -19,6 +19,9 @@ class Conversation(Base):
     model_id: Mapped[int | None] = mapped_column(BigInteger, comment="会话级模型覆盖")
     kb_id: Mapped[int | None] = mapped_column(BigInteger, comment="绑定的知识库 (RAG)")
     title: Mapped[str] = mapped_column(String(50), nullable=False)
+    pinned: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0", comment="置顶: 0/1 (置顶组内按 last_message_at)"
+    )
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime)
     last_message_preview: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(

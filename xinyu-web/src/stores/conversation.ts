@@ -70,5 +70,17 @@ export const useConversationStore = defineStore('conversation', () => {
     }
   }
 
-  return { list, activeId, loading, active, fetchList, create, setActive, remove, updateTitle }
+  /**
+   * 置顶/取消置顶 (M5): 更新本地项; 列表顺序由后端排序 (置顶组在前),
+   * 下次 fetchList 拉取即恢复展示顺序
+   */
+  async function setPinned(id: string, pinned: boolean): Promise<void> {
+    const updated = await conversationApi.setPinned(id, pinned)
+    const idx = list.value.findIndex((c) => c.id === id)
+    if (idx !== -1) {
+      list.value[idx] = updated
+    }
+  }
+
+  return { list, activeId, loading, active, fetchList, create, setActive, remove, updateTitle, setPinned }
 })

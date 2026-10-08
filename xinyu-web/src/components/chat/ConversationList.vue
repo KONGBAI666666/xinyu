@@ -134,6 +134,19 @@ async function handleRename(id: string, title: string): Promise<void> {
     }, 3000)
   }
 }
+
+/** 置顶/取消置顶 (M5): 后端已重排顺序, 本地更新该项后重拉列表恢复展示顺序 */
+async function handlePin(id: string, pinned: boolean): Promise<void> {
+  try {
+    await conversationStore.setPinned(id, pinned)
+    await conversationStore.fetchList()
+  } catch (e) {
+    renameError.value = e instanceof BizError ? e.message : '操作失败，请稍后重试'
+    window.setTimeout(() => {
+      renameError.value = ''
+    }, 3000)
+  }
+}
 </script>
 
 <template>
@@ -317,6 +330,7 @@ async function handleRename(id: string, title: string): Promise<void> {
           @select="$emit('select', $event)"
           @delete="requestDelete"
           @rename="handleRename"
+          @pin="handlePin"
         />
       </div>
     </nav>

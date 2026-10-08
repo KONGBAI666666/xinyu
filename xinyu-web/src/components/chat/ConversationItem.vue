@@ -15,6 +15,7 @@ const emit = defineEmits<{
   select: [id: string]
   delete: [id: string]
   rename: [id: string, title: string]
+  pin: [id: string, pinned: boolean]
 }>()
 
 // ——— 重命名编辑状态 ———
@@ -101,6 +102,33 @@ const timeText = computed(() => {
       </div>
       <div class="flex items-center gap-1 shrink-0">
         <span class="time text-xs">{{ timeText }}</span>
+        <span v-if="!editing && conversation.pinned" class="pin-flag" title="已置顶">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M7 1.5V9M7 9L4 6.5M7 9L10 6.5M2.5 12.5H11.5"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <span
+          v-if="!editing"
+          class="pin-btn"
+          :title="conversation.pinned ? '取消置顶' : '置顶'"
+          @click.stop="$emit('pin', conversation.id, !conversation.pinned)"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M7 1.5V9M7 9L4 6.5M7 9L10 6.5M2.5 12.5H11.5"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
         <span v-if="!editing" class="edit-btn" title="重命名" @click.stop="startEdit">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path
@@ -178,7 +206,8 @@ const timeText = computed(() => {
 }
 
 .edit-btn,
-.del-btn {
+.del-btn,
+.pin-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,8 +221,20 @@ const timeText = computed(() => {
 }
 
 .item:hover .edit-btn,
-.item:hover .del-btn {
+.item:hover .del-btn,
+.item:hover .pin-btn {
   opacity: 1;
+}
+
+.pin-btn:hover {
+  color: var(--color-primary);
+  background: rgba(94, 234, 212, 0.12);
+}
+
+.pin-flag {
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
 }
 
 .edit-btn:hover {

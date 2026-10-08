@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS `conversation` (
   `model_id`             BIGINT       DEFAULT NULL COMMENT '会话级模型覆盖, NULL=用用户默认模型',
   `kb_id`                BIGINT       DEFAULT NULL COMMENT '会话绑定的知识库ID (M3 RAG), NULL=普通聊天',
   `title`                VARCHAR(50)  NOT NULL COMMENT '默认取首条用户消息前20字, 可重命名',
+  `pinned`               TINYINT      NOT NULL DEFAULT 0 COMMENT '置顶: 0/1 (置顶组内按 last_message_at)',
   `last_message_at`      DATETIME     DEFAULT NULL COMMENT '冗余: 最新消息时间(列表排序)',
   `last_message_preview` VARCHAR(100) DEFAULT NULL COMMENT '冗余: 最新消息摘要(列表副标题)',
   `created_at`           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

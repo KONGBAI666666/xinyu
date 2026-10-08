@@ -28,14 +28,21 @@ async def insert(db, conversation: Conversation) -> Conversation:
 
 
 async def list_by_user(db, user_id: int, limit: int = 100) -> list[Conversation]:
-    """按最新消息时间倒序, 上限 100 条 (侧边栏只展示最近会话)"""
+    """置顶组在前, 组内按最新消息时间倒序; 上限 100 条 (侧边栏只展示最近会话)"""
     result = await db.execute(
         select(Conversation)
         .where(Conversation.user_id == user_id, Conversation.deleted == 0)
-        .order_by(Conversation.last_message_at.desc())
+        .order_by(Conversation.pinned.desc(), Conversation.last_message_at.desc())
         .limit(limit)
     )
     return list(result.scalars())
+
+
+async def set_pinned(db, conversation: Conversation, pinned: bool) -> None:
+    """置顶/取消置顶"""
+    await db.execute(
+        update(Conversation).where(Conversation.id == conversation.id).values(pinned=1 if pinned else 0)
+    )
 
 
 async def refresh_last_message(db, conversation_id: int, preview: str | None, message_at=None) -> None:

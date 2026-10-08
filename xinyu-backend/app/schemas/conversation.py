@@ -25,6 +25,7 @@ class ConversationVO(BaseModel):
     modelId: str | None = None
     kbId: str | None = None
     title: str
+    pinned: bool = False
     lastMessageAt: DateTimeStr | None = None
     lastMessagePreview: str | None = None
     createdAt: DateTimeStr
@@ -32,6 +33,10 @@ class ConversationVO(BaseModel):
 
 class RenameConversationDTO(BaseModel):
     title: str
+
+
+class PinConversationDTO(BaseModel):
+    pinned: bool
 
 
 class ChatRequestDTO(BaseModel):
