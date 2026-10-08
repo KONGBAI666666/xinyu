@@ -75,7 +75,7 @@ def public_url_to_path(url: str) -> Path | None:
     prefix = "/api/static/uploads/"
     if not url.startswith(prefix):
         return None
-    rel = url[len(prefix):]
+    rel = url[len(prefix) :]
     if ".." in rel or "/" not in rel:
         return None
     return UPLOAD_ROOT / rel

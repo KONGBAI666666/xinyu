@@ -19,7 +19,9 @@ class File(Base):
     url: Mapped[str] = mapped_column(String(255), nullable=False, comment="访问地址")
     file_type: Mapped[str | None] = mapped_column(String(50), comment="MIME类型")
     file_size: Mapped[int | None] = mapped_column(BigInteger, comment="字节数")
-    biz_type: Mapped[str] = mapped_column(String(30), nullable=False, comment="USER_AVATAR/CHARACTER_AVATAR/ATTACHMENT")
+    biz_type: Mapped[str] = mapped_column(
+        String(30), nullable=False, comment="USER_AVATAR/CHARACTER_AVATAR/ATTACHMENT"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=now_local, server_default=func.now()
     )
