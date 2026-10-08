@@ -35,6 +35,12 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
 
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check .
+          ruff format --check .
+
       - name: Dump OpenAPI contract
         run: python scripts/dump_openapi.py
 
@@ -62,6 +68,9 @@ jobs:
 
       - name: Unit tests (vitest)
         run: npm run test
+
+      - name: Lint (eslint)
+        run: npm run lint
 
       - name: Type check (vue-tsc)
         run: npm run typecheck
