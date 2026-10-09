@@ -21,6 +21,9 @@ services:
       # :? 语法: 变量缺失或为空时 compose 直接报错退出, 避免 MySQL 以空 root 密码启动
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:?请先复制 .env.example 为 .env 并设置 MYSQL_PASSWORD}
       MYSQL_DATABASE: xinyu
+      # 应用专用最小权限账号: 官方镜像自动创建并仅授予 xinyu 库权限 (root 不进应用链路)
+      MYSQL_USER: ${XINYU_DB_USER:-xinyu_app}
+      MYSQL_PASSWORD: ${XINYU_DB_PASSWORD:?请先在 .env 中设置 XINYU_DB_PASSWORD (应用账号密码)}
       TZ: Asia/Shanghai
     command:
       - --character-set-server=utf8mb4
@@ -70,8 +73,8 @@ services:
       XINYU_ENV: prod
       XINYU_DB_HOST: mysql
       XINYU_DB_PORT: "3306"
-      XINYU_DB_USER: root
-      XINYU_DB_PASSWORD: ${MYSQL_PASSWORD:?请先复制 .env.example 为 .env 并设置 MYSQL_PASSWORD}
+      XINYU_DB_USER: ${XINYU_DB_USER:-xinyu_app}
+      XINYU_DB_PASSWORD: ${XINYU_DB_PASSWORD:?请先在 .env 中设置 XINYU_DB_PASSWORD (应用账号密码)}
       XINYU_DB_NAME: xinyu
       # :? 语法: 缺失/为空时立即报错, 避免用到不安全的默认密钥
       XINYU_JWT_SECRET: ${XINYU_JWT_SECRET:?请先在 .env 中设置 XINYU_JWT_SECRET (≥32 字符)}
